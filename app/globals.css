@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500&display=swap');
+
+:root {
+  --color-primary: #2D6A9F;
+  --color-accent: #F4A261;
+  --color-background: #F9FAFB;
+  --color-text: #1A1A2E;
+  --color-success: #52B788;
+}
+
+body {
+  background-color: #F9FAFB;
+  color: #1A1A2E;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-heading {
+  font-family: 'Fraunces', Georgia, serif;
+}
+
+.font-body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
