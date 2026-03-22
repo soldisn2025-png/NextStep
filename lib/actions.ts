@@ -5,12 +5,13 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     id: 'early-intervention',
     title: 'Apply for Early Intervention services',
     description:
-      'Children under 3 qualify for free Early Intervention (Part C of IDEA). Contact your state\'s EI program — services can begin within 45 days of referral and include speech, OT, and developmental therapy at no cost.',
+      'Children under 3 qualify for free Early Intervention (Part C of IDEA). Contact your state\'s EI program — services can begin within 45 days of referral and include speech, OT, and developmental therapy at no cost. Search "[your county] + Infant and Toddler Connection" or "[your state] + Early Intervention" to find your local program.',
     category: 'therapy',
     urgency: 'immediate',
     resources: [
-      { label: 'Find your state EI program', url: 'https://www.cdc.gov/ncbddd/actearly/parents/states.html' },
-      { label: 'What is Early Intervention?', url: 'https://www.cdc.gov/ncbddd/actearly/parents/early-intervention.html' },
+      { label: 'Find your state EI program (CDC)', url: 'https://www.cdc.gov/act-early/early-intervention/index.html' },
+      { label: 'What is Early Intervention? (CDC)', url: 'https://www.cdc.gov/act-early/early-intervention/index.html' },
+      { label: 'Example: Fairfax County Infant & Toddler Connection', url: 'https://www.fairfaxcounty.gov/neighborhood-community-services/infant-and-toddler-connection' },
     ],
   },
   'official-diagnosis': {
@@ -21,8 +22,8 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     category: 'school',
     urgency: 'immediate',
     resources: [
-      { label: 'Find a developmental pediatrician (AAP)', url: 'https://www.healthychildren.org/English/family-life/health-management/Pages/What-Is-a-Developmental-Behavioral-Pediatrician.aspx' },
-      { label: 'Autism diagnosis: what to expect', url: 'https://www.autismspeaks.org/autism-diagnosis' },
+      { label: 'Autism diagnosis: what to expect (Autism Speaks)', url: 'https://www.autismspeaks.org/autism-diagnosis' },
+      { label: 'AAP autism resources for families', url: 'https://www.aap.org/en/patient-care/autism/' },
     ],
   },
   'find-slp': {
@@ -33,8 +34,8 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     category: 'therapy',
     urgency: 'immediate',
     resources: [
-      { label: 'Find an SLP (ASHA)', url: 'https://www.asha.org/public/speech/disorders/autism/' },
-      { label: 'ASHA ProFind directory', url: 'https://www.asha.org/profind/' },
+      { label: 'Autism and communication (ASHA)', url: 'https://www.asha.org/public/speech/disorders/autism/' },
+      { label: 'ASHA ProFind — find an SLP near you', url: 'https://www.asha.org/profind/' },
     ],
   },
   'find-ot': {
@@ -46,7 +47,7 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     urgency: 'soon',
     resources: [
       { label: 'Find an OT (AOTA)', url: 'https://www.aota.org/about/find-ot' },
-      { label: 'OT and autism — overview', url: 'https://www.aota.org/practice/children-youth/autism' },
+      { label: 'OT and autism — overview (AOTA)', url: 'https://www.aota.org/practice/children-youth/autism' },
     ],
   },
   'explore-aba': {
@@ -57,8 +58,8 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     category: 'therapy',
     urgency: 'soon',
     resources: [
-      { label: 'Find a BCBA near you', url: 'https://www.bacb.com/services/o.php?page=101145' },
       { label: 'What is ABA? (Autism Speaks)', url: 'https://www.autismspeaks.org/applied-behavior-analysis' },
+      { label: 'ABA therapy overview (Autism Science Foundation)', url: 'https://autismsciencefoundation.org/what-is-autism/aba-applied-behavior-analysis/' },
     ],
   },
   'request-iep': {
@@ -69,9 +70,9 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     category: 'school',
     urgency: 'immediate',
     resources: [
-      { label: 'Sample IEP request letter (Wrightslaw)', url: 'https://www.wrightslaw.com/info/test.ltr2sd.htm' },
-      { label: 'IEP guide for parents (PACER)', url: 'https://www.pacer.org/parent/php/PHP-c8.pdf' },
-      { label: 'Your rights under IDEA', url: 'https://sites.ed.gov/idea/parents-and-educators/' },
+      { label: 'How to request an IEP (Wrightslaw)', url: 'https://www.wrightslaw.com/info/iep.htm' },
+      { label: 'IEP guide for parents (PACER)', url: 'https://www.pacer.org/parent/iep/' },
+      { label: 'Your rights — Center for Parent Information', url: 'https://www.parentcenterhub.org/basics/' },
     ],
   },
   'review-insurance': {
@@ -82,20 +83,21 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     category: 'insurance',
     urgency: 'soon',
     resources: [
-      { label: 'State autism insurance mandates map', url: 'https://www.autismspeaks.org/autism-insurance-resource-center' },
-      { label: 'Insure Kids Now (CHIP/Medicaid)', url: 'https://www.insurekidsnow.gov/' },
+      { label: 'State autism insurance mandates (Autism Speaks)', url: 'https://www.autismspeaks.org/autism-insurance-resource-center' },
+      { label: 'Free/low-cost coverage via CHIP/Medicaid', url: 'https://www.insurekidsnow.gov/' },
     ],
   },
   'connect-parents': {
     id: 'connect-parents',
     title: 'Connect with other autism parents',
     description:
-      'Parent support groups — local or online — are one of the most valuable resources after a diagnosis. The Autism Society of America and local chapters offer free groups. Many parents find that other parents know the system better than any professional.',
+      'Parent support groups — local or online — are one of the most valuable resources after a diagnosis. Many parents find that other parents know the system better than any professional. Search "[your county or city] + autism parent group" to find your local community.',
     category: 'community',
     urgency: 'when-ready',
     resources: [
-      { label: 'Find a local Autism Society chapter', url: 'https://autismsociety.org/find-support/local-chapters/' },
-      { label: 'Autism Parent Support (Facebook groups)', url: 'https://www.facebook.com/groups/autismparentssupport/' },
+      { label: 'Find your local Autism Society chapter', url: 'https://autismsociety.org/get-involved/chapters/' },
+      { label: 'POAC-NOVA (example regional group — Northern Virginia)', url: 'https://poac-nova.org/' },
+      { label: 'Autism Parent Support (Facebook group)', url: 'https://www.facebook.com/groups/autismparentssupport/' },
     ],
   },
   'parent-wellbeing': {
@@ -107,7 +109,8 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     urgency: 'soon',
     resources: [
       { label: 'NAMI Family Support Line', url: 'https://www.nami.org/Support-Education/Support-Groups' },
-      { label: 'Caregiver resources (Autism Speaks)', url: 'https://www.autismspeaks.org/tool-kit/100-day-kit-young-children' },
+      { label: 'Caregiver support resources (Autism Speaks)', url: 'https://www.autismspeaks.org/tool-kit/100-day-kit-young-children' },
+      { label: 'Top autism parenting books (Amazon)', url: 'https://www.amazon.com/s?k=autism+parenting+books' },
     ],
   },
   'adhd-management': {
@@ -144,7 +147,7 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     urgency: 'when-ready',
     resources: [
       { label: 'Wrightslaw — special ed law & advocacy', url: 'https://www.wrightslaw.com/' },
-      { label: 'IDEA parent rights (US Dept of Ed)', url: 'https://sites.ed.gov/idea/parents-and-educators/' },
+      { label: 'IDEA basics for parents', url: 'https://www.parentcenterhub.org/basics/' },
     ],
   },
   'find-developmental-ped': {
@@ -155,8 +158,8 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     category: 'therapy',
     urgency: 'soon',
     resources: [
-      { label: 'What developmental peds do (AAP)', url: 'https://www.healthychildren.org/English/family-life/health-management/Pages/What-Is-a-Developmental-Behavioral-Pediatrician.aspx' },
-      { label: 'ABPDN — find a specialist', url: 'https://www.abpdn.org/public-patients/find-a-diplomate/' },
+      { label: 'AAP autism resources for families', url: 'https://www.aap.org/en/patient-care/autism/' },
+      { label: 'Autism diagnosis: next steps (Autism Speaks)', url: 'https://www.autismspeaks.org/autism-diagnosis' },
     ],
   },
   'sensory-environment': {
@@ -167,8 +170,10 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     category: 'parent',
     urgency: 'when-ready',
     resources: [
-      { label: 'Sensory processing and autism (STAR)', url: 'https://www.spdstar.org/basic/understanding-sensory-processing-disorder' },
-      { label: 'Sensory diet ideas for home', url: 'https://www.understood.org/articles/sensory-diet' },
+      { label: 'Understanding sensory processing (STAR Institute)', url: 'https://sensoryhealth.org/basic/understanding-sensory-processing-disorder' },
+      { label: 'Fidget & sensory toys on Amazon', url: 'https://www.amazon.com/s?k=autism+sensory+fidget+toys' },
+      { label: 'Noise-canceling headphones for kids (Amazon)', url: 'https://www.amazon.com/s?k=noise+canceling+headphones+kids+autism' },
+      { label: 'Weighted blankets for children (Amazon)', url: 'https://www.amazon.com/s?k=weighted+blanket+kids+autism' },
     ],
   },
 };
