@@ -12,6 +12,15 @@ export interface IntakeStep {
   placeholder?: string;
 }
 
+export interface ResourceLink {
+  label: string;
+  url: string;
+}
+
+export interface SupportItem extends ResourceLink {
+  affiliate?: boolean;
+}
+
 export interface RecommendedAction {
   id: string;
   title: string;
@@ -19,7 +28,8 @@ export interface RecommendedAction {
   category: 'therapy' | 'school' | 'insurance' | 'community' | 'parent';
   urgency: 'immediate' | 'soon' | 'when-ready';
   learnMoreUrl?: string;
-  resources?: { label: string; url: string }[];
+  resources?: ResourceLink[];
+  supportItems?: SupportItem[];
 }
 
 export interface IntakeAnswers {
@@ -29,4 +39,19 @@ export interface IntakeAnswers {
   currentSupport: string[];
   topConcerns: string[];
   freeText: string;
+}
+
+export interface LocalResource extends ResourceLink {
+  id: string;
+  description: string;
+  kind: 'official-program' | 'parent-group' | 'provider';
+  regionIds: string[];
+  actionIds: string[];
+  verifiedAt: string;
+}
+
+export interface LocationMatch {
+  zip: string;
+  regionIds: string[];
+  primaryRegionLabel: string | null;
 }
