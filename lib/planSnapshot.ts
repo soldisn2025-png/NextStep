@@ -1,6 +1,8 @@
 import { parseStoredProgressEntry } from './actionPlanState';
 import {
   ActionPlanProgressMap,
+  DocumentAnalysisEntry,
+  DocumentAnalysisType,
   IntakeAnswers,
   WeeklyCheckInEntry,
 } from './types';
@@ -28,6 +30,7 @@ export interface PersistedPlanSnapshot {
   savedZip: string;
   progress: ActionPlanProgressMap;
   weeklyCheckIn: WeeklyCheckInEntry | null;
+  documentAnalyses: DocumentAnalysisEntry[];
   planUpdatedAt: string;
 }
 
@@ -123,6 +126,51 @@ function parseProgressMap(value: unknown): ActionPlanProgressMap {
   );
 }
 
+function isDocumentAnalysisType(value: unknown): value is DocumentAnalysisType {
+  return (
+    value === 'iep-notes' ||
+    value === 'evaluation-report' ||
+    value === 'insurance-denial' ||
+    value === 'school-email' ||
+    value === 'provider-intake'
+  );
+}
+
+function parseDocumentAnalyses(value: unknown): DocumentAnalysisEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') {
+      return [];
+    }
+
+    const record = item as Record<string, unknown>;
+    if (
+      typeof record.id !== 'string' ||
+      !isDocumentAnalysisType(record.type) ||
+      typeof record.title !== 'string' ||
+      typeof record.sourceText !== 'string' ||
+      typeof record.output !== 'string' ||
+      typeof record.analyzedAt !== 'string'
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        id: record.id,
+        type: record.type,
+        title: record.title,
+        sourceText: record.sourceText,
+        output: record.output,
+        analyzedAt: record.analyzedAt,
+      },
+    ];
+  });
+}
+
 export function getEmptyPlanSnapshot(): PersistedPlanSnapshot {
   return {
     answers: emptyAnswers,
@@ -131,6 +179,7 @@ export function getEmptyPlanSnapshot(): PersistedPlanSnapshot {
     savedZip: '',
     progress: {},
     weeklyCheckIn: null,
+    documentAnalyses: [],
     planUpdatedAt: '',
   };
 }
@@ -153,6 +202,7 @@ export function parsePersistedPlanSnapshot(value: unknown): PersistedPlanSnapsho
     savedZip: typeof record.savedZip === 'string' ? record.savedZip : '',
     progress: parseProgressMap(record.progress),
     weeklyCheckIn: parseWeeklyCheckIn(record.weeklyCheckIn),
+    documentAnalyses: parseDocumentAnalyses(record.documentAnalyses),
     planUpdatedAt:
       typeof record.planUpdatedAt === 'string' ? record.planUpdatedAt : '',
   };
@@ -184,6 +234,9 @@ export function readLocalPlanSnapshot(): PersistedPlanSnapshot {
       savedZip: localStorage.getItem(ZIP_STORAGE_KEY) ?? '',
       progress,
       weeklyCheckIn,
+      documentAnalyses: parseDocumentAnalyses(
+        JSON.parse(localStorage.getItem('nextstep_document_analyses') ?? 'null')
+      ),
       planUpdatedAt: localStorage.getItem(PLAN_UPDATED_AT_STORAGE_KEY) ?? '',
     };
   } catch {
@@ -207,6 +260,10 @@ export function writeLocalPlanSnapshot(snapshot: PersistedPlanSnapshot) {
     );
     localStorage.setItem(ZIP_STORAGE_KEY, snapshot.savedZip);
     localStorage.setItem(ACTION_PROGRESS_STORAGE_KEY, JSON.stringify(snapshot.progress));
+    localStorage.setItem(
+      'nextstep_document_analyses',
+      JSON.stringify(snapshot.documentAnalyses)
+    );
 
     if (snapshot.weeklyCheckIn) {
       localStorage.setItem(
@@ -238,6 +295,7 @@ export function clearLocalPlanSnapshot() {
     localStorage.removeItem(ZIP_STORAGE_KEY);
     localStorage.removeItem(ACTION_PROGRESS_STORAGE_KEY);
     localStorage.removeItem(WEEKLY_CHECK_IN_STORAGE_KEY);
+    localStorage.removeItem('nextstep_document_analyses');
     localStorage.removeItem(PLAN_UPDATED_AT_STORAGE_KEY);
   } catch {
     // ignore storage errors
@@ -255,6 +313,7 @@ export function isPlanSnapshotEmpty(snapshot: PersistedPlanSnapshot) {
     snapshot.completed === false &&
     snapshot.savedZip.length === 0 &&
     Object.keys(snapshot.progress).length === 0 &&
-    snapshot.weeklyCheckIn === null
+    snapshot.weeklyCheckIn === null &&
+    snapshot.documentAnalyses.length === 0
   );
 }

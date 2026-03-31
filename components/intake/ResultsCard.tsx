@@ -15,6 +15,7 @@ import {
   ActionPlanProgressEntry,
   ActionPlanProgressMap,
   ActionPlanStatus,
+  DocumentAnalysisEntry,
   IntakeAnswers,
   PlanSyncStatus,
   RecommendedAction,
@@ -22,6 +23,7 @@ import {
 } from '@/lib/types';
 import ActionPlanCard from './ActionPlanCard';
 import ActionPlanOverview from './ActionPlanOverview';
+import DocumentActionPanel from './DocumentActionPanel';
 import ReminderCenter from './ReminderCenter';
 import WeeklyCheckInPanel from './WeeklyCheckInPanel';
 
@@ -31,11 +33,13 @@ interface ResultsCardProps {
   savedZip: string;
   progress: ActionPlanProgressMap;
   weeklyCheckIn: WeeklyCheckInEntry | null;
+  documentAnalyses: DocumentAnalysisEntry[];
   syncStatus: PlanSyncStatus;
   accountEmail: string | null;
   onSavedZipChange: (value: string) => void;
   onUpdateActionEntry: (actionId: string, updates: Partial<ActionPlanProgressEntry>) => void;
   onWeeklyCheckInChange: (entry: WeeklyCheckInEntry | null) => void;
+  onSaveDocumentAnalysis: (entry: DocumentAnalysisEntry) => void;
   onStartOver: () => void;
 }
 
@@ -108,11 +112,13 @@ export default function ResultsCard({
   savedZip,
   progress,
   weeklyCheckIn,
+  documentAnalyses,
   syncStatus,
   accountEmail,
   onSavedZipChange,
   onUpdateActionEntry,
   onWeeklyCheckInChange,
+  onSaveDocumentAnalysis,
   onStartOver,
 }: ResultsCardProps) {
   const [zipInput, setZipInput] = useState(savedZip);
@@ -243,6 +249,11 @@ export default function ResultsCard({
 
       <ReminderCenter
         items={activeRecommendations.map(({ action, entry }) => ({ action, entry }))}
+      />
+
+      <DocumentActionPanel
+        analyses={documentAnalyses}
+        onSaveAnalysis={onSaveDocumentAnalysis}
       />
 
       <WeeklyCheckInPanel

@@ -127,6 +127,22 @@ export interface WeeklyCheckInEntry {
   checkedInAt: string;
 }
 
+export type DocumentAnalysisType =
+  | 'iep-notes'
+  | 'evaluation-report'
+  | 'insurance-denial'
+  | 'school-email'
+  | 'provider-intake';
+
+export interface DocumentAnalysisEntry {
+  id: string;
+  type: DocumentAnalysisType;
+  title: string;
+  sourceText: string;
+  output: string;
+  analyzedAt: string;
+}
+
 export type PlanSyncStatus =
   | 'signed-out'
   | 'not-configured'

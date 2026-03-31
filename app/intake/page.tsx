@@ -269,6 +269,7 @@ export default function IntakePage() {
         savedZip={plan.savedZip}
         progress={plan.progress}
         weeklyCheckIn={plan.weeklyCheckIn}
+        documentAnalyses={plan.documentAnalyses}
         syncStatus={syncStatus}
         accountEmail={user?.email ?? null}
         onSavedZipChange={(value) =>
@@ -295,6 +296,12 @@ export default function IntakePage() {
           updatePlan((current) => ({
             ...current,
             weeklyCheckIn: entry,
+          }))
+        }
+        onSaveDocumentAnalysis={(entry) =>
+          updatePlan((current) => ({
+            ...current,
+            documentAnalyses: [entry, ...current.documentAnalyses].slice(0, 8),
           }))
         }
         onStartOver={handleStartOver}
