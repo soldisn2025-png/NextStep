@@ -83,7 +83,7 @@ export interface ProviderSearchPayload {
   generatedAt: string;
 }
 
-export type ActionPlanStatus = 'not-started' | 'in-progress' | 'done';
+export type ActionPlanStatus = 'not-started' | 'in-progress' | 'done' | 'skipped';
 export type ReminderLeadDays = 0 | 1 | 3 | 7 | null;
 export type ExecutionLogType =
   | 'email-sent'

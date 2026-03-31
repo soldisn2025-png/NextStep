@@ -6,11 +6,14 @@ import { RecommendedAction } from '@/lib/types';
 
 interface ActionPlanOverviewProps {
   completionPercent: number;
+  notStartedCount: number;
   completedCount: number;
   inProgressCount: number;
-  remainingCount: number;
+  skippedCount: number;
   nextFocus: RecommendedAction | null;
   nextFocusFirstMove: string | null;
+  emptyFocusTitle: string;
+  emptyFocusMessage: string;
   focusContext?: string | null;
   zipInput: string;
   savedZip: string;
@@ -25,11 +28,14 @@ interface ActionPlanOverviewProps {
 
 export default function ActionPlanOverview({
   completionPercent,
+  notStartedCount,
   completedCount,
   inProgressCount,
-  remainingCount,
+  skippedCount,
   nextFocus,
   nextFocusFirstMove,
+  emptyFocusTitle,
+  emptyFocusMessage,
   focusContext,
   zipInput,
   savedZip,
@@ -71,11 +77,10 @@ export default function ActionPlanOverview({
                   </p>
                 )}
                 <h3 className="mt-2 font-heading text-2xl text-text-main leading-tight">
-                  {nextFocus ? nextFocus.title : 'You cleared the current plan.'}
+                  {nextFocus ? nextFocus.title : emptyFocusTitle}
                 </h3>
                 <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                  {nextFocusFirstMove ??
-                    'Everything in this plan is marked done. You can revisit completed steps or retake the intake if your situation changes.'}
+                  {nextFocusFirstMove ?? emptyFocusMessage}
                 </p>
               </div>
               <div className="rounded-2xl border border-[#e3dac9] bg-[#fbf8f1] px-4 py-3 min-w-[150px]">
@@ -94,12 +99,12 @@ export default function ActionPlanOverview({
               />
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl border border-[#e7decd] bg-[#fffdf8] px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                  Left
+                  Not started
                 </p>
-                <p className="mt-1 font-heading text-2xl text-text-main">{remainingCount}</p>
+                <p className="mt-1 font-heading text-2xl text-text-main">{notStartedCount}</p>
               </div>
               <div className="rounded-2xl border border-[#f2dfb9] bg-[#fff7e9] px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
@@ -112,6 +117,12 @@ export default function ActionPlanOverview({
                   Done
                 </p>
                 <p className="mt-1 font-heading text-2xl text-text-main">{completedCount}</p>
+              </div>
+              <div className="rounded-2xl border border-[#e2dbcf] bg-[#f5f2ec] px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                  Skipped
+                </p>
+                <p className="mt-1 font-heading text-2xl text-text-main">{skippedCount}</p>
               </div>
             </div>
           </div>

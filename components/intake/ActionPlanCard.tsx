@@ -13,6 +13,7 @@ import {
   MapPin,
   Play,
   RotateCcw,
+  X,
   Zap,
 } from 'lucide-react';
 import { getActionPlanGuidance } from '@/lib/actionPlan';
@@ -68,6 +69,11 @@ const statusMeta: Record<
     label: 'Done',
     className: 'bg-[#edf6e7] text-[#4f6d4e] border-[#d4e4c8]',
     cardClass: 'bg-[#f9fbf1] border-[#d7e1c7]',
+  },
+  skipped: {
+    label: 'Skipped',
+    className: 'bg-[#f5f2ec] text-[#726a5f] border-[#e2dbcf]',
+    cardClass: 'bg-[#fcfaf6] border-[#e5dccf]',
   },
 };
 
@@ -176,13 +182,13 @@ export default function ActionPlanCard({
       : null,
   ]
     .filter(Boolean)
-    .join(' • ');
+    .join(' / ');
   const toolsSummary = [
     savedDraftCount ? getPluralLabel(savedDraftCount, 'saved draft') : null,
     executionLogCount ? getPluralLabel(executionLogCount, 'logged activity', 'logged activities') : null,
   ]
     .filter(Boolean)
-    .join(' • ');
+    .join(' / ');
 
   return (
     <div
@@ -439,7 +445,7 @@ export default function ActionPlanCard({
         <div className="mt-6 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex flex-wrap gap-2">
-              {status !== 'done' && (
+              {status !== 'done' && status !== 'skipped' && (
                 <button
                   type="button"
                   onClick={() => onUpdateStatus(action.id, 'in-progress')}
@@ -453,24 +459,36 @@ export default function ActionPlanCard({
                   {status === 'in-progress' ? 'Working on this' : 'Start this'}
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() =>
-                  onUpdateStatus(action.id, status === 'done' ? 'not-started' : 'done')
-                }
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-body transition-colors ${
-                  status === 'done'
-                    ? 'border border-[#d5cfaf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
-                    : 'bg-[#6d6b47] text-white hover:bg-[#5a583a]'
-                }`}
-              >
-                {status === 'done' ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
-                {status === 'done' ? 'Reopen step' : 'Mark as done'}
-              </button>
+              {status !== 'skipped' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateStatus(action.id, 'skipped')}
+                    className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
+                  >
+                    <X size={14} />
+                    Skip this
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdateStatus(action.id, status === 'done' ? 'not-started' : 'done')
+                    }
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-body transition-colors ${
+                      status === 'done'
+                        ? 'border border-[#d5cfaf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
+                        : 'bg-[#6d6b47] text-white hover:bg-[#5a583a]'
+                    }`}
+                  >
+                    {status === 'done' ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
+                    {status === 'done' ? 'Reopen step' : 'Mark as done'}
+                  </button>
+                </>
+              )}
             </div>
-            {status !== 'done' && (
+            {status !== 'done' && status !== 'skipped' && (
               <p className="mt-2 text-xs text-[#8a8377] font-body">
-                Marked-done steps move into the green completed section below.
+                Done steps move into the green completed section. Skipped steps move into the skipped section.
               </p>
             )}
           </div>

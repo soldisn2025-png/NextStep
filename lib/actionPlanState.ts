@@ -149,7 +149,12 @@ export function parseStoredProgressEntry(
   }
 
   const status = entry.status;
-  if (status !== 'not-started' && status !== 'in-progress' && status !== 'done') {
+  if (
+    status !== 'not-started' &&
+    status !== 'in-progress' &&
+    status !== 'done' &&
+    status !== 'skipped'
+  ) {
     return null;
   }
 
@@ -196,6 +201,13 @@ export function getFollowUpState(
     return {
       label: 'Step completed',
       tone: 'success',
+    };
+  }
+
+  if (status === 'skipped') {
+    return {
+      label: 'Step skipped for now',
+      tone: 'neutral',
     };
   }
 

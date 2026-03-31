@@ -7,6 +7,7 @@ import {
   ArrowUp,
   BellRing,
   CheckCircle2,
+  CircleOff,
   ChevronRight,
   ClipboardList,
   FileText,
@@ -75,6 +76,7 @@ const statusOrder: Record<ActionPlanStatus, number> = {
   'in-progress': 0,
   'not-started': 1,
   done: 2,
+  skipped: 3,
 };
 
 const planMapStatusMeta: Record<
@@ -92,6 +94,10 @@ const planMapStatusMeta: Record<
   done: {
     label: 'Done',
     className: 'border-[#d4e4c8] bg-[#edf6e7] text-[#4f6d4e]',
+  },
+  skipped: {
+    label: 'Skipped',
+    className: 'border-[#e2dbcf] bg-[#f5f2ec] text-[#726a5f]',
   },
 };
 
@@ -204,17 +210,24 @@ export default function ResultsCard({
       });
   }, [progress, recommendations]);
 
-  const activeRecommendations = recommendationsWithState.filter(({ status }) => status !== 'done');
+  const activeRecommendations = recommendationsWithState.filter(
+    ({ status }) => status !== 'done' && status !== 'skipped'
+  );
   const completedRecommendations = recommendationsWithState.filter(({ status }) => status === 'done');
+  const skippedRecommendations = recommendationsWithState.filter(({ status }) => status === 'skipped');
 
   const completedCount = completedRecommendations.length;
+  const skippedCount = skippedRecommendations.length;
+  const notStartedCount = recommendationsWithState.filter(
+    ({ status }) => status === 'not-started'
+  ).length;
   const inProgressCount = recommendationsWithState.filter(
     ({ status }) => status === 'in-progress'
   ).length;
   const hasLongPlan = recommendationsWithState.length > 3;
-  const remainingCount = recommendations.length - completedCount;
-  const completionPercent = recommendations.length
-    ? Math.round((completedCount / recommendations.length) * 100)
+  const progressDenominator = recommendations.length - skippedCount;
+  const completionPercent = progressDenominator > 0
+    ? Math.round((completedCount / progressDenominator) * 100)
     : 0;
 
   const reminderItems = useMemo(
@@ -241,6 +254,12 @@ export default function ResultsCard({
 
   const nextFocus = weeklyFocusAction ?? activeRecommendations[0]?.action ?? null;
   const nextFocusGuidance = nextFocus ? getActionPlanGuidance(nextFocus.id) : null;
+  const emptyFocusTitle = skippedCount > 0
+    ? 'No active step selected right now.'
+    : 'You cleared the current plan.';
+  const emptyFocusMessage = skippedCount > 0
+    ? 'Everything left in this plan is currently skipped. Restore a skipped suggestion below if your situation changes.'
+    : 'Everything in this plan is marked done. You can revisit completed steps or retake the intake if your situation changes.';
   const focusContext =
     weeklyFocusAction && weeklyCheckIn
       ? shortenText(
@@ -321,11 +340,14 @@ export default function ResultsCard({
     <div className={`max-w-5xl mx-auto px-4 py-8 ${hasLongPlan ? 'pb-28' : ''}`}>
       <ActionPlanOverview
         completionPercent={completionPercent}
+        notStartedCount={notStartedCount}
         completedCount={completedCount}
         inProgressCount={inProgressCount}
-        remainingCount={remainingCount}
+        skippedCount={skippedCount}
         nextFocus={nextFocus}
         nextFocusFirstMove={nextFocusGuidance?.firstMove ?? null}
+        emptyFocusTitle={emptyFocusTitle}
+        emptyFocusMessage={emptyFocusMessage}
         focusContext={focusContext}
         zipInput={zipInput}
         savedZip={savedZip}
@@ -388,6 +410,15 @@ export default function ResultsCard({
                 <ChevronRight size={14} />
               </a>
             )}
+            {skippedRecommendations.length > 0 && (
+              <a
+                href="#skipped-steps"
+                className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
+              >
+                Skipped
+                <ChevronRight size={14} />
+              </a>
+            )}
           </div>
         </div>
 
@@ -425,7 +456,7 @@ export default function ResultsCard({
         ) : (
           <div className="mt-4 rounded-[24px] border border-[#d7e1c7] bg-[#f7fbf2] px-4 py-4">
             <p className="text-sm text-[#5d6e55] font-body leading-relaxed">
-              There are no active steps left right now. Review completed items below or retake the intake if your situation has changed.
+              There are no active steps left right now. Review completed or skipped items below, or retake the intake if your situation has changed.
             </p>
           </div>
         )}
@@ -599,6 +630,74 @@ export default function ResultsCard({
                         >
                           <RotateCcw size={14} />
                           Reopen step
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+        )}
+
+        {skippedRecommendations.length > 0 && (
+          <details
+            id="skipped-steps"
+            className="rounded-[28px] border border-[#ddd5c8] bg-[#f7f4ef] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.5)]"
+          >
+            <summary className="cursor-pointer list-none">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#ece6dd] text-[#726a5f]">
+                    <CircleOff size={18} />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#7d7569] font-body">
+                      Skipped steps
+                    </p>
+                    <h3 className="mt-1 font-heading text-xl text-text-main">
+                      {skippedRecommendations.length} step{skippedRecommendations.length === 1 ? '' : 's'} skipped for now
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-[#696356] font-body">
+                  Use skip when a suggestion does not fit right now. It will not count against progress.
+                </p>
+              </div>
+            </summary>
+
+            <div className="mt-4 space-y-4">
+              {skippedRecommendations.map(({ action, entry }) => {
+                const guidance = getActionPlanGuidance(action.id);
+
+                return (
+                  <div
+                    key={action.id}
+                    className="rounded-[24px] border border-[#e0d8cb] bg-white px-4 py-4"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center rounded-full border border-[#e2dbcf] bg-[#f5f2ec] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#726a5f] font-body">
+                            Skipped
+                          </span>
+                        </div>
+                        <h4 className="mt-3 font-heading text-2xl text-text-main">{action.title}</h4>
+                        <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                          {guidance.firstMove}
+                        </p>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <p className="text-xs text-[#8a8377] font-body">
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : 'Skipped'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => updateActionStatus(action.id, 'not-started')}
+                          className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body hover:border-[#7f7a57] hover:text-[#504b40] transition-colors"
+                        >
+                          <RotateCcw size={14} />
+                          Restore step
                         </button>
                       </div>
                     </div>
