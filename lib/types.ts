@@ -85,6 +85,27 @@ export interface ProviderSearchPayload {
 
 export type ActionPlanStatus = 'not-started' | 'in-progress' | 'done';
 export type ReminderLeadDays = 0 | 1 | 3 | 7 | null;
+export type ExecutionLogType =
+  | 'email-sent'
+  | 'call-made'
+  | 'voicemail-left'
+  | 'meeting-booked'
+  | 'form-submitted';
+
+export interface ActionExecutionDraft {
+  id: string;
+  mode: ActionAssistantMode;
+  content: string;
+  savedAt: string;
+  updatedAt: string;
+}
+
+export interface ActionExecutionLogEntry {
+  id: string;
+  type: ExecutionLogType;
+  note: string;
+  createdAt: string;
+}
 
 export interface ActionPlanProgressEntry {
   status: ActionPlanStatus;
@@ -93,6 +114,8 @@ export interface ActionPlanProgressEntry {
   lastContactDate?: string;
   nextFollowUpDate?: string;
   reminderLeadDays?: ReminderLeadDays;
+  savedDrafts?: ActionExecutionDraft[];
+  executionLog?: ActionExecutionLogEntry[];
 }
 
 export type ActionPlanProgressMap = Record<string, ActionPlanProgressEntry>;

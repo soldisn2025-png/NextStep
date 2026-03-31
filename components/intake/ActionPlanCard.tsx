@@ -20,6 +20,7 @@ import {
   RecommendedAction,
 } from '@/lib/types';
 import ActionAIAssistant from './ActionAIAssistant';
+import ActionExecutionWorkspace from './ActionExecutionWorkspace';
 import ActionStepTracker from './ActionStepTracker';
 import NearbyProviders from './NearbyProviders';
 
@@ -312,6 +313,13 @@ export default function ActionPlanCard({
           actionTitle={action.title}
           actionDescription={action.description}
           entry={entry}
+          onUpdate={(updates) => onUpdateEntry(action.id, updates)}
+        />
+
+        <ActionExecutionWorkspace
+          entry={entry}
+          status={status}
+          onUpdate={(updates) => onUpdateEntry(action.id, updates)}
         />
 
         <div className="mt-6 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">

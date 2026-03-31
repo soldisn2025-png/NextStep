@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Bot, Copy, Loader2, Sparkles } from 'lucide-react';
+import { Bot, Copy, Loader2, Save, Sparkles } from 'lucide-react';
 import { ACTION_ASSISTANT_OPTIONS } from '@/lib/actionAssistant';
+import { createDraftId, upsertExecutionDraft } from '@/lib/executionTools';
 import { ActionAssistantMode, ActionPlanProgressEntry } from '@/lib/types';
 
 interface ActionAIAssistantProps {
@@ -10,6 +11,7 @@ interface ActionAIAssistantProps {
   actionTitle: string;
   actionDescription: string;
   entry?: ActionPlanProgressEntry;
+  onUpdate: (updates: Partial<ActionPlanProgressEntry>) => void;
 }
 
 interface AssistantResponse {
@@ -21,12 +23,14 @@ export default function ActionAIAssistant({
   actionTitle,
   actionDescription,
   entry,
+  onUpdate,
 }: ActionAIAssistantProps) {
   const [selectedMode, setSelectedMode] = useState<ActionAssistantMode>('draft-email');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const currentOption = useMemo(
     () => ACTION_ASSISTANT_OPTIONS.find((option) => option.mode === selectedMode) ?? ACTION_ASSISTANT_OPTIONS[0],
@@ -44,6 +48,7 @@ export default function ActionAIAssistant({
     setIsLoading(true);
     setError('');
     setCopied(false);
+    setSaved(false);
 
     try {
       const response = await fetch('/api/action-assistant', {
@@ -77,6 +82,37 @@ export default function ActionAIAssistant({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSaveDraft = () => {
+    const trimmedOutput = output.trim();
+    if (!trimmedOutput) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const currentDrafts = entry?.savedDrafts ?? [];
+    const existingDraft = currentDrafts.find((draft) => draft.mode === selectedMode);
+    const nextDraft = existingDraft
+      ? {
+          ...existingDraft,
+          content: trimmedOutput,
+          updatedAt: now,
+        }
+      : {
+          id: createDraftId(selectedMode),
+          mode: selectedMode,
+          content: trimmedOutput,
+          savedAt: now,
+          updatedAt: now,
+        };
+
+    onUpdate({
+      savedDrafts: upsertExecutionDraft(currentDrafts, nextDraft),
+      status: entry?.status === 'done' ? 'done' : 'in-progress',
+    });
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1800);
   };
 
   const handleCopy = async () => {
@@ -140,25 +176,37 @@ export default function ActionAIAssistant({
         </p>
 
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={isLoading}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body transition-colors hover:bg-[#5a583a] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-            {isLoading ? 'Generating' : `Generate ${currentOption.label.toLowerCase()}`}
-          </button>
-          {output && (
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={handleCopy}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2.5 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
+              onClick={handleGenerate}
+              disabled={isLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body transition-colors hover:bg-[#5a583a] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              <Copy size={14} />
-              {copied ? 'Copied' : 'Copy result'}
+              {isLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {isLoading ? 'Generating' : `Generate ${currentOption.label.toLowerCase()}`}
             </button>
-          )}
+            {output && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d5cfaf] bg-[#f8f3e6] px-4 py-2.5 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
+                >
+                  <Save size={14} />
+                  {saved ? 'Saved to step' : 'Save to step'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2.5 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
+                >
+                  <Copy size={14} />
+                  {copied ? 'Copied' : 'Copy result'}
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {error && (

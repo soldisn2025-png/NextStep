@@ -1,4 +1,10 @@
-import { ActionPlanProgressEntry, ActionPlanStatus, ReminderLeadDays } from './types';
+import {
+  ActionExecutionDraft,
+  ActionExecutionLogEntry,
+  ActionPlanProgressEntry,
+  ActionPlanStatus,
+  ReminderLeadDays,
+} from './types';
 
 const DAY_IN_MS = 86_400_000;
 
@@ -34,6 +40,8 @@ export function createActionPlanEntry(
     lastContactDate: updates.lastContactDate ?? previous?.lastContactDate ?? '',
     nextFollowUpDate: updates.nextFollowUpDate ?? previous?.nextFollowUpDate ?? '',
     reminderLeadDays: updates.reminderLeadDays ?? previous?.reminderLeadDays ?? null,
+    savedDrafts: updates.savedDrafts ?? previous?.savedDrafts ?? [],
+    executionLog: updates.executionLog ?? previous?.executionLog ?? [],
   };
 }
 
@@ -43,6 +51,94 @@ function parseReminderLeadDays(value: unknown): ReminderLeadDays {
   }
 
   return null;
+}
+
+function isActionAssistantMode(value: unknown) {
+  return (
+    value === 'draft-email' ||
+    value === 'call-script' ||
+    value === 'meeting-questions' ||
+    value === 'summarize-notes'
+  );
+}
+
+function isExecutionLogType(value: unknown) {
+  return (
+    value === 'email-sent' ||
+    value === 'call-made' ||
+    value === 'voicemail-left' ||
+    value === 'meeting-booked' ||
+    value === 'form-submitted'
+  );
+}
+
+function parseExecutionDrafts(value: unknown): ActionExecutionDraft[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((draft) => {
+    if (!draft || typeof draft !== 'object') {
+      return [];
+    }
+
+    const record = draft as Record<string, unknown>;
+    if (
+      typeof record.id !== 'string' ||
+      typeof record.content !== 'string' ||
+      !isActionAssistantMode(record.mode)
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        id: record.id,
+        mode: record.mode,
+        content: record.content,
+        savedAt:
+          typeof record.savedAt === 'string' && record.savedAt.length > 0
+            ? record.savedAt
+            : new Date().toISOString(),
+        updatedAt:
+          typeof record.updatedAt === 'string' && record.updatedAt.length > 0
+            ? record.updatedAt
+            : typeof record.savedAt === 'string' && record.savedAt.length > 0
+              ? record.savedAt
+              : new Date().toISOString(),
+      },
+    ];
+  });
+}
+
+function parseExecutionLog(value: unknown): ActionExecutionLogEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') {
+      return [];
+    }
+
+    const record = item as Record<string, unknown>;
+    if (
+      typeof record.id !== 'string' ||
+      !isExecutionLogType(record.type) ||
+      typeof record.createdAt !== 'string'
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        id: record.id,
+        type: record.type,
+        note: typeof record.note === 'string' ? record.note : '',
+        createdAt: record.createdAt,
+      },
+    ];
+  });
 }
 
 export function parseStoredProgressEntry(
@@ -67,6 +163,8 @@ export function parseStoredProgressEntry(
     lastContactDate: typeof entry.lastContactDate === 'string' ? entry.lastContactDate : '',
     nextFollowUpDate: typeof entry.nextFollowUpDate === 'string' ? entry.nextFollowUpDate : '',
     reminderLeadDays: parseReminderLeadDays(entry.reminderLeadDays),
+    savedDrafts: parseExecutionDrafts(entry.savedDrafts),
+    executionLog: parseExecutionLog(entry.executionLog),
   };
 }
 
