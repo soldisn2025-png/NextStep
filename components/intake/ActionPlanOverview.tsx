@@ -94,13 +94,13 @@ export default function ActionPlanOverview({
                 </p>
                 <p className="mt-1 font-heading text-2xl text-text-main">{remainingCount}</p>
               </div>
-              <div className="rounded-2xl border border-[#e7decd] bg-[#fffdf8] px-4 py-3">
+              <div className="rounded-2xl border border-[#f2dfb9] bg-[#fff7e9] px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
                   Working on
                 </p>
                 <p className="mt-1 font-heading text-2xl text-text-main">{inProgressCount}</p>
               </div>
-              <div className="rounded-2xl border border-[#e7decd] bg-[#fffdf8] px-4 py-3">
+              <div className="rounded-2xl border border-[#d4e4c8] bg-[#edf6e7] px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
                   Done
                 </p>

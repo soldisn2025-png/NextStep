@@ -51,7 +51,7 @@ const statusMeta: Record<
   'in-progress': {
     label: 'Working on it',
     className: 'bg-[#f2efde] text-[#676540] border-[#d9d3b6]',
-    cardClass: 'bg-[#fffdf8] border-[#ddd4bf]',
+    cardClass: 'bg-[#fcfaf1] border-[#d9d1b7]',
   },
   done: {
     label: 'Done',
@@ -62,22 +62,25 @@ const statusMeta: Record<
 
 const urgencyConfig: Record<
   RecommendedAction['urgency'],
-  { label: string; icon: LucideIcon; className: string }
+  { label: string; icon: LucideIcon; className: string; accentClass: string }
 > = {
   immediate: {
     label: 'Immediate',
     icon: Zap,
     className: 'bg-[#fff0ed] text-[#b25b4b] border-[#f3d2ca]',
+    accentClass: 'before:bg-[#f1d7cf]',
   },
   soon: {
     label: 'Soon',
     icon: Clock,
     className: 'bg-[#fff7e9] text-[#9c6a27] border-[#f2dfb9]',
+    accentClass: 'before:bg-[#f3e5bf]',
   },
   'when-ready': {
     label: 'When ready',
     icon: Calendar,
     className: 'bg-[#f4f1ec] text-[#7a7468] border-[#e2dbcf]',
+    accentClass: 'before:bg-[#e7e0d2]',
   },
 };
 
@@ -156,192 +159,201 @@ export default function ActionPlanCard({
 
   return (
     <div
-      className={`overflow-hidden rounded-[30px] border px-5 py-5 shadow-[0_24px_64px_-42px_rgba(54,44,28,0.5)] sm:px-6 sm:py-6 ${statusMeta[status].cardClass}`}
+      className={`relative overflow-hidden rounded-[30px] border px-5 py-5 shadow-[0_24px_64px_-42px_rgba(54,44,28,0.5)] before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] sm:px-6 sm:py-6 ${statusMeta[status].cardClass} ${urgency.accentClass}`}
     >
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${urgency.className}`}
-          >
-            <UrgencyIcon size={12} className="mr-1.5" />
-            {urgency.label}
-          </span>
-          <span
-            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${categoryMeta[action.category].className}`}
-          >
-            {categoryMeta[action.category].label}
-          </span>
-          <span
-            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${statusMeta[status].className}`}
-          >
-            {statusMeta[status].label}
-          </span>
-        </div>
-        <div className="text-left md:text-right">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-            Step {displayIndex}
-          </p>
-          {updatedAt && (
-            <p className="mt-1 text-xs text-[#8a8377] font-body">
-              {formatSavedAt(updatedAt)}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <h3 className="font-heading text-[1.9rem] leading-tight text-text-main">
-          {action.title}
-        </h3>
-        <p className="mt-3 max-w-3xl text-sm text-[#625e53] font-body leading-relaxed">
-          {action.description}
-        </p>
-      </div>
-
-      <div className="mt-5 grid gap-3 lg:grid-cols-2">
-        <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-            First move
-          </p>
-          <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
-            {guidance.firstMove}
-          </p>
-        </div>
-        <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-            While you wait
-          </p>
-          <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
-            {guidance.whileWaiting ??
-              'If this step feels blocked, write down what is slowing you down so the next call or appointment gets more specific.'}
-          </p>
-        </div>
-      </div>
-
-      {action.resources && action.resources.length > 0 && (
-        <div className="mt-5">
-          <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-2">
-            Trusted resources
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {action.resources.map((resource) => (
-              <a
-                key={resource.url}
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 hover:shadow-sm transition-all font-body"
-              >
-                {resource.label}
-                <ExternalLink size={11} />
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {localKinds.length > 0 && (
-        <div className="mt-5 space-y-3">
-          {localKinds.map((kind) => {
-            const meta = localSectionMeta[kind];
-            const items = groupedLocalResources[kind];
-
-            return (
-              <div
-                key={kind}
-                className={`rounded-[24px] border px-4 py-4 ${meta.containerClass}`}
-              >
-                <p className={`text-xs uppercase tracking-[0.18em] font-body mb-3 ${meta.labelClass}`}>
-                  {meta.heading}
-                </p>
-                <div className="space-y-3">
-                  {items.map((resource) => (
-                    <div key={resource.id}>
-                      <a
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-text-main hover:text-primary transition-colors font-body"
-                      >
-                        <ExternalLink size={12} />
-                        <span className="font-medium">{resource.label}</span>
-                      </a>
-                      <p className="mt-1 text-sm text-[#625e53] font-body leading-relaxed">
-                        {resource.description}
-                      </p>
-                      <p className="mt-1 text-xs text-[#8a8377] font-body">
-                        Verified {resource.verifiedAt}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
-
-      {action.supportItems && action.supportItems.length > 0 && (
-        <div className="mt-5 rounded-[24px] border border-[#efdfbc] bg-[#fff7e7] px-4 py-4">
-          <p className="text-xs uppercase tracking-[0.18em] text-[#9a6a27] font-body mb-2">
-            Helpful items
-          </p>
-          <p className="text-sm text-[#625e53] font-body leading-relaxed mb-3">
-            Optional items families often explore while building routines or waiting for services to start.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {action.supportItems.map((item) => (
-              <a
-                key={item.url}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#e7d4a8] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 transition-all font-body"
-              >
-                {item.label}
-                <ExternalLink size={11} />
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="mt-6 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {status !== 'done' && (
-            <button
-              type="button"
-              onClick={() => onUpdateStatus(action.id, 'in-progress')}
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-body transition-colors ${
-                status === 'in-progress'
-                  ? 'border-[#d5cfaf] bg-[#ebe7d4] text-[#676540]'
-                  : 'border-[#ddd3bf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
-              }`}
+      <div className="relative">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${urgency.className}`}
             >
-              <Play size={14} />
-              {status === 'in-progress' ? 'Working on this' : 'Start this'}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              onUpdateStatus(action.id, status === 'done' ? 'not-started' : 'done')
-            }
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-body transition-colors ${
-              status === 'done'
-                ? 'border border-[#d5cfaf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
-                : 'bg-[#6d6b47] text-white hover:bg-[#5a583a]'
-            }`}
-          >
-            {status === 'done' ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
-            {status === 'done' ? 'Reopen step' : 'Mark as done'}
-          </button>
+              <UrgencyIcon size={12} className="mr-1.5" />
+              {urgency.label}
+            </span>
+            <span
+              className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${categoryMeta[action.category].className}`}
+            >
+              {categoryMeta[action.category].label}
+            </span>
+            <span
+              className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${statusMeta[status].className}`}
+            >
+              {statusMeta[status].label}
+            </span>
+          </div>
+          <div className="text-left md:text-right">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
+              Step {displayIndex}
+            </p>
+            {updatedAt && (
+              <p className="mt-1 text-xs text-[#8a8377] font-body">
+                {formatSavedAt(updatedAt)}
+              </p>
+            )}
+          </div>
         </div>
-        <p className="text-xs text-[#8a8377] font-body">
-          Saved on this device{savedZip ? ` · ZIP ${savedZip}` : ''}.
-        </p>
+
+        <div className="mt-4">
+          <h3 className="font-heading text-[1.9rem] leading-tight text-text-main">
+            {action.title}
+          </h3>
+          <p className="mt-3 max-w-3xl text-sm text-[#625e53] font-body leading-relaxed">
+            {action.description}
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
+              First move
+            </p>
+            <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
+              {guidance.firstMove}
+            </p>
+          </div>
+          <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
+              While you wait
+            </p>
+            <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
+              {guidance.whileWaiting ??
+                'If this step feels blocked, write down what is slowing you down so the next call or appointment gets more specific.'}
+            </p>
+          </div>
+        </div>
+
+        {action.resources && action.resources.length > 0 && (
+          <div className="mt-5">
+            <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-2">
+              Trusted resources
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {action.resources.map((resource) => (
+                <a
+                  key={resource.url}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 hover:shadow-sm transition-all font-body"
+                >
+                  {resource.label}
+                  <ExternalLink size={11} />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {localKinds.length > 0 && (
+          <div className="mt-5 space-y-3">
+            {localKinds.map((kind) => {
+              const meta = localSectionMeta[kind];
+              const items = groupedLocalResources[kind];
+
+              return (
+                <div
+                  key={kind}
+                  className={`rounded-[24px] border px-4 py-4 ${meta.containerClass}`}
+                >
+                  <p className={`text-xs uppercase tracking-[0.18em] font-body mb-3 ${meta.labelClass}`}>
+                    {meta.heading}
+                  </p>
+                  <div className="space-y-3">
+                    {items.map((resource) => (
+                      <div key={resource.id}>
+                        <a
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-text-main hover:text-primary transition-colors font-body"
+                        >
+                          <ExternalLink size={12} />
+                          <span className="font-medium">{resource.label}</span>
+                        </a>
+                        <p className="mt-1 text-sm text-[#625e53] font-body leading-relaxed">
+                          {resource.description}
+                        </p>
+                        <p className="mt-1 text-xs text-[#8a8377] font-body">
+                          Verified {resource.verifiedAt}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+
+        {action.supportItems && action.supportItems.length > 0 && (
+          <div className="mt-5 rounded-[24px] border border-[#efdfbc] bg-[#fff7e7] px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-[#9a6a27] font-body mb-2">
+              Helpful items
+            </p>
+            <p className="text-sm text-[#625e53] font-body leading-relaxed mb-3">
+              Optional items families often explore while building routines or waiting for services to start.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {action.supportItems.map((item) => (
+                <a
+                  key={item.url}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#e7d4a8] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 transition-all font-body"
+                >
+                  {item.label}
+                  <ExternalLink size={11} />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex flex-wrap gap-2">
+              {status !== 'done' && (
+                <button
+                  type="button"
+                  onClick={() => onUpdateStatus(action.id, 'in-progress')}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-body transition-colors ${
+                    status === 'in-progress'
+                      ? 'border-[#d5cfaf] bg-[#ebe7d4] text-[#676540]'
+                      : 'border-[#ddd3bf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
+                  }`}
+                >
+                  <Play size={14} />
+                  {status === 'in-progress' ? 'Working on this' : 'Start this'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() =>
+                  onUpdateStatus(action.id, status === 'done' ? 'not-started' : 'done')
+                }
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-body transition-colors ${
+                  status === 'done'
+                    ? 'border border-[#d5cfaf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
+                    : 'bg-[#6d6b47] text-white hover:bg-[#5a583a]'
+                }`}
+              >
+                {status === 'done' ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
+                {status === 'done' ? 'Reopen step' : 'Mark as done'}
+              </button>
+            </div>
+            {status !== 'done' && (
+              <p className="mt-2 text-xs text-[#8a8377] font-body">
+                Marked-done steps move into the green completed section below.
+              </p>
+            )}
+          </div>
+          <p className="text-xs text-[#8a8377] font-body">
+            Saved on this device{savedZip ? ` | ZIP ${savedZip}` : ''}.
+          </p>
+        </div>
       </div>
     </div>
   );

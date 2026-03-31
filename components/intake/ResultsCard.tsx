@@ -253,27 +253,25 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
         ))}
 
         {completedRecommendations.length > 0 && (
-          <details className="rounded-[28px] border border-[#ddd3bf] bg-white/75 px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.65)]">
-            <summary className="cursor-pointer list-none select-none">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf6e7] text-[#5a754e]">
-                    <Trophy size={18} />
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                      Completed steps
-                    </p>
-                    <h3 className="mt-1 font-heading text-xl text-text-main">
-                      {completedRecommendations.length} step{completedRecommendations.length === 1 ? '' : 's'} marked done
-                    </h3>
-                  </div>
+          <div className="rounded-[28px] border border-[#d7e1c7] bg-[#f7fbf2] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.65)]">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf6e7] text-[#5a754e]">
+                  <Trophy size={18} />
                 </div>
-                <p className="text-sm text-[#625e53] font-body">
-                  Open to review or reopen later.
-                </p>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[#73856b] font-body">
+                    Completed steps
+                  </p>
+                  <h3 className="mt-1 font-heading text-xl text-text-main">
+                    {completedRecommendations.length} step{completedRecommendations.length === 1 ? '' : 's'} marked done
+                  </h3>
+                </div>
               </div>
-            </summary>
+              <p className="text-sm text-[#5d6e55] font-body">
+                Recently finished steps stay visible here so they are easy to verify or reopen.
+              </p>
+            </div>
 
             <div className="mt-4 space-y-4">
               {completedRecommendations.map(({ action, updatedAt }) => {
@@ -282,7 +280,7 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
                 return (
                   <div
                     key={action.id}
-                    className="rounded-[24px] border border-[#d7e1c7] bg-[#f9fbf1] px-4 py-4"
+                    className="rounded-[24px] border border-[#d7e1c7] bg-white px-4 py-4"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
@@ -314,7 +312,7 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
                 );
               })}
             </div>
-          </details>
+          </div>
         )}
       </div>
 
