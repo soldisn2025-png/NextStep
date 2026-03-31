@@ -1,11 +1,11 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { DocumentAnalysisType } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const MODEL = 'gpt-5-mini';
+const MODEL = 'claude-sonnet-4-6';
 const VALID_TYPES: DocumentAnalysisType[] = [
   'iep-notes',
   'evaluation-report',
@@ -46,7 +46,7 @@ function getDocumentPrompt(type: DocumentAnalysisType) {
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
       { error: 'The document analyzer is not configured in this deployment.', code: 'missing_api_key' },
@@ -73,24 +73,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const client = new OpenAI({ apiKey });
-    const response = await client.responses.create({
+    const client = new Anthropic({ apiKey });
+    const response = await client.messages.create({
       model: MODEL,
-      instructions:
+      system:
         'You help caregivers turn autism-related documents into practical next actions. Be concrete, objective, and concise. Do not provide legal, medical, or therapeutic advice. Output plain text only with exactly these section headers: Situation summary, Time-sensitive points, What is still unclear, Next 3 actions, Questions to ask.',
-      input: [
-        `Document type: ${body.type}`,
-        title ? `Title: ${title}` : 'Title: not provided',
-        '',
-        getDocumentPrompt(body.type),
-        '',
-        'Document text:',
-        sourceText,
-      ].join('\n'),
-      max_output_tokens: 650,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            `Document type: ${body.type}`,
+            title ? `Title: ${title}` : 'Title: not provided',
+            '',
+            getDocumentPrompt(body.type),
+            '',
+            'Document text:',
+            sourceText,
+          ].join('\n'),
+        },
+      ],
+      max_tokens: 650,
     });
 
-    const output = response.output_text.trim();
+    const output = response.content
+      .filter((block) => block.type === 'text')
+      .map((block) => block.text)
+      .join('\n\n')
+      .trim();
     if (!output) {
       return NextResponse.json(
         { error: 'The document analyzer returned an empty result.' },

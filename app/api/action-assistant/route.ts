@@ -1,11 +1,11 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { ActionAssistantMode } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const MODEL = 'gpt-5-mini';
+const MODEL = 'claude-sonnet-4-6';
 const VALID_MODES: ActionAssistantMode[] = [
   'draft-email',
   'call-script',
@@ -63,7 +63,7 @@ function buildPrompt(body: Required<Pick<ActionAssistantRequestBody, 'actionTitl
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
       { error: 'The AI helper is not configured in this deployment.', code: 'missing_api_key' },
@@ -103,23 +103,32 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const client = new OpenAI({ apiKey });
-    const response = await client.responses.create({
+    const client = new Anthropic({ apiKey });
+    const response = await client.messages.create({
       model: MODEL,
-      instructions:
+      system:
         'You help caregivers move autism-related support tasks forward. Be concrete, calm, and objective. Focus on logistics, communication, questions, and next actions. Do not give medical, therapeutic, or legal advice. Do not add encouragement, hedging, or generic filler. Output only the requested artifact.',
-      input: buildPrompt({
-        actionTitle,
-        actionDescription,
-        mode: body.mode,
-        notes,
-        lastContactDate,
-        nextFollowUpDate,
-      }),
-      max_output_tokens: 420,
+      messages: [
+        {
+          role: 'user',
+          content: buildPrompt({
+            actionTitle,
+            actionDescription,
+            mode: body.mode,
+            notes,
+            lastContactDate,
+            nextFollowUpDate,
+          }),
+        },
+      ],
+      max_tokens: 420,
     });
 
-    const output = response.output_text.trim();
+    const output = response.content
+      .filter((block) => block.type === 'text')
+      .map((block) => block.text)
+      .join('\n\n')
+      .trim();
     if (!output) {
       return NextResponse.json(
         { error: 'The AI helper returned an empty result.' },
