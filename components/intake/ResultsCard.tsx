@@ -3,16 +3,20 @@
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Archive,
   ArrowLeft,
   ArrowUp,
   BellRing,
   CheckCircle2,
   CircleOff,
+  ChevronLeft,
   ChevronRight,
   ClipboardList,
   FileText,
+  Map,
   RefreshCcw,
   RotateCcw,
+  Target,
   Trophy,
 } from 'lucide-react';
 import { getActionPlanGuidance } from '@/lib/actionPlan';
@@ -102,6 +106,7 @@ const planMapStatusMeta: Record<
 };
 
 type WorkspacePanel = 'reminders' | 'check-in' | 'documents';
+type MobileTab = 'focus' | 'plan' | 'tools' | 'history';
 
 function getInitialWorkspacePanel(
   overdueFollowUpCount: number,
@@ -246,6 +251,8 @@ export default function ResultsCard({
       weeklyCheckInState.needsAttention
     )
   );
+  const [mobileTab, setMobileTab] = useState<MobileTab>('focus');
+  const [selectedMobileActionId, setSelectedMobileActionId] = useState<string | null>(null);
 
   const weeklyFocusAction =
     weeklyCheckIn?.focusActionId
@@ -312,6 +319,42 @@ export default function ResultsCard({
       icon: FileText,
     },
   ];
+  const mobileTabs: Array<{
+    id: MobileTab;
+    label: string;
+    icon: typeof Target;
+  }> = [
+    { id: 'focus', label: 'Focus', icon: Target },
+    { id: 'plan', label: 'Plan', icon: Map },
+    { id: 'tools', label: 'Tools', icon: BellRing },
+    { id: 'history', label: 'History', icon: Archive },
+  ];
+
+  useEffect(() => {
+    if (activeRecommendations.length === 0) {
+      setSelectedMobileActionId(null);
+      return;
+    }
+
+    if (
+      selectedMobileActionId &&
+      activeRecommendations.some(({ action }) => action.id === selectedMobileActionId)
+    ) {
+      return;
+    }
+
+    setSelectedMobileActionId(nextFocus?.id ?? activeRecommendations[0]?.action.id ?? null);
+  }, [activeRecommendations, nextFocus, selectedMobileActionId]);
+
+  const selectedMobileRecommendation =
+    activeRecommendations.find(({ action }) => action.id === selectedMobileActionId) ??
+    activeRecommendations[0] ??
+    null;
+  const selectedMobileIndex = selectedMobileRecommendation
+    ? activeRecommendations.findIndex(
+        ({ action }) => action.id === selectedMobileRecommendation.action.id
+      )
+    : -1;
 
   const handleZipSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -336,8 +379,453 @@ export default function ResultsCard({
     onUpdateActionEntry(actionId, { status });
   };
 
+  const openMobileAction = (actionId: string) => {
+    setSelectedMobileActionId(actionId);
+    setMobileTab('focus');
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className={`max-w-5xl mx-auto px-4 py-8 ${hasLongPlan ? 'pb-28' : ''}`}>
+      <div className="lg:hidden">
+        <div className="sticky top-0 z-30 -mx-4 border-b border-[#e5dccb] bg-[#fbf7ef]/95 px-4 py-3 backdrop-blur">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                Mobile plan
+              </p>
+              <h2 className="mt-1 font-heading text-2xl text-text-main">
+                {nextFocus ? nextFocus.title : emptyFocusTitle}
+              </h2>
+            </div>
+            <div className="rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1.5 text-sm text-[#5a5549] font-body">
+              {completionPercent}% done
+            </div>
+          </div>
+          {syncMessage && (
+            <div
+              className={`mt-3 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-body ${syncMessage.className}`}
+            >
+              {syncMessage.text}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4 pt-4">
+          <div className="rounded-[28px] border border-[#ddd3bf] bg-white/90 px-4 py-4 shadow-[0_18px_42px_-34px_rgba(54,44,28,0.45)]">
+            <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+              Dashboard
+            </p>
+            <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+              {nextFocusGuidance?.firstMove ?? emptyFocusMessage}
+            </p>
+            <div className="mt-4 h-2 rounded-full bg-[#ece4d6]">
+              <div
+                className="h-full rounded-full bg-[linear-gradient(90deg,#6d6b47,#9bb07b)]"
+                style={{ width: `${completionPercent}%` }}
+              />
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-[18px] border border-[#e7decd] bg-[#fffdf8] px-3 py-3">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                  Not started
+                </p>
+                <p className="mt-1 font-heading text-xl text-text-main">{notStartedCount}</p>
+              </div>
+              <div className="rounded-[18px] border border-[#f2dfb9] bg-[#fff7e9] px-3 py-3">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                  Working on
+                </p>
+                <p className="mt-1 font-heading text-xl text-text-main">{inProgressCount}</p>
+              </div>
+              <div className="rounded-[18px] border border-[#d4e4c8] bg-[#edf6e7] px-3 py-3">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                  Done
+                </p>
+                <p className="mt-1 font-heading text-xl text-text-main">{completedCount}</p>
+              </div>
+              <div className="rounded-[18px] border border-[#e2dbcf] bg-[#f5f2ec] px-3 py-3">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                  Skipped
+                </p>
+                <p className="mt-1 font-heading text-xl text-text-main">{skippedCount}</p>
+              </div>
+            </div>
+          </div>
+
+          {mobileTab === 'focus' && (
+            <>
+              {activeRecommendations.length > 1 && (
+                <div className="overflow-x-auto pb-1">
+                  <div className="flex gap-2">
+                    {activeRecommendations.map(({ action, status }, index) => (
+                      <button
+                        key={action.id}
+                        type="button"
+                        onClick={() => setSelectedMobileActionId(action.id)}
+                        className={`min-w-[136px] rounded-[18px] border px-3 py-3 text-left transition-colors ${
+                          selectedMobileRecommendation?.action.id === action.id
+                            ? 'border-[#d5cfaf] bg-[#f8f3e6]'
+                            : 'border-[#e6dccb] bg-white/85'
+                        }`}
+                      >
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                          Step {index + 1}
+                        </p>
+                        <p className="mt-1 text-sm text-text-main font-body leading-snug">
+                          {action.title}
+                        </p>
+                        <p className="mt-2 text-xs text-[#8a8377] font-body">
+                          {planMapStatusMeta[status].label}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedMobileRecommendation ? (
+                <>
+                  <ActionPlanCard
+                    action={selectedMobileRecommendation.action}
+                    displayIndex={selectedMobileIndex + 1}
+                    savedZip={savedZip}
+                    entry={selectedMobileRecommendation.entry}
+                    onUpdateStatus={updateActionStatus}
+                    onUpdateEntry={onUpdateActionEntry}
+                  />
+
+                  {activeRecommendations.length > 1 && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        disabled={selectedMobileIndex <= 0}
+                        onClick={() =>
+                          selectedMobileIndex > 0 &&
+                          setSelectedMobileActionId(
+                            activeRecommendations[selectedMobileIndex - 1]?.action.id ?? null
+                          )
+                        }
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-3 text-sm text-[#5a5549] font-body disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <ChevronLeft size={14} />
+                        Previous
+                      </button>
+                      <button
+                        type="button"
+                        disabled={selectedMobileIndex >= activeRecommendations.length - 1}
+                        onClick={() =>
+                          selectedMobileIndex < activeRecommendations.length - 1 &&
+                          setSelectedMobileActionId(
+                            activeRecommendations[selectedMobileIndex + 1]?.action.id ?? null
+                          )
+                        }
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6d6b47] px-4 py-3 text-sm text-white font-body disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Next
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="rounded-[24px] border border-[#d7e1c7] bg-[#f7fbf2] px-4 py-4">
+                  <p className="text-sm text-[#5d6e55] font-body leading-relaxed">
+                    There is no active step right now. Switch to History if you want to review completed or skipped items.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          {mobileTab === 'plan' && (
+            <>
+              <div className="rounded-[28px] border border-[#ddd3bf] bg-white/90 px-4 py-4 shadow-[0_18px_42px_-34px_rgba(54,44,28,0.45)]">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                  Local help
+                </p>
+                <form onSubmit={handleZipSubmit} className="mt-3 space-y-3">
+                  <input
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    maxLength={5}
+                    value={zipInput}
+                    onChange={(event) => {
+                      setZipError('');
+                      setZipInput(event.target.value.replace(/\D/g, '').slice(0, 5));
+                    }}
+                    placeholder="ZIP code"
+                    className="w-full rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-3 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-[18px] bg-[#6d6b47] px-4 py-3 text-sm text-white font-body"
+                    >
+                      Show local help
+                    </button>
+                    {savedZip && (
+                      <button
+                        type="button"
+                        onClick={handleClearZip}
+                        className="rounded-[18px] border border-[#ddd3bf] px-4 py-3 text-sm text-[#625e53] font-body"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </form>
+                {zipError && <p className="mt-2 text-sm text-red-500 font-body">{zipError}</p>}
+                {!zipError && savedZip && hasSupportedRegion && locationMatch?.primaryRegionLabel && (
+                  <p className="mt-3 text-sm text-success font-body">
+                    Showing curated local resources for {locationMatch.primaryRegionLabel}.
+                  </p>
+                )}
+                {!zipError && savedZip && !hasSupportedRegion && (
+                  <p className="mt-3 text-sm text-amber-700 font-body">
+                    Curated programs are not available for ZIP {savedZip} yet, but provider search still works.
+                  </p>
+                )}
+                <p className="mt-3 text-xs text-[#8a8377] font-body leading-relaxed">
+                  {LOCAL_PILOT_SUMMARY}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {activeRecommendations.length > 0 ? (
+                  activeRecommendations.map(({ action, entry, status }, index) => {
+                    const followUpState = getFollowUpState(entry.nextFollowUpDate, status);
+
+                    return (
+                      <button
+                        key={action.id}
+                        type="button"
+                        onClick={() => openMobileAction(action.id)}
+                        className="w-full rounded-[24px] border border-[#e6dccb] bg-white/90 px-4 py-4 text-left shadow-[0_18px_42px_-34px_rgba(54,44,28,0.4)]"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                              Step {index + 1}
+                            </p>
+                            <h3 className="mt-2 font-heading text-xl text-text-main">
+                              {action.title}
+                            </h3>
+                            <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                              {followUpState.label}
+                            </p>
+                          </div>
+                          <span
+                            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${planMapStatusMeta[status].className}`}
+                          >
+                            {planMapStatusMeta[status].label}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-[24px] border border-[#d7e1c7] bg-[#f7fbf2] px-4 py-4">
+                    <p className="text-sm text-[#5d6e55] font-body leading-relaxed">
+                      No active steps are left in the plan right now.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {mobileTab === 'tools' && (
+            <>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {workspacePanels.map((panel) => {
+                  const Icon = panel.icon;
+                  const isActive = activeWorkspacePanel === panel.id;
+
+                  return (
+                    <button
+                      key={panel.id}
+                      type="button"
+                      onClick={() => setActiveWorkspacePanel(panel.id)}
+                      className={`rounded-[22px] border px-4 py-4 text-left transition-colors ${
+                        isActive
+                          ? 'border-[#d5cfaf] bg-[#f8f3e6]'
+                          : 'border-[#e6dccb] bg-white/85'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#7a724b]">
+                          <Icon size={16} />
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                            {panel.label}
+                          </p>
+                          <p className="mt-1 text-sm text-text-main font-body">
+                            {panel.countLabel}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {activeWorkspacePanel === 'reminders' && (
+                <ReminderCenter
+                  className=""
+                  items={activeRecommendations.map(({ action, entry }) => ({ action, entry }))}
+                />
+              )}
+
+              {activeWorkspacePanel === 'documents' && (
+                <DocumentActionPanel
+                  className=""
+                  analyses={documentAnalyses}
+                  onSaveAnalysis={onSaveDocumentAnalysis}
+                />
+              )}
+
+              {activeWorkspacePanel === 'check-in' && (
+                <WeeklyCheckInPanel
+                  className=""
+                  checkIn={weeklyCheckIn}
+                  activeRecommendations={activeRecommendations.map(({ action }) => action)}
+                  dueFollowUpCount={dueSoonCount}
+                  overdueFollowUpCount={overdueFollowUpCount}
+                  currentFocusActionId={nextFocus?.id ?? null}
+                  onSave={onWeeklyCheckInChange}
+                />
+              )}
+            </>
+          )}
+
+          {mobileTab === 'history' && (
+            <div className="space-y-4">
+              {completedRecommendations.length > 0 && (
+                <div className="rounded-[28px] border border-[#d7e1c7] bg-[#f7fbf2] px-4 py-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-[#73856b] font-body">
+                    Completed
+                  </p>
+                  <div className="mt-3 space-y-3">
+                    {completedRecommendations.map(({ action, entry }) => (
+                      <div key={action.id} className="rounded-[20px] border border-[#d7e1c7] bg-white px-4 py-4">
+                        <h4 className="font-heading text-xl text-text-main">{action.title}</h4>
+                        <p className="mt-2 text-xs text-[#8a8377] font-body">
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : 'Completed'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => updateActionStatus(action.id, 'not-started')}
+                          className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body"
+                        >
+                          <RotateCcw size={14} />
+                          Reopen
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {skippedRecommendations.length > 0 && (
+                <div className="rounded-[28px] border border-[#ddd5c8] bg-[#f7f4ef] px-4 py-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-[#7d7569] font-body">
+                    Skipped
+                  </p>
+                  <div className="mt-3 space-y-3">
+                    {skippedRecommendations.map(({ action, entry }) => (
+                      <div key={action.id} className="rounded-[20px] border border-[#e0d8cb] bg-white px-4 py-4">
+                        <h4 className="font-heading text-xl text-text-main">{action.title}</h4>
+                        <p className="mt-2 text-xs text-[#8a8377] font-body">
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : 'Skipped'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => updateActionStatus(action.id, 'not-started')}
+                          className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body"
+                        >
+                          <RotateCcw size={14} />
+                          Restore
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <details className="rounded-[28px] border border-[#ddd3bf] bg-white/80 px-4 py-4">
+                <summary className="cursor-pointer list-none text-sm text-[#5a5549] font-body">
+                  Review intake answers
+                </summary>
+                <div className="mt-3 overflow-hidden rounded-[20px] border border-[#e7decd] bg-[#fffdf8]">
+                  {intakeSteps.map((step, index) => {
+                    const val = answers[step.fieldName as keyof IntakeAnswers];
+                    const isEmpty = !val || (Array.isArray(val) && val.length === 0) || val === '';
+
+                    if (isEmpty && step.optional) {
+                      return null;
+                    }
+
+                    return (
+                      <div
+                        key={step.fieldName}
+                        className={`px-4 py-3 ${index === intakeSteps.length - 1 ? '' : 'border-b border-[#eee6d7]'}`}
+                      >
+                        <p className="text-xs text-[#8a8377] font-body mb-1">
+                          {fieldLabels[step.fieldName]}
+                        </p>
+                        <p className="text-sm text-text-main font-body">
+                          {Array.isArray(val) ? val.join(', ') : val || '-'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </details>
+
+              <div className="flex justify-center pt-2">
+                <button
+                  onClick={onStartOver}
+                  aria-label="Start over and retake the questionnaire"
+                  className="flex items-center gap-1.5 text-sm text-[#7e786c] hover:text-primary transition-colors font-body"
+                >
+                  <ArrowLeft size={14} />
+                  Start over
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e5dccb] bg-[#fffdf8]/95 px-4 py-2 backdrop-blur">
+          <div className="grid grid-cols-4 gap-2">
+            {mobileTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = mobileTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setMobileTab(tab.id)}
+                  className={`inline-flex flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-xs font-body transition-colors ${
+                    isActive ? 'bg-[#f0eadb] text-[#5a5549]' : 'text-[#8a8377]'
+                  }`}
+                >
+                  <Icon size={16} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden lg:block">
       <ActionPlanOverview
         completionPercent={completionPercent}
         notStartedCount={notStartedCount}
@@ -776,11 +1264,12 @@ export default function ResultsCard({
           Start over
         </button>
       </div>
+      </div>
 
       {hasLongPlan && (
         <a
           href="#plan-map"
-          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-[#6d6b47] px-4 py-3 text-sm text-white shadow-[0_18px_40px_-24px_rgba(54,44,28,0.75)] transition-colors hover:bg-[#5a583a] focus:outline-none focus:ring-2 focus:ring-[#7f7a57]/30"
+          className="fixed bottom-5 right-5 z-40 hidden items-center gap-2 rounded-full border border-[#d5cfaf] bg-[#6d6b47] px-4 py-3 text-sm text-white shadow-[0_18px_40px_-24px_rgba(54,44,28,0.75)] transition-colors hover:bg-[#5a583a] focus:outline-none focus:ring-2 focus:ring-[#7f7a57]/30 lg:inline-flex"
         >
           <ArrowUp size={15} />
           Back to plan map
