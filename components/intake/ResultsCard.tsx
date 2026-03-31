@@ -7,6 +7,7 @@ import { IntakeAnswers, LocalResource, RecommendedAction } from '@/lib/types';
 import { intakeSteps } from '@/lib/intakeSteps';
 import { ArrowLeft, Calendar, CheckCircle, Clock, ExternalLink, MapPin, Zap } from 'lucide-react';
 import { getLocationMatch, getLocalResourcesForAction, LOCAL_PILOT_SUMMARY } from '@/lib/localResources';
+import NearbyProviders from './NearbyProviders';
 
 interface ResultsCardProps {
   answers: IntakeAnswers;
@@ -305,6 +306,8 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
                   })}
                 </div>
               )}
+
+              {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
 
               {action.supportItems && action.supportItems.length > 0 && (
                 <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">

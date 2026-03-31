@@ -55,3 +55,30 @@ export interface LocationMatch {
   regionIds: string[];
   primaryRegionLabel: string | null;
 }
+
+export type ProviderSearchKind = 'speech' | 'ot' | 'aba';
+
+export interface ProviderSearchResult {
+  id: string;
+  kind: ProviderSearchKind;
+  name: string;
+  address: string;
+  phone: string | null;
+  websiteUri: string | null;
+  googleMapsUri: string;
+  rating: number | null;
+  userRatingCount: number;
+  distanceMiles: number | null;
+  reviewConfidence: 'strong' | 'limited' | 'none';
+  primaryType: string | null;
+  score: number;
+  attributions: ResourceLink[];
+}
+
+export interface ProviderSearchPayload {
+  kind: ProviderSearchKind;
+  providers: ProviderSearchResult[];
+  sourceLabel: string;
+  rankingSummary: string;
+  generatedAt: string;
+}

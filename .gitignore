@@ -16,4 +16,5 @@ public/workbox-*.js.map
 .DS_Store
 *.pem
 .env*
+!.env.example
 .vercel
