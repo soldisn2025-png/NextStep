@@ -18,6 +18,7 @@ import {
 import { ActionPlanProgressEntry, RecommendedAction } from '@/lib/types';
 
 interface ReminderCenterProps {
+  className?: string;
   items: Array<{
     action: RecommendedAction;
     entry: ActionPlanProgressEntry;
@@ -51,7 +52,7 @@ function getNotificationKey(actionId: string, followUpDate: string, reminderLead
   return `${actionId}:${followUpDate}:${reminderLeadDays === null ? 'none' : reminderLeadDays}`;
 }
 
-export default function ReminderCenter({ items }: ReminderCenterProps) {
+export default function ReminderCenter({ className = 'mt-6', items }: ReminderCenterProps) {
   const reminderItems = useMemo(() => buildReminderItems(items), [items]);
   const [notificationPermission, setNotificationPermission] = useState<
     NotificationPermission | 'unsupported'
@@ -124,7 +125,7 @@ export default function ReminderCenter({ items }: ReminderCenterProps) {
   const previewItems = reminderItems.slice(0, 4);
 
   return (
-    <div className="mt-6 rounded-[30px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,243,235,0.98))] px-5 py-5 shadow-[0_22px_58px_-46px_rgba(54,44,28,0.55)] sm:px-6">
+    <div className={`${className} rounded-[30px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,243,235,0.98))] px-5 py-5 shadow-[0_22px_58px_-46px_rgba(54,44,28,0.55)] sm:px-6`}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.22em] text-[#6d6658] font-body">

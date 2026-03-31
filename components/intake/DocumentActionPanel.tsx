@@ -9,6 +9,7 @@ import {
 import { DocumentAnalysisEntry, DocumentAnalysisType } from '@/lib/types';
 
 interface DocumentActionPanelProps {
+  className?: string;
   analyses: DocumentAnalysisEntry[];
   onSaveAnalysis: (entry: DocumentAnalysisEntry) => void;
 }
@@ -19,6 +20,7 @@ interface DocumentAssistantResponse {
 }
 
 export default function DocumentActionPanel({
+  className = 'mt-6',
   analyses,
   onSaveAnalysis,
 }: DocumentActionPanelProps) {
@@ -113,7 +115,7 @@ export default function DocumentActionPanel({
   };
 
   return (
-    <div className="mt-6 rounded-[30px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,244,236,0.98))] px-5 py-5 shadow-[0_22px_58px_-46px_rgba(54,44,28,0.55)] sm:px-6">
+    <div className={`${className} rounded-[30px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,244,236,0.98))] px-5 py-5 shadow-[0_22px_58px_-46px_rgba(54,44,28,0.55)] sm:px-6`}>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.22em] text-[#6d6658] font-body">

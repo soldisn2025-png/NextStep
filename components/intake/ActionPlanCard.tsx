@@ -1,11 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
+  Bot,
   Calendar,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
   ExternalLink,
+  MapPin,
   Play,
   RotateCcw,
   Zap,
@@ -13,6 +18,7 @@ import {
 import { getActionPlanGuidance } from '@/lib/actionPlan';
 import { formatRelativeUpdate } from '@/lib/actionPlanState';
 import { getLocalResourcesForAction } from '@/lib/localResources';
+import { getProviderSearchKindForAction } from '@/lib/providerSearchConfig';
 import {
   ActionPlanProgressEntry,
   ActionPlanStatus,
@@ -124,6 +130,10 @@ function groupLocalResources(resources: LocalResource[]) {
   );
 }
 
+function getPluralLabel(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 export default function ActionPlanCard({
   action,
   displayIndex,
@@ -138,10 +148,41 @@ export default function ActionPlanCard({
   const urgency = urgencyConfig[action.urgency];
   const UrgencyIcon = urgency.icon;
   const localResources = savedZip ? getLocalResourcesForAction(action.id, savedZip) : [];
+  const providerSearchKind = savedZip ? getProviderSearchKindForAction(action.id) : null;
   const groupedLocalResources = groupLocalResources(localResources);
   const localKinds = (Object.keys(groupedLocalResources) as LocalResource['kind'][]).filter(
     (kind) => groupedLocalResources[kind].length > 0
   );
+  const savedDraftCount = entry?.savedDrafts?.length ?? 0;
+  const executionLogCount = entry?.executionLog?.length ?? 0;
+  const hasResourceHub = Boolean(
+    (action.resources?.length ?? 0) > 0 ||
+      localKinds.length > 0 ||
+      providerSearchKind ||
+      (action.supportItems?.length ?? 0) > 0
+  );
+  const [showResources, setShowResources] = useState(false);
+  const [showTools, setShowTools] = useState(savedDraftCount > 0 || executionLogCount > 0);
+  const resourceSummary = [
+    action.resources?.length
+      ? getPluralLabel(action.resources.length, 'trusted link')
+      : null,
+    localResources.length
+      ? getPluralLabel(localResources.length, 'local listing')
+      : null,
+    providerSearchKind ? 'live nearby search' : null,
+    action.supportItems?.length
+      ? getPluralLabel(action.supportItems.length, 'support item')
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' • ');
+  const toolsSummary = [
+    savedDraftCount ? getPluralLabel(savedDraftCount, 'saved draft') : null,
+    executionLogCount ? getPluralLabel(executionLogCount, 'logged activity', 'logged activities') : null,
+  ]
+    .filter(Boolean)
+    .join(' • ');
 
   return (
     <div
@@ -218,109 +259,182 @@ export default function ActionPlanCard({
           onUpdate={(updates) => onUpdateEntry(action.id, updates)}
         />
 
-        {action.resources && action.resources.length > 0 && (
-          <div className="mt-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-2">
-              Trusted resources
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {action.resources.map((resource) => (
-                <a
-                  key={resource.url}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 hover:shadow-sm transition-all font-body"
-                >
-                  {resource.label}
-                  <ExternalLink size={11} />
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {localKinds.length > 0 && (
-          <div className="mt-5 space-y-3">
-            {localKinds.map((kind) => {
-              const meta = localSectionMeta[kind];
-              const items = groupedLocalResources[kind];
-
-              return (
-                <div
-                  key={kind}
-                  className={`rounded-[24px] border px-4 py-4 ${meta.containerClass}`}
-                >
-                  <p className={`text-xs uppercase tracking-[0.18em] font-body mb-3 ${meta.labelClass}`}>
-                    {meta.heading}
-                  </p>
-                  <div className="space-y-3">
-                    {items.map((resource) => (
-                      <div key={resource.id}>
-                        <a
-                          href={resource.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm text-text-main hover:text-primary transition-colors font-body"
-                        >
-                          <ExternalLink size={12} />
-                          <span className="font-medium">{resource.label}</span>
-                        </a>
-                        <p className="mt-1 text-sm text-[#625e53] font-body leading-relaxed">
-                          {resource.description}
-                        </p>
-                        <p className="mt-1 text-xs text-[#8a8377] font-body">
-                          Verified {resource.verifiedAt}
-                        </p>
-                      </div>
-                    ))}
+        <div className="mt-5 space-y-3">
+          {hasResourceHub && (
+            <div className="rounded-[24px] border border-[#e4dac8] bg-white/82 px-4 py-4">
+              <button
+                type="button"
+                onClick={() => setShowResources((current) => !current)}
+                aria-expanded={showResources}
+                className="flex w-full items-start justify-between gap-3 text-left"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef3ff] text-primary">
+                    <MapPin size={16} />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                      Local help and resources
+                    </p>
+                    <h4 className="mt-1 font-heading text-xl text-text-main">
+                      Keep providers and reference links out of the way until you need them.
+                    </h4>
+                    <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                      {resourceSummary || 'Open this section to see trusted links, local programs, and nearby provider options.'}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-3 py-1.5 text-xs text-[#5a5549] font-body">
+                  {showResources ? 'Hide' : 'Open'}
+                  {showResources ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </span>
+              </button>
 
-        {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+              {showResources && (
+                <div className="mt-4 border-t border-[#ece3d4] pt-4">
+                  {action.resources && action.resources.length > 0 && (
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-2">
+                        Trusted resources
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {action.resources.map((resource) => (
+                          <a
+                            key={resource.url}
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 hover:shadow-sm transition-all font-body"
+                          >
+                            {resource.label}
+                            <ExternalLink size={11} />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-        {action.supportItems && action.supportItems.length > 0 && (
-          <div className="mt-5 rounded-[24px] border border-[#efdfbc] bg-[#fff7e7] px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#9a6a27] font-body mb-2">
-              Helpful items
-            </p>
-            <p className="text-sm text-[#625e53] font-body leading-relaxed mb-3">
-              Optional items families often explore while building routines or waiting for services to start.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {action.supportItems.map((item) => (
-                <a
-                  key={item.url}
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[#e7d4a8] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 transition-all font-body"
-                >
-                  {item.label}
-                  <ExternalLink size={11} />
-                </a>
-              ))}
+                  {localKinds.length > 0 && (
+                    <div className="mt-5 space-y-3">
+                      {localKinds.map((kind) => {
+                        const meta = localSectionMeta[kind];
+                        const items = groupedLocalResources[kind];
+
+                        return (
+                          <div
+                            key={kind}
+                            className={`rounded-[24px] border px-4 py-4 ${meta.containerClass}`}
+                          >
+                            <p className={`text-xs uppercase tracking-[0.18em] font-body mb-3 ${meta.labelClass}`}>
+                              {meta.heading}
+                            </p>
+                            <div className="space-y-3">
+                              {items.map((resource) => (
+                                <div key={resource.id}>
+                                  <a
+                                    href={resource.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm text-text-main hover:text-primary transition-colors font-body"
+                                  >
+                                    <ExternalLink size={12} />
+                                    <span className="font-medium">{resource.label}</span>
+                                  </a>
+                                  <p className="mt-1 text-sm text-[#625e53] font-body leading-relaxed">
+                                    {resource.description}
+                                  </p>
+                                  <p className="mt-1 text-xs text-[#8a8377] font-body">
+                                    Verified {resource.verifiedAt}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+
+                  {action.supportItems && action.supportItems.length > 0 && (
+                    <div className="mt-5 rounded-[24px] border border-[#efdfbc] bg-[#fff7e7] px-4 py-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#9a6a27] font-body mb-2">
+                        Helpful items
+                      </p>
+                      <p className="text-sm text-[#625e53] font-body leading-relaxed mb-3">
+                        Optional items families often explore while building routines or waiting for services to start.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {action.supportItems.map((item) => (
+                          <a
+                            key={item.url}
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-[#e7d4a8] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 transition-all font-body"
+                          >
+                            {item.label}
+                            <ExternalLink size={11} />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+          )}
+
+          <div className="rounded-[24px] border border-[#e4dac8] bg-white/82 px-4 py-4">
+            <button
+              type="button"
+              onClick={() => setShowTools((current) => !current)}
+              aria-expanded={showTools}
+              className="flex w-full items-start justify-between gap-3 text-left"
+            >
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f6f1ff] text-[#675985]">
+                  <Bot size={16} />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                    Drafts and outreach log
+                  </p>
+                  <h4 className="mt-1 font-heading text-xl text-text-main">
+                    Open the AI helper only when this step actually needs it.
+                  </h4>
+                  <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                    {toolsSummary ||
+                      'Generate a draft, save it, and log real outreach here without making every card feel heavy.'}
+                  </p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-3 py-1.5 text-xs text-[#5a5549] font-body">
+                {showTools ? 'Hide' : 'Open'}
+                {showTools ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              </span>
+            </button>
+
+            {showTools && (
+              <div className="mt-4 border-t border-[#ece3d4] pt-4">
+                <ActionAIAssistant
+                  actionId={action.id}
+                  actionTitle={action.title}
+                  actionDescription={action.description}
+                  entry={entry}
+                  onUpdate={(updates) => onUpdateEntry(action.id, updates)}
+                />
+
+                <ActionExecutionWorkspace
+                  entry={entry}
+                  status={status}
+                  onUpdate={(updates) => onUpdateEntry(action.id, updates)}
+                />
+              </div>
+            )}
           </div>
-        )}
-
-        <ActionAIAssistant
-          actionId={action.id}
-          actionTitle={action.title}
-          actionDescription={action.description}
-          entry={entry}
-          onUpdate={(updates) => onUpdateEntry(action.id, updates)}
-        />
-
-        <ActionExecutionWorkspace
-          entry={entry}
-          status={status}
-          onUpdate={(updates) => onUpdateEntry(action.id, updates)}
-        />
+        </div>
 
         <div className="mt-6 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

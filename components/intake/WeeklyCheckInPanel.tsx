@@ -6,6 +6,7 @@ import { getWeeklyCheckInState } from '@/lib/actionPlanState';
 import { RecommendedAction, WeeklyCheckInEntry } from '@/lib/types';
 
 interface WeeklyCheckInPanelProps {
+  className?: string;
   checkIn: WeeklyCheckInEntry | null;
   activeRecommendations: RecommendedAction[];
   dueFollowUpCount: number;
@@ -15,6 +16,7 @@ interface WeeklyCheckInPanelProps {
 }
 
 export default function WeeklyCheckInPanel({
+  className = 'mt-6',
   checkIn,
   activeRecommendations,
   dueFollowUpCount,
@@ -53,7 +55,7 @@ export default function WeeklyCheckInPanel({
   );
 
   return (
-    <div className="mt-6 rounded-[30px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(249,245,237,0.98))] px-5 py-5 shadow-[0_22px_58px_-46px_rgba(54,44,28,0.55)] sm:px-6">
+    <div className={`${className} rounded-[30px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(249,245,237,0.98))] px-5 py-5 shadow-[0_22px_58px_-46px_rgba(54,44,28,0.55)] sm:px-6`}>
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.22em] text-[#6d6658] font-body">
