@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
+  ArrowUp,
   BellRing,
   CheckCircle2,
   ChevronRight,
@@ -210,6 +211,7 @@ export default function ResultsCard({
   const inProgressCount = recommendationsWithState.filter(
     ({ status }) => status === 'in-progress'
   ).length;
+  const hasLongPlan = recommendationsWithState.length > 3;
   const remainingCount = recommendations.length - completedCount;
   const completionPercent = recommendations.length
     ? Math.round((completedCount / recommendations.length) * 100)
@@ -316,7 +318,7 @@ export default function ResultsCard({
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className={`max-w-5xl mx-auto px-4 py-8 ${hasLongPlan ? 'pb-28' : ''}`}>
       <ActionPlanOverview
         completionPercent={completionPercent}
         completedCount={completedCount}
@@ -675,6 +677,16 @@ export default function ResultsCard({
           Start over
         </button>
       </div>
+
+      {hasLongPlan && (
+        <a
+          href="#plan-map"
+          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-[#6d6b47] px-4 py-3 text-sm text-white shadow-[0_18px_40px_-24px_rgba(54,44,28,0.75)] transition-colors hover:bg-[#5a583a] focus:outline-none focus:ring-2 focus:ring-[#7f7a57]/30"
+        >
+          <ArrowUp size={15} />
+          Back to plan map
+        </a>
+      )}
     </div>
   );
 }
