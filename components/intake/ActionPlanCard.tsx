@@ -144,6 +144,7 @@ export default function ActionPlanCard({
 
   return (
     <div
+      id={`action-${action.id}`}
       className={`relative overflow-hidden rounded-[30px] border px-5 py-5 shadow-[0_24px_64px_-42px_rgba(54,44,28,0.5)] before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] sm:px-6 sm:py-6 ${statusMeta[status].cardClass} ${urgency.accentClass}`}
     >
       <div className="relative">
@@ -209,6 +210,7 @@ export default function ActionPlanCard({
 
         <ActionStepTracker
           actionId={action.id}
+          action={action}
           actionTitle={action.title}
           entry={entry}
           status={status}

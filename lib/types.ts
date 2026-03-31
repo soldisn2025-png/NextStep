@@ -84,6 +84,7 @@ export interface ProviderSearchPayload {
 }
 
 export type ActionPlanStatus = 'not-started' | 'in-progress' | 'done';
+export type ReminderLeadDays = 0 | 1 | 3 | 7 | null;
 
 export interface ActionPlanProgressEntry {
   status: ActionPlanStatus;
@@ -91,6 +92,7 @@ export interface ActionPlanProgressEntry {
   notes?: string;
   lastContactDate?: string;
   nextFollowUpDate?: string;
+  reminderLeadDays?: ReminderLeadDays;
 }
 
 export type ActionPlanProgressMap = Record<string, ActionPlanProgressEntry>;

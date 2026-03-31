@@ -1,11 +1,13 @@
 'use client';
 
-import { CalendarClock, ClipboardPenLine, PhoneCall } from 'lucide-react';
+import { BellRing, CalendarClock, CalendarPlus2, ClipboardPenLine, PhoneCall } from 'lucide-react';
 import { createActionPlanEntry, getFollowUpState } from '@/lib/actionPlanState';
-import { ActionPlanProgressEntry, ActionPlanStatus } from '@/lib/types';
+import { downloadReminderCalendarFile, REMINDER_LEAD_DAY_OPTIONS } from '@/lib/reminders';
+import { ActionPlanProgressEntry, ActionPlanStatus, RecommendedAction, ReminderLeadDays } from '@/lib/types';
 
 interface ActionStepTrackerProps {
   actionId: string;
+  action: RecommendedAction;
   actionTitle: string;
   entry?: ActionPlanProgressEntry;
   status: ActionPlanStatus;
@@ -21,6 +23,7 @@ const followUpToneClass = {
 
 export default function ActionStepTracker({
   actionId,
+  action,
   actionTitle,
   entry,
   status,
@@ -100,12 +103,78 @@ export default function ActionStepTracker({
               id={`follow-up-${actionId}`}
               type="date"
               value={normalizedEntry.nextFollowUpDate ?? ''}
-              onChange={(event) => onUpdate({ nextFollowUpDate: event.target.value })}
+              onChange={(event) =>
+                onUpdate(
+                  event.target.value
+                    ? {
+                        nextFollowUpDate: event.target.value,
+                        reminderLeadDays:
+                          normalizedEntry.reminderLeadDays ?? 1,
+                      }
+                    : {
+                        nextFollowUpDate: '',
+                        reminderLeadDays: null,
+                      }
+                )
+              }
               className="mt-3 w-full rounded-[18px] border border-[#e3dac9] bg-[#fffdf9] px-4 py-3 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
             />
             <p className="mt-2 text-xs text-[#8a8377] font-body">
               This gives the dashboard a concrete reason to pull you back in.
             </p>
+          </div>
+
+          <div className="rounded-[20px] border border-[#e9dfcf] bg-white/85 px-4 py-4">
+            <label
+              htmlFor={`reminder-lead-${actionId}`}
+              className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body"
+            >
+              <BellRing size={13} />
+              Reminder setting
+            </label>
+            <select
+              id={`reminder-lead-${actionId}`}
+              value={
+                normalizedEntry.reminderLeadDays === null
+                  ? 'none'
+                  : String(normalizedEntry.reminderLeadDays)
+              }
+              disabled={!normalizedEntry.nextFollowUpDate}
+              onChange={(event) =>
+                onUpdate({
+                  reminderLeadDays:
+                    event.target.value === 'none'
+                      ? null
+                      : (Number(event.target.value) as Exclude<ReminderLeadDays, null>),
+                })
+              }
+              className="mt-3 w-full rounded-[18px] border border-[#e3dac9] bg-[#fffdf9] px-4 py-3 text-sm text-text-main font-body outline-none transition-all disabled:cursor-not-allowed disabled:bg-[#f5f0e6] disabled:text-[#9b9487] focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
+            >
+              {REMINDER_LEAD_DAY_OPTIONS.map((option) => (
+                <option
+                  key={option.value === null ? 'none' : option.value}
+                  value={option.value === null ? 'none' : option.value}
+                >
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-[#8a8377] font-body">
+                {normalizedEntry.nextFollowUpDate
+                  ? 'Export this follow-up to your calendar with the selected reminder.'
+                  : 'Add a follow-up date first to enable calendar or browser reminders.'}
+              </p>
+              <button
+                type="button"
+                disabled={!normalizedEntry.nextFollowUpDate}
+                onClick={() => downloadReminderCalendarFile(action, normalizedEntry)}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-3 py-2 text-xs text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40] disabled:cursor-not-allowed disabled:border-[#e5dccb] disabled:bg-[#f8f3ea] disabled:text-[#a49b8d]"
+              >
+                <CalendarPlus2 size={13} />
+                Add to calendar
+              </button>
+            </div>
           </div>
         </div>
       </div>

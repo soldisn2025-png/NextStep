@@ -1,4 +1,4 @@
-import { ActionPlanProgressEntry, ActionPlanStatus } from './types';
+import { ActionPlanProgressEntry, ActionPlanStatus, ReminderLeadDays } from './types';
 
 const DAY_IN_MS = 86_400_000;
 
@@ -33,7 +33,16 @@ export function createActionPlanEntry(
     notes: updates.notes ?? previous?.notes ?? '',
     lastContactDate: updates.lastContactDate ?? previous?.lastContactDate ?? '',
     nextFollowUpDate: updates.nextFollowUpDate ?? previous?.nextFollowUpDate ?? '',
+    reminderLeadDays: updates.reminderLeadDays ?? previous?.reminderLeadDays ?? null,
   };
+}
+
+function parseReminderLeadDays(value: unknown): ReminderLeadDays {
+  if (value === 0 || value === 1 || value === 3 || value === 7) {
+    return value;
+  }
+
+  return null;
 }
 
 export function parseStoredProgressEntry(
@@ -57,6 +66,7 @@ export function parseStoredProgressEntry(
     notes: typeof entry.notes === 'string' ? entry.notes : '',
     lastContactDate: typeof entry.lastContactDate === 'string' ? entry.lastContactDate : '',
     nextFollowUpDate: typeof entry.nextFollowUpDate === 'string' ? entry.nextFollowUpDate : '',
+    reminderLeadDays: parseReminderLeadDays(entry.reminderLeadDays),
   };
 }
 

@@ -7,11 +7,11 @@ import { getActionPlanGuidance } from '@/lib/actionPlan';
 import {
   createActionPlanEntry,
   formatRelativeUpdate,
-  getDaysUntil,
   parseStoredProgressEntry,
 } from '@/lib/actionPlanState';
 import { intakeSteps } from '@/lib/intakeSteps';
 import { getLocationMatch, LOCAL_PILOT_SUMMARY } from '@/lib/localResources';
+import { buildReminderItems } from '@/lib/reminders';
 import {
   ActionPlanProgressMap,
   ActionPlanStatus,
@@ -21,6 +21,7 @@ import {
 } from '@/lib/types';
 import ActionPlanCard from './ActionPlanCard';
 import ActionPlanOverview from './ActionPlanOverview';
+import ReminderCenter from './ReminderCenter';
 import WeeklyCheckInPanel from './WeeklyCheckInPanel';
 
 interface ResultsCardProps {
@@ -196,15 +197,14 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
     ? Math.round((completedCount / recommendations.length) * 100)
     : 0;
 
-  const dueSoonCount = activeRecommendations.filter(({ entry }) => {
-    const daysUntil = entry.nextFollowUpDate ? getDaysUntil(entry.nextFollowUpDate) : null;
-    return daysUntil !== null && daysUntil >= 0 && daysUntil <= 7;
-  }).length;
-
-  const overdueFollowUpCount = activeRecommendations.filter(({ entry }) => {
-    const daysUntil = entry.nextFollowUpDate ? getDaysUntil(entry.nextFollowUpDate) : null;
-    return daysUntil !== null && daysUntil < 0;
-  }).length;
+  const reminderItems = useMemo(
+    () => buildReminderItems(activeRecommendations.map(({ action, entry }) => ({ action, entry }))),
+    [activeRecommendations]
+  );
+  const dueSoonCount = reminderItems.filter(
+    (item) => item.daysUntil >= 0 && item.daysUntil <= 7
+  ).length;
+  const overdueFollowUpCount = reminderItems.filter((item) => item.daysUntil < 0).length;
 
   const weeklyFocusAction =
     weeklyCheckIn?.focusActionId
@@ -310,6 +310,10 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
         }}
         onZipSubmit={handleZipSubmit}
         onClearZip={handleClearZip}
+      />
+
+      <ReminderCenter
+        items={activeRecommendations.map(({ action, entry }) => ({ action, entry }))}
       />
 
       <WeeklyCheckInPanel
