@@ -16,6 +16,7 @@ import {
   getReminderLeadDaysLabel,
 } from '@/lib/reminders';
 import { ActionPlanProgressEntry, RecommendedAction } from '@/lib/types';
+import SmsReminderSetup from './SmsReminderSetup';
 
 interface ReminderCenterProps {
   className?: string;
@@ -140,44 +141,48 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
           </p>
         </div>
 
-        <div className="rounded-[24px] border border-[#e3dac9] bg-white/88 px-4 py-4 lg:max-w-sm">
-          <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-            Browser alerts
-          </p>
-          <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-            Alerts are optional and local to this device. They can fire when the user opens the app, but this is not push messaging yet.
-          </p>
-          {notificationPermission === 'default' && (
-            <button
-              type="button"
-              onClick={async () => {
-                const permission = await Notification.requestPermission();
-                setNotificationPermission(permission);
-              }}
-              className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body transition-colors hover:bg-[#5a583a]"
-            >
-              <Bell size={14} />
-              Enable browser alerts
-            </button>
-          )}
-          {notificationPermission === 'granted' && (
-            <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d4e4c8] bg-[#edf6e7] px-3 py-2 text-sm text-[#4f6d4e] font-body">
-              <BellRing size={14} />
-              Browser alerts enabled on this device
+        <div className="grid gap-3 lg:max-w-sm">
+          <div className="rounded-[24px] border border-[#e3dac9] bg-white/88 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+              Browser alerts
             </p>
-          )}
-          {notificationPermission === 'denied' && (
-            <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#efd2ca] bg-[#fff2ef] px-3 py-2 text-sm text-[#a25547] font-body">
-              <BellOff size={14} />
-              Browser alerts are blocked in this browser
+            <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+              Alerts are optional and local to this device. They can fire when the user opens the app, but this is not push messaging yet.
             </p>
-          )}
-          {notificationPermission === 'unsupported' && (
-            <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#e7decd] bg-[#fffdf8] px-3 py-2 text-sm text-[#6f6a5b] font-body">
-              <BellOff size={14} />
-              Browser alerts are not supported here
-            </p>
-          )}
+            {notificationPermission === 'default' && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const permission = await Notification.requestPermission();
+                  setNotificationPermission(permission);
+                }}
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body transition-colors hover:bg-[#5a583a]"
+              >
+                <Bell size={14} />
+                Enable browser alerts
+              </button>
+            )}
+            {notificationPermission === 'granted' && (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d4e4c8] bg-[#edf6e7] px-3 py-2 text-sm text-[#4f6d4e] font-body">
+                <BellRing size={14} />
+                Browser alerts enabled on this device
+              </p>
+            )}
+            {notificationPermission === 'denied' && (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#efd2ca] bg-[#fff2ef] px-3 py-2 text-sm text-[#a25547] font-body">
+                <BellOff size={14} />
+                Browser alerts are blocked in this browser
+              </p>
+            )}
+            {notificationPermission === 'unsupported' && (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#e7decd] bg-[#fffdf8] px-3 py-2 text-sm text-[#6f6a5b] font-body">
+                <BellOff size={14} />
+                Browser alerts are not supported here
+              </p>
+            )}
+          </div>
+
+          <SmsReminderSetup />
         </div>
       </div>
 
