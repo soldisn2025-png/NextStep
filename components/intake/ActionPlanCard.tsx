@@ -11,21 +11,25 @@ import {
   Zap,
 } from 'lucide-react';
 import { getActionPlanGuidance } from '@/lib/actionPlan';
+import { formatRelativeUpdate } from '@/lib/actionPlanState';
 import { getLocalResourcesForAction } from '@/lib/localResources';
 import {
+  ActionPlanProgressEntry,
   ActionPlanStatus,
   LocalResource,
   RecommendedAction,
 } from '@/lib/types';
+import ActionAIAssistant from './ActionAIAssistant';
+import ActionStepTracker from './ActionStepTracker';
 import NearbyProviders from './NearbyProviders';
 
 interface ActionPlanCardProps {
   action: RecommendedAction;
   displayIndex: number;
   savedZip: string;
-  status: ActionPlanStatus;
-  updatedAt?: string;
+  entry?: ActionPlanProgressEntry;
   onUpdateStatus: (actionId: string, status: ActionPlanStatus) => void;
+  onUpdateEntry: (actionId: string, updates: Partial<ActionPlanProgressEntry>) => void;
 }
 
 const categoryMeta: Record<
@@ -119,35 +123,16 @@ function groupLocalResources(resources: LocalResource[]) {
   );
 }
 
-function formatSavedAt(updatedAt: string) {
-  const diffMs = Date.now() - new Date(updatedAt).getTime();
-
-  if (!Number.isFinite(diffMs) || diffMs < 60_000) {
-    return 'Updated just now';
-  }
-
-  const minutes = Math.floor(diffMs / 60_000);
-  if (minutes < 60) {
-    return `Updated ${minutes}m ago`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `Updated ${hours}h ago`;
-  }
-
-  const days = Math.floor(hours / 24);
-  return `Updated ${days}d ago`;
-}
-
 export default function ActionPlanCard({
   action,
   displayIndex,
   savedZip,
-  status,
-  updatedAt,
+  entry,
   onUpdateStatus,
+  onUpdateEntry,
 }: ActionPlanCardProps) {
+  const status = entry?.status ?? 'not-started';
+  const updatedAt = entry?.updatedAt;
   const guidance = getActionPlanGuidance(action.id);
   const urgency = urgencyConfig[action.urgency];
   const UrgencyIcon = urgency.icon;
@@ -187,7 +172,7 @@ export default function ActionPlanCard({
             </p>
             {updatedAt && (
               <p className="mt-1 text-xs text-[#8a8377] font-body">
-                {formatSavedAt(updatedAt)}
+                {formatRelativeUpdate(updatedAt)}
               </p>
             )}
           </div>
@@ -221,6 +206,14 @@ export default function ActionPlanCard({
             </p>
           </div>
         </div>
+
+        <ActionStepTracker
+          actionId={action.id}
+          actionTitle={action.title}
+          entry={entry}
+          status={status}
+          onUpdate={(updates) => onUpdateEntry(action.id, updates)}
+        />
 
         {action.resources && action.resources.length > 0 && (
           <div className="mt-5">
@@ -311,6 +304,13 @@ export default function ActionPlanCard({
             </div>
           </div>
         )}
+
+        <ActionAIAssistant
+          actionId={action.id}
+          actionTitle={action.title}
+          actionDescription={action.description}
+          entry={entry}
+        />
 
         <div className="mt-6 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

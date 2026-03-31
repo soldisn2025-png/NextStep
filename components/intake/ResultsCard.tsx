@@ -4,6 +4,12 @@ import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, ClipboardList, RotateCcw, Trophy } from 'lucide-react';
 import { getActionPlanGuidance } from '@/lib/actionPlan';
+import {
+  createActionPlanEntry,
+  formatRelativeUpdate,
+  getDaysUntil,
+  parseStoredProgressEntry,
+} from '@/lib/actionPlanState';
 import { intakeSteps } from '@/lib/intakeSteps';
 import { getLocationMatch, LOCAL_PILOT_SUMMARY } from '@/lib/localResources';
 import {
@@ -11,9 +17,11 @@ import {
   ActionPlanStatus,
   IntakeAnswers,
   RecommendedAction,
+  WeeklyCheckInEntry,
 } from '@/lib/types';
 import ActionPlanCard from './ActionPlanCard';
 import ActionPlanOverview from './ActionPlanOverview';
+import WeeklyCheckInPanel from './WeeklyCheckInPanel';
 
 interface ResultsCardProps {
   answers: IntakeAnswers;
@@ -23,6 +31,7 @@ interface ResultsCardProps {
 
 const ZIP_STORAGE_KEY = 'nextstep_local_zip';
 const ACTION_PROGRESS_STORAGE_KEY = 'nextstep_action_progress';
+const WEEKLY_CHECK_IN_STORAGE_KEY = 'nextstep_weekly_checkin';
 
 const fieldLabels: Record<string, string> = {
   childAge: "Child's age",
@@ -51,16 +60,14 @@ function parseProgressState(rawValue: string | null): ActionPlanProgressMap {
   }
 
   try {
-    const parsed = JSON.parse(rawValue) as Record<string, { status?: string; updatedAt?: string }>;
+    const parsed = JSON.parse(rawValue) as Record<string, Record<string, unknown>>;
 
     return Object.fromEntries(
       Object.entries(parsed).flatMap(([actionId, entry]) => {
-        if (
-          entry?.status === 'not-started' ||
-          entry?.status === 'in-progress' ||
-          entry?.status === 'done'
-        ) {
-          return [[actionId, { status: entry.status, updatedAt: entry.updatedAt ?? new Date().toISOString() }]];
+        const normalizedEntry = parseStoredProgressEntry(entry);
+
+        if (normalizedEntry) {
+          return [[actionId, normalizedEntry]];
         }
 
         return [];
@@ -71,25 +78,44 @@ function parseProgressState(rawValue: string | null): ActionPlanProgressMap {
   }
 }
 
-function formatSavedAt(updatedAt: string) {
-  const diffMs = Date.now() - new Date(updatedAt).getTime();
-
-  if (!Number.isFinite(diffMs) || diffMs < 60_000) {
-    return 'Updated just now';
+function parseWeeklyCheckIn(rawValue: string | null): WeeklyCheckInEntry | null {
+  if (!rawValue) {
+    return null;
   }
 
-  const minutes = Math.floor(diffMs / 60_000);
-  if (minutes < 60) {
-    return `Updated ${minutes}m ago`;
+  try {
+    const parsed = JSON.parse(rawValue) as Record<string, unknown>;
+    const checkedInAt =
+      typeof parsed.checkedInAt === 'string' && parsed.checkedInAt.length > 0
+        ? parsed.checkedInAt
+        : null;
+
+    if (!checkedInAt) {
+      return null;
+    }
+
+    return {
+      summary: typeof parsed.summary === 'string' ? parsed.summary : '',
+      blocker: typeof parsed.blocker === 'string' ? parsed.blocker : '',
+      focusActionId:
+        typeof parsed.focusActionId === 'string'
+          ? parsed.focusActionId
+          : parsed.focusActionId === null
+            ? null
+            : null,
+      checkedInAt,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function shortenText(value: string, maxLength = 140) {
+  if (value.length <= maxLength) {
+    return value;
   }
 
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `Updated ${hours}h ago`;
-  }
-
-  const days = Math.floor(hours / 24);
-  return `Updated ${days}d ago`;
+  return `${value.slice(0, maxLength - 1).trimEnd()}...`;
 }
 
 export default function ResultsCard({ answers, recommendations, onStartOver }: ResultsCardProps) {
@@ -97,6 +123,7 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
   const [savedZip, setSavedZip] = useState('');
   const [zipError, setZipError] = useState('');
   const [progress, setProgress] = useState<ActionPlanProgressMap>({});
+  const [weeklyCheckIn, setWeeklyCheckIn] = useState<WeeklyCheckInEntry | null>(null);
 
   useEffect(() => {
     try {
@@ -104,6 +131,7 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
       setZipInput(storedZip);
       setSavedZip(storedZip);
       setProgress(parseProgressState(localStorage.getItem(ACTION_PROGRESS_STORAGE_KEY)));
+      setWeeklyCheckIn(parseWeeklyCheckIn(localStorage.getItem(WEEKLY_CHECK_IN_STORAGE_KEY)));
     } catch {
       // ignore storage errors
     }
@@ -117,18 +145,30 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
     }
   }, [progress]);
 
+  useEffect(() => {
+    try {
+      if (weeklyCheckIn) {
+        localStorage.setItem(WEEKLY_CHECK_IN_STORAGE_KEY, JSON.stringify(weeklyCheckIn));
+      } else {
+        localStorage.removeItem(WEEKLY_CHECK_IN_STORAGE_KEY);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [weeklyCheckIn]);
+
   const locationMatch = useMemo(() => getLocationMatch(savedZip), [savedZip]);
   const hasSupportedRegion = Boolean(locationMatch && locationMatch.regionIds.length > 0);
 
   const recommendationsWithState = useMemo(() => {
     return recommendations
       .map((action, index) => {
-        const progressEntry = progress[action.id];
+        const progressEntry = createActionPlanEntry(progress[action.id], {});
         return {
           action,
           index,
-          status: progressEntry?.status ?? 'not-started',
-          updatedAt: progressEntry?.updatedAt,
+          entry: progressEntry,
+          status: progressEntry.status,
         };
       })
       .sort((a, b) => {
@@ -156,8 +196,31 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
     ? Math.round((completedCount / recommendations.length) * 100)
     : 0;
 
-  const nextFocus = activeRecommendations[0]?.action ?? null;
+  const dueSoonCount = activeRecommendations.filter(({ entry }) => {
+    const daysUntil = entry.nextFollowUpDate ? getDaysUntil(entry.nextFollowUpDate) : null;
+    return daysUntil !== null && daysUntil >= 0 && daysUntil <= 7;
+  }).length;
+
+  const overdueFollowUpCount = activeRecommendations.filter(({ entry }) => {
+    const daysUntil = entry.nextFollowUpDate ? getDaysUntil(entry.nextFollowUpDate) : null;
+    return daysUntil !== null && daysUntil < 0;
+  }).length;
+
+  const weeklyFocusAction =
+    weeklyCheckIn?.focusActionId
+      ? activeRecommendations.find(({ action }) => action.id === weeklyCheckIn.focusActionId)?.action ?? null
+      : null;
+
+  const nextFocus = weeklyFocusAction ?? activeRecommendations[0]?.action ?? null;
   const nextFocusGuidance = nextFocus ? getActionPlanGuidance(nextFocus.id) : null;
+  const focusContext =
+    weeklyFocusAction && weeklyCheckIn
+      ? shortenText(
+          weeklyCheckIn.summary ||
+            weeklyCheckIn.blocker ||
+            'Chosen during your latest weekly check-in.'
+        )
+      : null;
 
   const handleZipSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -191,20 +254,28 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
     setSavedZip('');
   };
 
-  const updateActionStatus = (actionId: string, status: ActionPlanStatus) => {
+  const updateActionEntry = (
+    actionId: string,
+    updates: Partial<ActionPlanProgressMap[string]>
+  ) => {
     setProgress((current) => ({
       ...current,
-      [actionId]: {
-        status,
+      [actionId]: createActionPlanEntry(current[actionId], {
+        ...updates,
         updatedAt: new Date().toISOString(),
-      },
+      }),
     }));
+  };
+
+  const updateActionStatus = (actionId: string, status: ActionPlanStatus) => {
+    updateActionEntry(actionId, { status });
   };
 
   const handleStartOver = () => {
     try {
       localStorage.removeItem(ZIP_STORAGE_KEY);
       localStorage.removeItem(ACTION_PROGRESS_STORAGE_KEY);
+      localStorage.removeItem(WEEKLY_CHECK_IN_STORAGE_KEY);
     } catch {
       // ignore storage errors
     }
@@ -213,6 +284,7 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
     setSavedZip('');
     setZipError('');
     setProgress({});
+    setWeeklyCheckIn(null);
     onStartOver();
   };
 
@@ -225,6 +297,7 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
         remainingCount={remainingCount}
         nextFocus={nextFocus}
         nextFocusFirstMove={nextFocusGuidance?.firstMove ?? null}
+        focusContext={focusContext}
         zipInput={zipInput}
         savedZip={savedZip}
         zipError={zipError}
@@ -239,16 +312,25 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
         onClearZip={handleClearZip}
       />
 
+      <WeeklyCheckInPanel
+        checkIn={weeklyCheckIn}
+        activeRecommendations={activeRecommendations.map(({ action }) => action)}
+        dueFollowUpCount={dueSoonCount}
+        overdueFollowUpCount={overdueFollowUpCount}
+        currentFocusActionId={nextFocus?.id ?? null}
+        onSave={setWeeklyCheckIn}
+      />
+
       <div className="mt-7 space-y-5">
-        {activeRecommendations.map(({ action, status, updatedAt }, index) => (
+        {activeRecommendations.map(({ action, entry }, index) => (
           <ActionPlanCard
             key={action.id}
             action={action}
             displayIndex={index + 1}
             savedZip={savedZip}
-            status={status}
-            updatedAt={updatedAt}
+            entry={entry}
             onUpdateStatus={updateActionStatus}
+            onUpdateEntry={updateActionEntry}
           />
         ))}
 
@@ -274,7 +356,7 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
             </div>
 
             <div className="mt-4 space-y-4">
-              {completedRecommendations.map(({ action, updatedAt }) => {
+              {completedRecommendations.map(({ action, entry }) => {
                 const guidance = getActionPlanGuidance(action.id);
 
                 return (
@@ -296,7 +378,7 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
                       </div>
                       <div className="text-left sm:text-right">
                         <p className="text-xs text-[#8a8377] font-body">
-                          {updatedAt ? formatSavedAt(updatedAt) : 'Completed'}
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : 'Completed'}
                         </p>
                         <button
                           type="button"

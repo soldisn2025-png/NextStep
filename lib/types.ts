@@ -88,6 +88,22 @@ export type ActionPlanStatus = 'not-started' | 'in-progress' | 'done';
 export interface ActionPlanProgressEntry {
   status: ActionPlanStatus;
   updatedAt: string;
+  notes?: string;
+  lastContactDate?: string;
+  nextFollowUpDate?: string;
 }
 
 export type ActionPlanProgressMap = Record<string, ActionPlanProgressEntry>;
+
+export interface WeeklyCheckInEntry {
+  summary: string;
+  blocker: string;
+  focusActionId: string | null;
+  checkedInAt: string;
+}
+
+export type ActionAssistantMode =
+  | 'draft-email'
+  | 'call-script'
+  | 'meeting-questions'
+  | 'summarize-notes';

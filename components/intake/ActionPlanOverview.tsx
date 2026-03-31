@@ -11,6 +11,7 @@ interface ActionPlanOverviewProps {
   remainingCount: number;
   nextFocus: RecommendedAction | null;
   nextFocusFirstMove: string | null;
+  focusContext?: string | null;
   zipInput: string;
   savedZip: string;
   zipError: string;
@@ -29,6 +30,7 @@ export default function ActionPlanOverview({
   remainingCount,
   nextFocus,
   nextFocusFirstMove,
+  focusContext,
   zipInput,
   savedZip,
   zipError,
@@ -63,6 +65,11 @@ export default function ActionPlanOverview({
                 <p className="text-xs uppercase tracking-[0.22em] text-[#817b6e] font-body">
                   Current focus
                 </p>
+                {focusContext && (
+                  <p className="mt-2 max-w-2xl text-xs uppercase tracking-[0.16em] text-[#7a745f] font-body">
+                    Weekly reset: {focusContext}
+                  </p>
+                )}
                 <h3 className="mt-2 font-heading text-2xl text-text-main leading-tight">
                   {nextFocus ? nextFocus.title : 'You cleared the current plan.'}
                 </h3>
