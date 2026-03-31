@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { SupabaseAuthProvider } from '@/components/providers/SupabaseAuthProvider';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 
@@ -36,9 +37,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <SupabaseAuthProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </SupabaseAuthProvider>
       </body>
     </html>
   );

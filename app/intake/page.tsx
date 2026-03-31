@@ -1,109 +1,305 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSupabaseAuth } from '@/components/providers/SupabaseAuthProvider';
 import StepWrapper from '@/components/intake/StepWrapper';
 import QuestionCard from '@/components/intake/QuestionCard';
 import TextInputStep from '@/components/intake/TextInputStep';
 import ResultsCard from '@/components/intake/ResultsCard';
 import { intakeSteps } from '@/lib/intakeSteps';
-import { IntakeAnswers, RecommendedAction } from '@/lib/types';
+import {
+  getEmptyPlanSnapshot,
+  isPlanSnapshotEmpty,
+  PersistedPlanSnapshot,
+  readLocalPlanSnapshot,
+  writeLocalPlanSnapshot,
+} from '@/lib/planSnapshot';
+import { PlanSyncStatus } from '@/lib/types';
 import { getRecommendations } from '@/lib/rulesEngine';
-
-const STORAGE_KEY = 'nextstep_intake_answers';
-
-const emptyAnswers: IntakeAnswers = {
-  childAge: '',
-  diagnosedBy: '',
-  diagnoses: [],
-  currentSupport: [],
-  topConcerns: [],
-  freeText: '',
-};
+import {
+  fetchRemotePlanSnapshot,
+  saveRemotePlanSnapshot,
+} from '@/lib/supabase/planSync';
 
 export default function IntakePage() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [answers, setAnswers] = useState<IntakeAnswers>(emptyAnswers);
-  const [completed, setCompleted] = useState(false);
+  const { user, isConfigured } = useSupabaseAuth();
+  const [plan, setPlan] = useState<PersistedPlanSnapshot>(getEmptyPlanSnapshot());
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<PlanSyncStatus>(
+    isConfigured ? 'signed-out' : 'not-configured'
+  );
+  const latestPlanRef = useRef(plan);
+  const hasResolvedRemoteRef = useRef(false);
+  const lastSyncedPlanUpdatedAtRef = useRef('');
 
-  // Restore from localStorage on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setAnswers(JSON.parse(saved));
-      }
-    } catch {
-      // ignore parse errors
-    }
+    latestPlanRef.current = plan;
+  }, [plan]);
+
+  useEffect(() => {
+    const localPlan = readLocalPlanSnapshot();
+    setPlan(localPlan);
+    setIsHydrated(true);
   }, []);
 
-  // Persist to localStorage on each answer change
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
-    } catch {
-      // ignore storage errors
+    if (!isHydrated) {
+      return;
     }
-  }, [answers]);
+
+    writeLocalPlanSnapshot(plan);
+  }, [isHydrated, plan]);
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    if (!isConfigured) {
+      hasResolvedRemoteRef.current = false;
+      lastSyncedPlanUpdatedAtRef.current = '';
+      setSyncStatus('not-configured');
+      return;
+    }
+
+    if (!user) {
+      hasResolvedRemoteRef.current = false;
+      lastSyncedPlanUpdatedAtRef.current = '';
+      setSyncStatus('signed-out');
+      return;
+    }
+
+    let cancelled = false;
+
+    const resolveInitialSync = async () => {
+      setSyncStatus('syncing');
+
+      try {
+        const remotePlan = await fetchRemotePlanSnapshot(user.id);
+        if (cancelled) {
+          return;
+        }
+
+        const localPlan = latestPlanRef.current;
+
+        if (!remotePlan) {
+          if (!isPlanSnapshotEmpty(localPlan) && localPlan.planUpdatedAt) {
+            await saveRemotePlanSnapshot(user.id, localPlan);
+            if (cancelled) {
+              return;
+            }
+            lastSyncedPlanUpdatedAtRef.current = localPlan.planUpdatedAt;
+          } else {
+            lastSyncedPlanUpdatedAtRef.current = '';
+          }
+
+          hasResolvedRemoteRef.current = true;
+          setSyncStatus('synced');
+          return;
+        }
+
+        const localTimestamp = localPlan.planUpdatedAt
+          ? new Date(localPlan.planUpdatedAt).getTime()
+          : 0;
+        const remoteTimestamp = remotePlan.planUpdatedAt
+          ? new Date(remotePlan.planUpdatedAt).getTime()
+          : 0;
+
+        if (
+          remoteTimestamp > localTimestamp ||
+          (isPlanSnapshotEmpty(localPlan) && !isPlanSnapshotEmpty(remotePlan))
+        ) {
+          lastSyncedPlanUpdatedAtRef.current = remotePlan.planUpdatedAt;
+          setPlan(remotePlan);
+        } else if (localTimestamp > remoteTimestamp) {
+          await saveRemotePlanSnapshot(user.id, localPlan);
+          if (cancelled) {
+            return;
+          }
+          lastSyncedPlanUpdatedAtRef.current = localPlan.planUpdatedAt;
+        } else {
+          lastSyncedPlanUpdatedAtRef.current =
+            remotePlan.planUpdatedAt || localPlan.planUpdatedAt;
+        }
+
+        hasResolvedRemoteRef.current = true;
+        setSyncStatus('synced');
+      } catch {
+        if (!cancelled) {
+          hasResolvedRemoteRef.current = true;
+          setSyncStatus('error');
+        }
+      }
+    };
+
+    void resolveInitialSync();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isConfigured, isHydrated, user]);
+
+  useEffect(() => {
+    if (!isHydrated || !isConfigured || !user || !hasResolvedRemoteRef.current) {
+      return;
+    }
+
+    if (!plan.planUpdatedAt || plan.planUpdatedAt === lastSyncedPlanUpdatedAtRef.current) {
+      return;
+    }
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        setSyncStatus('syncing');
+        const latestPlan = latestPlanRef.current;
+        await saveRemotePlanSnapshot(user.id, latestPlan);
+        lastSyncedPlanUpdatedAtRef.current = latestPlan.planUpdatedAt;
+        setSyncStatus('synced');
+      } catch {
+        setSyncStatus('error');
+      }
+    }, 900);
+
+    return () => window.clearTimeout(timeout);
+  }, [isConfigured, isHydrated, plan, user]);
 
   const totalSteps = intakeSteps.length;
+  const currentStep = Math.min(Math.max(plan.currentStep, 1), totalSteps);
   const step = intakeSteps[currentStep - 1];
 
+  const updatePlan = (updater: (current: PersistedPlanSnapshot) => PersistedPlanSnapshot) => {
+    setPlan((current) => ({
+      ...updater(current),
+      planUpdatedAt: new Date().toISOString(),
+    }));
+  };
+
   const handleSingleSelect = (fieldName: string, value: string) => {
-    setAnswers((prev) => ({ ...prev, [fieldName]: value }));
-    // Auto-advance for single-select
-    advanceStep();
+    updatePlan((current) => {
+      const nextStep = current.currentStep < totalSteps ? current.currentStep + 1 : current.currentStep;
+
+      return {
+        ...current,
+        answers: {
+          ...current.answers,
+          [fieldName]: value,
+        },
+        currentStep: nextStep,
+        completed: current.currentStep >= totalSteps ? true : current.completed,
+      };
+    });
   };
 
   const handleMultiSelect = (fieldName: string, value: string) => {
-    setAnswers((prev) => {
-      const current = prev[fieldName as keyof IntakeAnswers] as string[];
-      const step = intakeSteps.find((s) => s.fieldName === fieldName);
-      const max = step?.maxSelections;
+    updatePlan((current) => {
+      const selectedValues = current.answers[fieldName as keyof typeof current.answers] as string[];
+      const intakeStep = intakeSteps.find((item) => item.fieldName === fieldName);
+      const maxSelections = intakeStep?.maxSelections;
 
-      if (current.includes(value)) {
-        return { ...prev, [fieldName]: current.filter((v) => v !== value) };
+      if (selectedValues.includes(value)) {
+        return {
+          ...current,
+          answers: {
+            ...current.answers,
+            [fieldName]: selectedValues.filter((item) => item !== value),
+          },
+        };
       }
-      // Enforce max selections
-      if (max !== undefined && current.length >= max) {
-        return prev;
+
+      if (maxSelections !== undefined && selectedValues.length >= maxSelections) {
+        return current;
       }
-      return { ...prev, [fieldName]: [...current, value] };
+
+      return {
+        ...current,
+        answers: {
+          ...current.answers,
+          [fieldName]: [...selectedValues, value],
+        },
+      };
     });
   };
 
   const advanceStep = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep((s) => s + 1);
-    } else {
-      setCompleted(true);
-    }
+    updatePlan((current) => ({
+      ...current,
+      currentStep: current.currentStep < totalSteps ? current.currentStep + 1 : current.currentStep,
+      completed: current.currentStep >= totalSteps ? true : current.completed,
+    }));
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep((s) => s - 1);
-    }
+    updatePlan((current) => ({
+      ...current,
+      currentStep: current.currentStep > 1 ? current.currentStep - 1 : 1,
+    }));
   };
 
   const handleSkip = () => {
-    setCompleted(true);
+    updatePlan((current) => ({
+      ...current,
+      completed: true,
+    }));
   };
 
   const handleSubmit = () => {
-    setCompleted(true);
+    updatePlan((current) => ({
+      ...current,
+      completed: true,
+    }));
   };
 
   const handleStartOver = () => {
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
-    setAnswers(emptyAnswers);
-    setCurrentStep(1);
-    setCompleted(false);
+    setPlan({
+      ...getEmptyPlanSnapshot(),
+      planUpdatedAt: new Date().toISOString(),
+    });
   };
 
-  if (completed) {
-    const recommendations: RecommendedAction[] = getRecommendations(answers);
-    return <ResultsCard answers={answers} recommendations={recommendations} onStartOver={handleStartOver} />;
+  const recommendations = useMemo(
+    () => getRecommendations(plan.answers),
+    [plan.answers]
+  );
+
+  if (plan.completed) {
+    return (
+      <ResultsCard
+        answers={plan.answers}
+        recommendations={recommendations}
+        savedZip={plan.savedZip}
+        progress={plan.progress}
+        weeklyCheckIn={plan.weeklyCheckIn}
+        syncStatus={syncStatus}
+        accountEmail={user?.email ?? null}
+        onSavedZipChange={(value) =>
+          updatePlan((current) => ({
+            ...current,
+            savedZip: value,
+          }))
+        }
+        onUpdateActionEntry={(actionId, updates) =>
+          updatePlan((current) => ({
+            ...current,
+            progress: {
+              ...current.progress,
+              [actionId]: {
+                ...current.progress[actionId],
+                ...updates,
+                status: updates.status ?? current.progress[actionId]?.status ?? 'not-started',
+                updatedAt: new Date().toISOString(),
+              },
+            },
+          }))
+        }
+        onWeeklyCheckInChange={(entry) =>
+          updatePlan((current) => ({
+            ...current,
+            weeklyCheckIn: entry,
+          }))
+        }
+        onStartOver={handleStartOver}
+      />
+    );
   }
 
   return (
@@ -113,15 +309,23 @@ export default function IntakePage() {
           question={step.question}
           subtitle={step.subtitle}
           placeholder={step.placeholder}
-          value={answers.freeText}
-          onChange={(val) => setAnswers((prev) => ({ ...prev, freeText: val }))}
+          value={plan.answers.freeText}
+          onChange={(value) =>
+            updatePlan((current) => ({
+              ...current,
+              answers: {
+                ...current.answers,
+                freeText: value,
+              },
+            }))
+          }
           onSkip={handleSkip}
           onSubmit={handleSubmit}
         />
       ) : (
         <QuestionCard
           step={step}
-          answers={answers}
+          answers={plan.answers}
           onSingleSelect={handleSingleSelect}
           onMultiSelect={handleMultiSelect}
           onContinue={advanceStep}

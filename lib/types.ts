@@ -104,6 +104,13 @@ export interface WeeklyCheckInEntry {
   checkedInAt: string;
 }
 
+export type PlanSyncStatus =
+  | 'signed-out'
+  | 'not-configured'
+  | 'syncing'
+  | 'synced'
+  | 'error';
+
 export type ActionAssistantMode =
   | 'draft-email'
   | 'call-script'
