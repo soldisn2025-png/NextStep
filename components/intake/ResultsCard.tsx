@@ -2,12 +2,18 @@
 
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { IntakeAnswers, LocalResource, RecommendedAction } from '@/lib/types';
+import { ArrowLeft, CheckCircle2, ClipboardList, RotateCcw, Trophy } from 'lucide-react';
+import { getActionPlanGuidance } from '@/lib/actionPlan';
 import { intakeSteps } from '@/lib/intakeSteps';
-import { ArrowLeft, Calendar, CheckCircle, Clock, ExternalLink, MapPin, Zap } from 'lucide-react';
-import { getLocationMatch, getLocalResourcesForAction, LOCAL_PILOT_SUMMARY } from '@/lib/localResources';
-import NearbyProviders from './NearbyProviders';
+import { getLocationMatch, LOCAL_PILOT_SUMMARY } from '@/lib/localResources';
+import {
+  ActionPlanProgressMap,
+  ActionPlanStatus,
+  IntakeAnswers,
+  RecommendedAction,
+} from '@/lib/types';
+import ActionPlanCard from './ActionPlanCard';
+import ActionPlanOverview from './ActionPlanOverview';
 
 interface ResultsCardProps {
   answers: IntakeAnswers;
@@ -16,6 +22,7 @@ interface ResultsCardProps {
 }
 
 const ZIP_STORAGE_KEY = 'nextstep_local_zip';
+const ACTION_PROGRESS_STORAGE_KEY = 'nextstep_action_progress';
 
 const fieldLabels: Record<string, string> = {
   childAge: "Child's age",
@@ -26,83 +33,131 @@ const fieldLabels: Record<string, string> = {
   freeText: 'Additional context',
 };
 
-const categoryColors: Record<RecommendedAction['category'], string> = {
-  therapy: 'bg-blue-50 text-blue-700',
-  school: 'bg-purple-50 text-purple-700',
-  insurance: 'bg-amber-50 text-amber-700',
-  community: 'bg-green-50 text-green-700',
-  parent: 'bg-rose-50 text-rose-700',
+const urgencyOrder: Record<RecommendedAction['urgency'], number> = {
+  immediate: 0,
+  soon: 1,
+  'when-ready': 2,
 };
 
-const categoryLabels: Record<RecommendedAction['category'], string> = {
-  therapy: 'Therapy',
-  school: 'School / Services',
-  insurance: 'Insurance',
-  community: 'Community',
-  parent: 'For You',
+const statusOrder: Record<ActionPlanStatus, number> = {
+  'in-progress': 0,
+  'not-started': 1,
+  done: 2,
 };
 
-const urgencyConfig: Record<
-  RecommendedAction['urgency'],
-  { label: string; icon: LucideIcon; color: string }
-> = {
-  immediate: { label: 'Do this first', icon: Zap, color: 'text-red-500' },
-  soon: { label: 'Do this soon', icon: Clock, color: 'text-amber-500' },
-  'when-ready': { label: 'When ready', icon: Calendar, color: 'text-gray-400' },
-};
+function parseProgressState(rawValue: string | null): ActionPlanProgressMap {
+  if (!rawValue) {
+    return {};
+  }
 
-const localSectionMeta: Record<
-  LocalResource['kind'],
-  { heading: string; containerClass: string; labelClass: string }
-> = {
-  'official-program': {
-    heading: 'Local programs near you',
-    containerClass: 'bg-sky-50 border-sky-100',
-    labelClass: 'text-sky-700',
-  },
-  'parent-group': {
-    heading: 'Parent and community groups',
-    containerClass: 'bg-emerald-50 border-emerald-100',
-    labelClass: 'text-emerald-700',
-  },
-  provider: {
-    heading: 'Private providers',
-    containerClass: 'bg-violet-50 border-violet-100',
-    labelClass: 'text-violet-700',
-  },
-};
+  try {
+    const parsed = JSON.parse(rawValue) as Record<string, { status?: string; updatedAt?: string }>;
 
-function groupLocalResources(resources: LocalResource[]) {
-  return resources.reduce(
-    (groups, resource) => {
-      groups[resource.kind].push(resource);
-      return groups;
-    },
-    {
-      'official-program': [] as LocalResource[],
-      'parent-group': [] as LocalResource[],
-      provider: [] as LocalResource[],
-    }
-  );
+    return Object.fromEntries(
+      Object.entries(parsed).flatMap(([actionId, entry]) => {
+        if (
+          entry?.status === 'not-started' ||
+          entry?.status === 'in-progress' ||
+          entry?.status === 'done'
+        ) {
+          return [[actionId, { status: entry.status, updatedAt: entry.updatedAt ?? new Date().toISOString() }]];
+        }
+
+        return [];
+      })
+    );
+  } catch {
+    return {};
+  }
+}
+
+function formatSavedAt(updatedAt: string) {
+  const diffMs = Date.now() - new Date(updatedAt).getTime();
+
+  if (!Number.isFinite(diffMs) || diffMs < 60_000) {
+    return 'Updated just now';
+  }
+
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 60) {
+    return `Updated ${minutes}m ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `Updated ${hours}h ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  return `Updated ${days}d ago`;
 }
 
 export default function ResultsCard({ answers, recommendations, onStartOver }: ResultsCardProps) {
   const [zipInput, setZipInput] = useState('');
   const [savedZip, setSavedZip] = useState('');
   const [zipError, setZipError] = useState('');
+  const [progress, setProgress] = useState<ActionPlanProgressMap>({});
 
   useEffect(() => {
     try {
       const storedZip = localStorage.getItem(ZIP_STORAGE_KEY) ?? '';
       setZipInput(storedZip);
       setSavedZip(storedZip);
+      setProgress(parseProgressState(localStorage.getItem(ACTION_PROGRESS_STORAGE_KEY)));
     } catch {
       // ignore storage errors
     }
   }, []);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(ACTION_PROGRESS_STORAGE_KEY, JSON.stringify(progress));
+    } catch {
+      // ignore storage errors
+    }
+  }, [progress]);
+
   const locationMatch = useMemo(() => getLocationMatch(savedZip), [savedZip]);
   const hasSupportedRegion = Boolean(locationMatch && locationMatch.regionIds.length > 0);
+
+  const recommendationsWithState = useMemo(() => {
+    return recommendations
+      .map((action, index) => {
+        const progressEntry = progress[action.id];
+        return {
+          action,
+          index,
+          status: progressEntry?.status ?? 'not-started',
+          updatedAt: progressEntry?.updatedAt,
+        };
+      })
+      .sort((a, b) => {
+        if (statusOrder[a.status] !== statusOrder[b.status]) {
+          return statusOrder[a.status] - statusOrder[b.status];
+        }
+
+        if (urgencyOrder[a.action.urgency] !== urgencyOrder[b.action.urgency]) {
+          return urgencyOrder[a.action.urgency] - urgencyOrder[b.action.urgency];
+        }
+
+        return a.index - b.index;
+      });
+  }, [progress, recommendations]);
+
+  const activeRecommendations = recommendationsWithState.filter(({ status }) => status !== 'done');
+  const completedRecommendations = recommendationsWithState.filter(({ status }) => status === 'done');
+
+  const completedCount = completedRecommendations.length;
+  const inProgressCount = recommendationsWithState.filter(
+    ({ status }) => status === 'in-progress'
+  ).length;
+  const remainingCount = recommendations.length - completedCount;
+  const completionPercent = recommendations.length
+    ? Math.round((completedCount / recommendations.length) * 100)
+    : 0;
+
+  const nextFocus = activeRecommendations[0]?.action ?? null;
+  const nextFocusGuidance = nextFocus ? getActionPlanGuidance(nextFocus.id) : null;
 
   const handleZipSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -136,214 +191,150 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
     setSavedZip('');
   };
 
+  const updateActionStatus = (actionId: string, status: ActionPlanStatus) => {
+    setProgress((current) => ({
+      ...current,
+      [actionId]: {
+        status,
+        updatedAt: new Date().toISOString(),
+      },
+    }));
+  };
+
+  const handleStartOver = () => {
+    try {
+      localStorage.removeItem(ZIP_STORAGE_KEY);
+      localStorage.removeItem(ACTION_PROGRESS_STORAGE_KEY);
+    } catch {
+      // ignore storage errors
+    }
+
+    setZipInput('');
+    setSavedZip('');
+    setZipError('');
+    setProgress({});
+    onStartOver();
+  };
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-4">
-          <CheckCircle size={48} className="text-success" />
-        </div>
-        <h2 className="font-heading text-2xl text-text-main mb-2">Your next steps</h2>
-        <p className="text-sm text-gray-500 font-body">
-          Based on what you shared, here&apos;s where to focus your energy.
-        </p>
-      </div>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <ActionPlanOverview
+        completionPercent={completionPercent}
+        completedCount={completedCount}
+        inProgressCount={inProgressCount}
+        remainingCount={remainingCount}
+        nextFocus={nextFocus}
+        nextFocusFirstMove={nextFocusGuidance?.firstMove ?? null}
+        zipInput={zipInput}
+        savedZip={savedZip}
+        zipError={zipError}
+        localPilotSummary={LOCAL_PILOT_SUMMARY}
+        hasSupportedRegion={hasSupportedRegion}
+        regionLabel={locationMatch?.primaryRegionLabel ?? null}
+        onZipInputChange={(value) => {
+          setZipError('');
+          setZipInput(value.replace(/\D/g, '').slice(0, 5));
+        }}
+        onZipSubmit={handleZipSubmit}
+        onClearZip={handleClearZip}
+      />
 
-      <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 mb-6">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-            <MapPin size={18} />
-          </div>
-          <div>
-            <h3 className="font-heading text-base text-text-main mb-1">Add local help near you</h3>
-            <p className="text-sm text-gray-500 font-body leading-relaxed">
-              Enter a ZIP code to layer in curated public programs and parent groups without changing your core results.
-            </p>
-          </div>
-        </div>
-
-        <form onSubmit={handleZipSubmit} className="flex flex-col sm:flex-row gap-2">
-          <label htmlFor="localZip" className="sr-only">
-            ZIP code for local resources
-          </label>
-          <input
-            id="localZip"
-            inputMode="numeric"
-            autoComplete="postal-code"
-            maxLength={5}
-            value={zipInput}
-            onChange={(event) => {
-              setZipError('');
-              setZipInput(event.target.value.replace(/\D/g, '').slice(0, 5));
-            }}
-            placeholder="ZIP code"
-            className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-text-main font-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+      <div className="mt-7 space-y-5">
+        {activeRecommendations.map(({ action, status, updatedAt }, index) => (
+          <ActionPlanCard
+            key={action.id}
+            action={action}
+            displayIndex={index + 1}
+            savedZip={savedZip}
+            status={status}
+            updatedAt={updatedAt}
+            onUpdateStatus={updateActionStatus}
           />
-          <button
-            type="submit"
-            className="rounded-xl bg-primary text-white px-4 py-2.5 text-sm font-body hover:opacity-95 transition-opacity"
-          >
-            Show local resources
-          </button>
-          {savedZip && (
-            <button
-              type="button"
-              onClick={handleClearZip}
-              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-500 font-body hover:text-primary hover:border-primary transition-colors"
-            >
-              Clear
-            </button>
-          )}
-        </form>
+        ))}
 
-        <p className="mt-3 text-xs text-gray-400 font-body">{LOCAL_PILOT_SUMMARY}</p>
-        {zipError && <p className="mt-2 text-sm text-red-500 font-body">{zipError}</p>}
-        {!zipError && savedZip && hasSupportedRegion && locationMatch?.primaryRegionLabel && (
-          <p className="mt-2 text-sm text-success font-body">
-            Showing curated local resources for {locationMatch.primaryRegionLabel}.
-          </p>
-        )}
-        {!zipError && savedZip && !hasSupportedRegion && (
-          <p className="mt-2 text-sm text-amber-600 font-body">
-            We do not have curated resources for ZIP {savedZip} yet. Your recommendations below still work nationally.
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-4 mb-10">
-        {recommendations.map((action, index) => {
-          const urgency = urgencyConfig[action.urgency];
-          const UrgencyIcon = urgency.icon;
-          const localResources = savedZip ? getLocalResourcesForAction(action.id, savedZip) : [];
-          const groupedLocalResources = groupLocalResources(localResources);
-          const localKinds = (Object.keys(groupedLocalResources) as LocalResource['kind'][]).filter(
-            (kind) => groupedLocalResources[kind].length > 0
-          );
-
-          return (
-            <div
-              key={action.id}
-              className="bg-white rounded-2xl border border-gray-100 px-5 py-4"
-            >
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full font-body ${categoryColors[action.category]}`}
-                  >
-                    {categoryLabels[action.category]}
-                  </span>
-                  <span className={`flex items-center gap-1 text-xs font-body ${urgency.color}`}>
-                    <UrgencyIcon size={12} />
-                    {urgency.label}
-                  </span>
+        {completedRecommendations.length > 0 && (
+          <details className="rounded-[28px] border border-[#ddd3bf] bg-white/75 px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.65)]">
+            <summary className="cursor-pointer list-none select-none">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf6e7] text-[#5a754e]">
+                    <Trophy size={18} />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                      Completed steps
+                    </p>
+                    <h3 className="mt-1 font-heading text-xl text-text-main">
+                      {completedRecommendations.length} step{completedRecommendations.length === 1 ? '' : 's'} marked done
+                    </h3>
+                  </div>
                 </div>
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-400 text-xs font-body flex items-center justify-center">
-                  {index + 1}
-                </span>
+                <p className="text-sm text-[#625e53] font-body">
+                  Open to review or reopen later.
+                </p>
               </div>
+            </summary>
 
-              <h3 className="font-heading text-base text-text-main mb-1">{action.title}</h3>
-              <p className="text-sm text-gray-500 font-body leading-relaxed">{action.description}</p>
+            <div className="mt-4 space-y-4">
+              {completedRecommendations.map(({ action, updatedAt }) => {
+                const guidance = getActionPlanGuidance(action.id);
 
-              {action.resources && action.resources.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-gray-400 font-body mb-2">
-                    Trusted national resources
-                  </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {action.resources.map((resource) => (
-                      <a
-                        key={resource.url}
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline underline-offset-2 font-body"
-                      >
-                        <ExternalLink size={11} />
-                        {resource.label}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {localKinds.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  {localKinds.map((kind) => {
-                    const meta = localSectionMeta[kind];
-                    const items = groupedLocalResources[kind];
-
-                    return (
-                      <div
-                        key={kind}
-                        className={`rounded-2xl border px-4 py-3 ${meta.containerClass}`}
-                      >
-                        <p className={`text-xs uppercase tracking-[0.18em] font-body mb-2 ${meta.labelClass}`}>
-                          {meta.heading}
-                        </p>
-                        <div className="space-y-3">
-                          {items.map((resource) => (
-                            <div key={resource.id}>
-                              <a
-                                href={resource.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-sm text-text-main hover:text-primary transition-colors font-body"
-                              >
-                                <ExternalLink size={12} />
-                                <span className="font-medium">{resource.label}</span>
-                              </a>
-                              <p className="text-sm text-gray-500 font-body leading-relaxed mt-1">
-                                {resource.description}
-                              </p>
-                              <p className="text-xs text-gray-400 font-body mt-1">
-                                Verified {resource.verifiedAt}
-                              </p>
-                            </div>
-                          ))}
+                return (
+                  <div
+                    key={action.id}
+                    className="rounded-[24px] border border-[#d7e1c7] bg-[#f9fbf1] px-4 py-4"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center rounded-full border border-[#d4e4c8] bg-[#edf6e7] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#4f6d4e] font-body">
+                            Done
+                          </span>
                         </div>
+                        <h4 className="mt-3 font-heading text-2xl text-text-main">{action.title}</h4>
+                        <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                          {guidance.firstMove}
+                        </p>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
-
-              {action.supportItems && action.supportItems.length > 0 && (
-                <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
-                  <p className="text-xs uppercase tracking-[0.18em] text-amber-700 font-body mb-2">
-                    Helpful items
-                  </p>
-                  <p className="text-sm text-gray-500 font-body leading-relaxed mb-2">
-                    Optional items families often explore while waiting for services or building routines at home.
-                  </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                    {action.supportItems.map((item) => (
-                      <a
-                        key={item.url}
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline underline-offset-2 font-body"
-                      >
-                        <ExternalLink size={11} />
-                        {item.label}
-                      </a>
-                    ))}
+                      <div className="text-left sm:text-right">
+                        <p className="text-xs text-[#8a8377] font-body">
+                          {updatedAt ? formatSavedAt(updatedAt) : 'Completed'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => updateActionStatus(action.id, 'not-started')}
+                          className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body hover:border-[#7f7a57] hover:text-[#504b40] transition-colors"
+                        >
+                          <RotateCcw size={14} />
+                          Reopen step
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })}
             </div>
-          );
-        })}
+          </details>
+        )}
       </div>
 
-      <details className="mb-6">
-        <summary className="text-sm text-gray-400 font-body cursor-pointer select-none hover:text-primary transition-colors">
-          View your answers
+      <details className="mt-8 rounded-[28px] border border-[#ddd3bf] bg-white/75 px-5 py-5 shadow-[0_20px_55px_-48px_rgba(54,44,28,0.65)]">
+        <summary className="cursor-pointer list-none select-none">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf4ff] text-primary">
+              <ClipboardList size={18} />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                Intake details
+              </p>
+              <h3 className="mt-1 font-heading text-xl text-text-main">Review your answers</h3>
+            </div>
+          </div>
         </summary>
-        <div className="mt-3 bg-white rounded-2xl border border-gray-100 divide-y divide-gray-100">
-          {intakeSteps.map((step) => {
+
+        <div className="mt-4 overflow-hidden rounded-[24px] border border-[#e7decd] bg-[#fffdf8]">
+          {intakeSteps.map((step, index) => {
             const val = answers[step.fieldName as keyof IntakeAnswers];
             const isEmpty = !val || (Array.isArray(val) && val.length === 0) || val === '';
 
@@ -352,8 +343,11 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
             }
 
             return (
-              <div key={step.fieldName} className="px-4 py-3">
-                <p className="text-xs text-gray-400 font-body mb-0.5">{fieldLabels[step.fieldName]}</p>
+              <div
+                key={step.fieldName}
+                className={`px-4 py-3 ${index === intakeSteps.length - 1 ? '' : 'border-b border-[#eee6d7]'}`}
+              >
+                <p className="text-xs text-[#8a8377] font-body mb-1">{fieldLabels[step.fieldName]}</p>
                 <p className="text-sm text-text-main font-body">
                   {Array.isArray(val) ? val.join(', ') : val || '-'}
                 </p>
@@ -363,16 +357,26 @@ export default function ResultsCard({ answers, recommendations, onStartOver }: R
         </div>
       </details>
 
-      <p className="text-xs text-gray-400 font-body text-center leading-relaxed mb-6">
+      <div className="mt-8 rounded-[30px] border border-[#e3dac9] bg-[linear-gradient(180deg,rgba(255,255,255,0.8),rgba(244,239,231,0.95))] px-6 py-8 text-center shadow-[0_22px_55px_-50px_rgba(54,44,28,0.6)]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f3eee3] text-[#7a724b]">
+          <CheckCircle2 size={20} />
+        </div>
+        <h3 className="mt-4 font-heading text-2xl text-text-main">You are building a real plan.</h3>
+        <p className="mt-3 max-w-2xl mx-auto text-sm text-[#625e53] font-body leading-relaxed">
+          Keep the plan simple, work one step at a time, and come back after calls or appointments to mark progress. This journey is heavy enough without forcing everything into one day.
+        </p>
+      </div>
+
+      <p className="mt-8 text-xs text-[#8a8377] font-body text-center leading-relaxed">
         These recommendations are general guidance based on your answers and do not
         constitute medical or therapeutic advice. Always consult a qualified professional.
       </p>
 
-      <div className="flex justify-center">
+      <div className="mt-6 flex justify-center">
         <button
-          onClick={onStartOver}
+          onClick={handleStartOver}
           aria-label="Start over and retake the questionnaire"
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-primary transition-colors font-body"
+          className="flex items-center gap-1.5 text-sm text-[#7e786c] hover:text-primary transition-colors font-body"
         >
           <ArrowLeft size={14} />
           Start over

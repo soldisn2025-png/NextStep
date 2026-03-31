@@ -82,3 +82,12 @@ export interface ProviderSearchPayload {
   rankingSummary: string;
   generatedAt: string;
 }
+
+export type ActionPlanStatus = 'not-started' | 'in-progress' | 'done';
+
+export interface ActionPlanProgressEntry {
+  status: ActionPlanStatus;
+  updatedAt: string;
+}
+
+export type ActionPlanProgressMap = Record<string, ActionPlanProgressEntry>;

@@ -35,11 +35,11 @@ function formatDistance(distanceMiles: number | null) {
 
 function renderRating(provider: ProviderSearchResult) {
   if (provider.rating === null) {
-    return <span className="text-xs text-gray-400 font-body">No public rating yet</span>;
+    return <span className="text-xs text-[#8a8377] font-body">No public rating yet</span>;
   }
 
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-gray-600 font-body">
+    <span className="inline-flex items-center gap-1 text-xs text-[#625e53] font-body">
       <Star size={12} className="fill-amber-400 text-amber-400" />
       {provider.rating.toFixed(1)} ({provider.userRatingCount} reviews)
     </span>
@@ -127,14 +127,14 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
   const hasMore = providers.length > 5;
 
   return (
-    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+    <div className="mt-5 rounded-[24px] border border-[#e5dccb] bg-[#fbf8f1] px-4 py-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-body mb-1">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-1">
             Nearby options
           </p>
           <h4 className="font-heading text-base text-text-main">{config.heading}</h4>
-          <p className="text-sm text-gray-500 font-body leading-relaxed mt-1">
+          <p className="text-sm text-[#625e53] font-body leading-relaxed mt-1">
             Public listings for {config.searchLabel} near ZIP {zip}.
           </p>
         </div>
@@ -150,15 +150,15 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
       </div>
 
       {status === 'loading' && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 font-body">
+        <div className="mt-4 flex items-center gap-2 text-sm text-[#625e53] font-body">
           <LoaderCircle size={14} className="animate-spin" />
           Looking up nearby providers...
         </div>
       )}
 
       {status === 'error' && (
-        <div className="mt-4 rounded-xl border border-amber-100 bg-white px-3 py-3">
-          <p className="text-sm text-gray-600 font-body leading-relaxed">
+        <div className="mt-4 rounded-[20px] border border-amber-100 bg-white px-3 py-3">
+          <p className="text-sm text-[#625e53] font-body leading-relaxed">
             {error?.code === 'missing_api_key'
               ? 'Nearby provider listings are not configured yet in this deployment.'
               : error?.message ?? 'Provider search is temporarily unavailable.'}
@@ -167,8 +167,8 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
       )}
 
       {status === 'ready' && providers.length === 0 && (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white px-3 py-3">
-          <p className="text-sm text-gray-600 font-body leading-relaxed">
+        <div className="mt-4 rounded-[20px] border border-[#e5dccb] bg-white px-3 py-3">
+          <p className="text-sm text-[#625e53] font-body leading-relaxed">
             No strong matches were returned for this ZIP yet. Use the map search above to broaden the search.
           </p>
         </div>
@@ -182,7 +182,7 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
             return (
               <div
                 key={provider.id}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-3"
+                className="rounded-[20px] border border-[#e5dccb] bg-white px-3 py-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -196,20 +196,20 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
                       {provider.name}
                     </a>
                     {provider.primaryType && (
-                      <p className="text-xs text-gray-400 font-body mt-1">{provider.primaryType}</p>
+                      <p className="text-xs text-[#8a8377] font-body mt-1">{provider.primaryType}</p>
                     )}
                   </div>
                   {renderRating(provider)}
                 </div>
 
                 <div className="mt-2 space-y-1.5">
-                  <p className="flex items-start gap-1.5 text-sm text-gray-500 font-body leading-relaxed">
-                    <MapPin size={14} className="mt-0.5 flex-shrink-0 text-gray-400" />
+                  <p className="flex items-start gap-1.5 text-sm text-[#625e53] font-body leading-relaxed">
+                    <MapPin size={14} className="mt-0.5 flex-shrink-0 text-[#8a8377]" />
                     <span>{provider.address}</span>
                   </p>
                   {provider.phone && (
-                    <p className="flex items-center gap-1.5 text-sm text-gray-500 font-body">
-                      <Phone size={14} className="flex-shrink-0 text-gray-400" />
+                    <p className="flex items-center gap-1.5 text-sm text-[#625e53] font-body">
+                      <Phone size={14} className="flex-shrink-0 text-[#8a8377]" />
                       <span>{provider.phone}</span>
                     </p>
                   )}
@@ -217,7 +217,7 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
 
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {distanceLabel && (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-body">
+                    <span className="rounded-full bg-[#f3eee3] px-2 py-0.5 text-xs text-[#6f695d] font-body">
                       {distanceLabel}
                     </span>
                   )}
@@ -257,7 +257,7 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
                 </div>
 
                 {provider.attributions.length > 0 && (
-                  <p className="mt-3 text-[11px] text-gray-400 font-body leading-relaxed">
+                  <p className="mt-3 text-[11px] text-[#8a8377] font-body leading-relaxed">
                     Additional data providers:{' '}
                     {provider.attributions.map((attribution, index) => (
                       <span key={attribution.url}>
@@ -290,7 +290,7 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
         </div>
       )}
 
-      <p className="mt-4 text-[11px] text-gray-400 font-body leading-relaxed">
+      <p className="mt-4 text-[11px] text-[#8a8377] font-body leading-relaxed">
         <span translate="no">Google Maps</span> data. {payload?.rankingSummary ?? 'Public ratings can be incomplete, so verify fit and credentials directly.'}
       </p>
     </div>
