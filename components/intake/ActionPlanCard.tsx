@@ -176,6 +176,7 @@ export default function ActionPlanCard({
   const [showResources, setShowResources] = useState(false);
   const [showTools, setShowTools] = useState(savedDraftCount > 0 || executionLogCount > 0);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel | null>(null);
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
   const resourceSummary = [
     action.resources?.length
       ? getPluralLabel(action.resources.length, 'trusted link')
@@ -337,6 +338,50 @@ export default function ActionPlanCard({
       />
     </>
   );
+  const actionButtons = (
+    <div className="flex flex-wrap gap-2">
+      {status !== 'done' && status !== 'skipped' && (
+        <button
+          type="button"
+          onClick={() => onUpdateStatus(action.id, 'in-progress')}
+          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-body transition-colors ${
+            status === 'in-progress'
+              ? 'border-[#d5cfaf] bg-[#ebe7d4] text-[#676540]'
+              : 'border-[#ddd3bf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
+          }`}
+        >
+          <Play size={14} />
+          {status === 'in-progress' ? 'Working on this' : 'Start this'}
+        </button>
+      )}
+      {status !== 'skipped' && (
+        <>
+          <button
+            type="button"
+            onClick={() => onUpdateStatus(action.id, 'skipped')}
+            className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
+          >
+            <X size={14} />
+            Skip this
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              onUpdateStatus(action.id, status === 'done' ? 'not-started' : 'done')
+            }
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-body transition-colors ${
+              status === 'done'
+                ? 'border border-[#d5cfaf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
+                : 'bg-[#6d6b47] text-white hover:bg-[#5a583a]'
+            }`}
+          >
+            {status === 'done' ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
+            {status === 'done' ? 'Reopen step' : 'Mark as done'}
+          </button>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -384,25 +429,89 @@ export default function ActionPlanCard({
           </p>
         </div>
 
-        <div className={`mt-5 grid gap-3 ${mobileMode ? '' : 'lg:grid-cols-2'}`}>
-          <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-              First move
-            </p>
-            <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
-              {guidance.firstMove}
-            </p>
+        {mobileMode ? (
+          <div className="mt-5 space-y-3">
+            <div className="rounded-[24px] border border-[#e5dccb] bg-white/88 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
+                Do this now
+              </p>
+              <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
+                {guidance.firstMove}
+              </p>
+            </div>
+
+            <div className="rounded-[24px] border border-[#e5dccb] bg-white/82 px-4 py-4">
+              <button
+                type="button"
+                onClick={() => setShowMobileDetails((current) => !current)}
+                aria-expanded={showMobileDetails}
+                className="flex w-full items-center justify-between gap-3 text-left"
+              >
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                    Why this step matters
+                  </p>
+                  <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                    Open the extra context only if you need it.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-3 py-1.5 text-xs text-[#5a5549] font-body">
+                  {showMobileDetails ? 'Hide' : 'Open'}
+                  {showMobileDetails ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </span>
+              </button>
+
+              {showMobileDetails && (
+                <div className="mt-4 space-y-3 border-t border-[#ece3d4] pt-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                      Context
+                    </p>
+                    <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                      {action.description}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                      While you wait
+                    </p>
+                    <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
+                      {guidance.whileWaiting ??
+                        'If this step feels blocked, write down what is slowing you down so the next call or appointment gets more specific.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-[24px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(249,246,239,0.98))] px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                Step actions
+              </p>
+              <div className="mt-3">{actionButtons}</div>
+            </div>
           </div>
-          <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-              While you wait
-            </p>
-            <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
-              {guidance.whileWaiting ??
-                'If this step feels blocked, write down what is slowing you down so the next call or appointment gets more specific.'}
-            </p>
+        ) : (
+          <div className="mt-5 grid gap-3 lg:grid-cols-2">
+            <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
+                First move
+              </p>
+              <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
+                {guidance.firstMove}
+              </p>
+            </div>
+            <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
+                While you wait
+              </p>
+              <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
+                {guidance.whileWaiting ??
+                  'If this step feels blocked, write down what is slowing you down so the next call or appointment gets more specific.'}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {mobileMode ? (
           <div className="mt-5 space-y-3">
@@ -618,50 +727,9 @@ export default function ActionPlanCard({
 
         <div className="mt-6 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex flex-wrap gap-2">
-              {status !== 'done' && status !== 'skipped' && (
-                <button
-                  type="button"
-                  onClick={() => onUpdateStatus(action.id, 'in-progress')}
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-body transition-colors ${
-                    status === 'in-progress'
-                      ? 'border-[#d5cfaf] bg-[#ebe7d4] text-[#676540]'
-                      : 'border-[#ddd3bf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
-                  }`}
-                >
-                  <Play size={14} />
-                  {status === 'in-progress' ? 'Working on this' : 'Start this'}
-                </button>
-              )}
-              {status !== 'skipped' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => onUpdateStatus(action.id, 'skipped')}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
-                  >
-                    <X size={14} />
-                    Skip this
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onUpdateStatus(action.id, status === 'done' ? 'not-started' : 'done')
-                    }
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-body transition-colors ${
-                      status === 'done'
-                        ? 'border border-[#d5cfaf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
-                        : 'bg-[#6d6b47] text-white hover:bg-[#5a583a]'
-                    }`}
-                  >
-                    {status === 'done' ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
-                    {status === 'done' ? 'Reopen step' : 'Mark as done'}
-                  </button>
-                </>
-              )}
-            </div>
+            {!mobileMode && actionButtons}
             {status !== 'done' && status !== 'skipped' && (
-              <p className="mt-2 text-xs text-[#8a8377] font-body">
+              <p className={`${mobileMode ? '' : 'mt-2 '}text-xs text-[#8a8377] font-body`}>
                 Done steps move into the green completed section. Skipped steps move into the skipped section.
               </p>
             )}

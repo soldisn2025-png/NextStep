@@ -417,42 +417,6 @@ export default function ResultsCard({
         <div className="space-y-4 pt-4">
           {mobileTab === 'focus' && (
             <>
-              <div className="grid grid-cols-4 gap-2">
-                <div className="rounded-[18px] border border-[#e7decd] bg-[#fffdf8] px-3 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                    Left
-                  </p>
-                  <p className="mt-1 font-heading text-lg text-text-main">{notStartedCount}</p>
-                </div>
-                <div className="rounded-[18px] border border-[#f2dfb9] bg-[#fff7e9] px-3 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                    Doing
-                  </p>
-                  <p className="mt-1 font-heading text-lg text-text-main">{inProgressCount}</p>
-                </div>
-                <div className="rounded-[18px] border border-[#d4e4c8] bg-[#edf6e7] px-3 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                    Done
-                  </p>
-                  <p className="mt-1 font-heading text-lg text-text-main">{completedCount}</p>
-                </div>
-                <div className="rounded-[18px] border border-[#e2dbcf] bg-[#f5f2ec] px-3 py-3">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                    Skipped
-                  </p>
-                  <p className="mt-1 font-heading text-lg text-text-main">{skippedCount}</p>
-                </div>
-              </div>
-
-              <div className="rounded-[24px] border border-[#ddd3bf] bg-white/90 px-4 py-4 shadow-[0_18px_42px_-34px_rgba(54,44,28,0.45)]">
-                <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                  Current focus
-                </p>
-                <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                  {nextFocusGuidance?.firstMove ?? emptyFocusMessage}
-                </p>
-              </div>
-
               {activeRecommendations.length > 1 && (
                 <div className="overflow-x-auto pb-1">
                   <div className="flex gap-2">
