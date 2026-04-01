@@ -676,6 +676,39 @@ export default function ResultsCard({
                     onUpdateEntry={onUpdateActionEntry}
                   />
 
+                  {!savedZip && (
+                    <div className="rounded-[24px] border border-[#ddd3bf] bg-white/90 px-4 py-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-1">
+                        Find nearby providers
+                      </p>
+                      <p className="mt-1 mb-3 text-sm text-[#625e53] font-body leading-relaxed">
+                        Enter your ZIP code to see local therapists and services for each step.
+                      </p>
+                      <form onSubmit={handleZipSubmit} className="flex gap-2">
+                        <input
+                          inputMode="numeric"
+                          autoComplete="postal-code"
+                          maxLength={5}
+                          value={zipInput}
+                          onChange={(event) => {
+                            setZipError('');
+                            setZipInput(event.target.value.replace(/\D/g, '').slice(0, 5));
+                          }}
+                          placeholder="ZIP code"
+                          aria-label="Enter ZIP code to find nearby providers"
+                          className="flex-1 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2.5 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-[18px] bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body"
+                        >
+                          Search
+                        </button>
+                      </form>
+                      {zipError && <p className="mt-2 text-sm text-red-500 font-body">{zipError}</p>}
+                    </div>
+                  )}
+
                   {activeRecommendations.length > 1 && (
                     <div className="grid grid-cols-2 gap-3">
                       <button

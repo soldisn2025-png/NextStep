@@ -160,7 +160,8 @@ export default function ActionPlanCard({
   const urgency = urgencyConfig[action.urgency];
   const UrgencyIcon = urgency.icon;
   const localResources = savedZip ? getLocalResourcesForAction(action.id, savedZip) : [];
-  const providerSearchKind = savedZip ? getProviderSearchKindForAction(action.id) : null;
+  const potentialProviderSearchKind = getProviderSearchKindForAction(action.id);
+  const providerSearchKind = savedZip ? potentialProviderSearchKind : null;
   const groupedLocalResources = groupLocalResources(localResources);
   const localKinds = (Object.keys(groupedLocalResources) as LocalResource['kind'][]).filter(
     (kind) => groupedLocalResources[kind].length > 0
@@ -170,7 +171,7 @@ export default function ActionPlanCard({
   const hasResourceHub = Boolean(
     (action.resources?.length ?? 0) > 0 ||
       localKinds.length > 0 ||
-      providerSearchKind ||
+      potentialProviderSearchKind ||
       (action.supportItems?.length ?? 0) > 0
   );
   const [showResources, setShowResources] = useState(false);
@@ -233,6 +234,17 @@ export default function ActionPlanCard({
   };
   const resourcesContent = (
     <>
+      {!savedZip && potentialProviderSearchKind && (
+        <div className="mb-5 rounded-[24px] border border-[#f0dcc0] bg-[#fff7e8] px-4 py-4">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#95611f] font-body mb-2">
+            Nearby provider search
+          </p>
+          <p className="text-sm text-[#625e53] font-body leading-relaxed">
+            Enter your ZIP code in the <strong className="font-medium text-[#95611f]">Plan</strong> tab to find nearby providers for this step.
+          </p>
+        </div>
+      )}
+
       {savedZip && providerSearchKind && (
         <div className="mb-5 rounded-[24px] border border-[#dbe4f8] bg-[#eef3ff] px-4 py-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[#516a8a] font-body mb-2">
@@ -576,13 +588,17 @@ export default function ActionPlanCard({
                     <MapPin size={16} />
                   </div>
                   <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                    Nearby search
+                    Nearby & resources
                   </p>
-                  {savedZip && providerSearchKind && (
+                  {savedZip && providerSearchKind ? (
                     <p className="mt-2 text-sm text-text-main font-body leading-relaxed">
                       Top nearby options for ZIP {savedZip}
                     </p>
-                  )}
+                  ) : !savedZip && potentialProviderSearchKind ? (
+                    <p className="mt-2 text-sm text-[#95611f] font-body leading-relaxed">
+                      Add ZIP to find nearby providers
+                    </p>
+                  ) : null}
                   <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
                     {resourceSummary || 'Nearby providers, local listings, and trusted links'}
                   </p>
