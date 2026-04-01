@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Bot,
@@ -17,7 +17,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { getActionPlanGuidance } from '@/lib/actionPlan';
-import { formatRelativeUpdate } from '@/lib/actionPlanState';
+import { createActionPlanEntry, formatRelativeUpdate, getFollowUpState } from '@/lib/actionPlanState';
 import { getLocalResourcesForAction } from '@/lib/localResources';
 import { getProviderSearchKindForAction } from '@/lib/providerSearchConfig';
 import {
@@ -36,6 +36,7 @@ interface ActionPlanCardProps {
   displayIndex: number;
   savedZip: string;
   entry?: ActionPlanProgressEntry;
+  mobileMode?: boolean;
   onUpdateStatus: (actionId: string, status: ActionPlanStatus) => void;
   onUpdateEntry: (actionId: string, updates: Partial<ActionPlanProgressEntry>) => void;
 }
@@ -140,16 +141,21 @@ function getPluralLabel(count: number, singular: string, plural = `${singular}s`
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
+type MobilePanel = 'tracker' | 'resources' | 'tools';
+
 export default function ActionPlanCard({
   action,
   displayIndex,
   savedZip,
   entry,
+  mobileMode = false,
   onUpdateStatus,
   onUpdateEntry,
 }: ActionPlanCardProps) {
   const status = entry?.status ?? 'not-started';
   const updatedAt = entry?.updatedAt;
+  const normalizedEntry = createActionPlanEntry(entry, {});
+  const followUpState = getFollowUpState(normalizedEntry.nextFollowUpDate, status);
   const guidance = getActionPlanGuidance(action.id);
   const urgency = urgencyConfig[action.urgency];
   const UrgencyIcon = urgency.icon;
@@ -169,6 +175,7 @@ export default function ActionPlanCard({
   );
   const [showResources, setShowResources] = useState(false);
   const [showTools, setShowTools] = useState(savedDraftCount > 0 || executionLogCount > 0);
+  const [mobilePanel, setMobilePanel] = useState<MobilePanel | null>(null);
   const resourceSummary = [
     action.resources?.length
       ? getPluralLabel(action.resources.length, 'trusted link')
@@ -183,17 +190,158 @@ export default function ActionPlanCard({
   ]
     .filter(Boolean)
     .join(' / ');
+
+  useEffect(() => {
+    if (!mobileMode || typeof document === 'undefined') {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = mobilePanel ? 'hidden' : previousOverflow;
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileMode, mobilePanel]);
   const toolsSummary = [
     savedDraftCount ? getPluralLabel(savedDraftCount, 'saved draft') : null,
     executionLogCount ? getPluralLabel(executionLogCount, 'logged activity', 'logged activities') : null,
   ]
     .filter(Boolean)
     .join(' / ');
+  const trackerSummary = followUpState.label;
+  const mobilePanels: Record<
+    MobilePanel,
+    { title: string; eyebrow: string; description: string }
+  > = {
+    tracker: {
+      title: 'Step tracker',
+      eyebrow: 'Keep this moving',
+      description: 'Update notes, contact dates, and follow-up timing without keeping the full editor open all the time.',
+    },
+    resources: {
+      title: 'Local help and resources',
+      eyebrow: 'Trusted links',
+      description: 'Use nearby providers, local programs, and reference links only when this step needs them.',
+    },
+    tools: {
+      title: 'Drafts and outreach log',
+      eyebrow: 'Execution tools',
+      description: 'Generate drafts, save them, and log outreach here without making the main step card heavy.',
+    },
+  };
+  const resourcesContent = (
+    <>
+      {action.resources && action.resources.length > 0 && (
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-2">
+            Trusted resources
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {action.resources.map((resource) => (
+              <a
+                key={resource.url}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 hover:shadow-sm transition-all font-body"
+              >
+                {resource.label}
+                <ExternalLink size={11} />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {localKinds.length > 0 && (
+        <div className="mt-5 space-y-3">
+          {localKinds.map((kind) => {
+            const meta = localSectionMeta[kind];
+            const items = groupedLocalResources[kind];
+
+            return (
+              <div key={kind} className={`rounded-[24px] border px-4 py-4 ${meta.containerClass}`}>
+                <p className={`text-xs uppercase tracking-[0.18em] font-body mb-3 ${meta.labelClass}`}>
+                  {meta.heading}
+                </p>
+                <div className="space-y-3">
+                  {items.map((resource) => (
+                    <div key={resource.id}>
+                      <a
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-text-main hover:text-primary transition-colors font-body"
+                      >
+                        <ExternalLink size={12} />
+                        <span className="font-medium">{resource.label}</span>
+                      </a>
+                      <p className="mt-1 text-sm text-[#625e53] font-body leading-relaxed">
+                        {resource.description}
+                      </p>
+                      <p className="mt-1 text-xs text-[#8a8377] font-body">
+                        Verified {resource.verifiedAt}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+
+      {action.supportItems && action.supportItems.length > 0 && (
+        <div className="mt-5 rounded-[24px] border border-[#efdfbc] bg-[#fff7e7] px-4 py-4">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#9a6a27] font-body mb-2">
+            Helpful items
+          </p>
+          <p className="text-sm text-[#625e53] font-body leading-relaxed mb-3">
+            Optional items families often explore while building routines or waiting for services to start.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {action.supportItems.map((item) => (
+              <a
+                key={item.url}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#e7d4a8] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 transition-all font-body"
+              >
+                {item.label}
+                <ExternalLink size={11} />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+  const toolsContent = (
+    <>
+      <ActionAIAssistant
+        actionId={action.id}
+        actionTitle={action.title}
+        actionDescription={action.description}
+        entry={entry}
+        onUpdate={(updates) => onUpdateEntry(action.id, updates)}
+      />
+
+      <ActionExecutionWorkspace
+        entry={entry}
+        status={status}
+        onUpdate={(updates) => onUpdateEntry(action.id, updates)}
+      />
+    </>
+  );
 
   return (
     <div
       id={`action-${action.id}`}
-      className={`relative overflow-hidden rounded-[30px] border px-5 py-5 shadow-[0_24px_64px_-42px_rgba(54,44,28,0.5)] before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] sm:px-6 sm:py-6 ${statusMeta[status].cardClass} ${urgency.accentClass}`}
+      className={`relative overflow-hidden rounded-[30px] border px-4 py-4 shadow-[0_24px_64px_-42px_rgba(54,44,28,0.5)] before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] sm:px-6 sm:py-6 ${statusMeta[status].cardClass} ${urgency.accentClass}`}
     >
       <div className="relative">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -228,7 +376,7 @@ export default function ActionPlanCard({
         </div>
 
         <div className="mt-4">
-          <h3 className="font-heading text-[1.9rem] leading-tight text-text-main">
+          <h3 className="font-heading text-[1.7rem] leading-tight text-text-main sm:text-[1.9rem]">
             {action.title}
           </h3>
           <p className="mt-3 max-w-3xl text-sm text-[#625e53] font-body leading-relaxed">
@@ -236,7 +384,7 @@ export default function ActionPlanCard({
           </p>
         </div>
 
-        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+        <div className={`mt-5 grid gap-3 ${mobileMode ? '' : 'lg:grid-cols-2'}`}>
           <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
             <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
               First move
@@ -256,191 +404,217 @@ export default function ActionPlanCard({
           </div>
         </div>
 
-        <ActionStepTracker
-          actionId={action.id}
-          action={action}
-          actionTitle={action.title}
-          entry={entry}
-          status={status}
-          onUpdate={(updates) => onUpdateEntry(action.id, updates)}
-        />
+        {mobileMode ? (
+          <div className="mt-5 space-y-3">
+            <div className="rounded-[24px] border border-[#e4dac8] bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,244,237,0.95))] px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                    Step tracker
+                  </p>
+                  <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
+                    {trackerSummary}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobilePanel('tracker')}
+                  className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-[#5a5549] font-body"
+                >
+                  Open
+                  <ChevronDown size={13} />
+                </button>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="rounded-[18px] border border-[#e9dfcf] bg-white/90 px-3 py-3">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                    Last contact
+                  </p>
+                  <p className="mt-1 text-sm text-text-main font-body">
+                    {normalizedEntry.lastContactDate || 'Not saved'}
+                  </p>
+                </div>
+                <div className="rounded-[18px] border border-[#e9dfcf] bg-white/90 px-3 py-3">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                    Next follow-up
+                  </p>
+                  <p className="mt-1 text-sm text-text-main font-body">
+                    {normalizedEntry.nextFollowUpDate || 'Not scheduled'}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-        <div className="mt-5 space-y-3">
-          {hasResourceHub && (
-            <div className="rounded-[24px] border border-[#e4dac8] bg-white/82 px-4 py-4">
-              <button
-                type="button"
-                onClick={() => setShowResources((current) => !current)}
-                aria-expanded={showResources}
-                className="flex w-full items-start justify-between gap-3 text-left"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef3ff] text-primary">
+            <div className={`grid gap-3 ${hasResourceHub ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {hasResourceHub && (
+                <button
+                  type="button"
+                  onClick={() => setMobilePanel('resources')}
+                  className="rounded-[24px] border border-[#e4dac8] bg-white/82 px-4 py-4 text-left"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef3ff] text-primary">
                     <MapPin size={16} />
                   </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                      Local help and resources
-                    </p>
-                    <h4 className="mt-1 font-heading text-xl text-text-main">
-                      Keep providers and reference links out of the way until you need them.
-                    </h4>
-                    <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                      {resourceSummary || 'Open this section to see trusted links, local programs, and nearby provider options.'}
-                    </p>
-                  </div>
+                  <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                    Resources
+                  </p>
+                  <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                    {resourceSummary || 'Links, local listings, and nearby search'}
+                  </p>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setMobilePanel('tools')}
+                className="rounded-[24px] border border-[#e4dac8] bg-white/82 px-4 py-4 text-left"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f6f1ff] text-[#675985]">
+                  <Bot size={16} />
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-3 py-1.5 text-xs text-[#5a5549] font-body">
-                  {showResources ? 'Hide' : 'Open'}
-                  {showResources ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </span>
+                <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                  Drafts and log
+                </p>
+                <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                  {toolsSummary || 'Open AI drafts and outreach logging only when needed.'}
+                </p>
               </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <ActionStepTracker
+              actionId={action.id}
+              action={action}
+              actionTitle={action.title}
+              entry={entry}
+              status={status}
+              onUpdate={(updates) => onUpdateEntry(action.id, updates)}
+            />
 
-              {showResources && (
-                <div className="mt-4 border-t border-[#ece3d4] pt-4">
-                  {action.resources && action.resources.length > 0 && (
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-2">
-                        Trusted resources
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {action.resources.map((resource) => (
-                          <a
-                            key={resource.url}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 hover:shadow-sm transition-all font-body"
-                          >
-                            {resource.label}
-                            <ExternalLink size={11} />
-                          </a>
-                        ))}
+            <div className="mt-5 space-y-3">
+              {hasResourceHub && (
+                <div className="rounded-[24px] border border-[#e4dac8] bg-white/82 px-4 py-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowResources((current) => !current)}
+                    aria-expanded={showResources}
+                    className="flex w-full items-start justify-between gap-3 text-left"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef3ff] text-primary">
+                        <MapPin size={16} />
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                          Local help and resources
+                        </p>
+                        <h4 className="mt-1 font-heading text-xl text-text-main">
+                          Keep providers and reference links out of the way until you need them.
+                        </h4>
+                        <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                          {resourceSummary || 'Open this section to see trusted links, local programs, and nearby provider options.'}
+                        </p>
                       </div>
                     </div>
-                  )}
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-3 py-1.5 text-xs text-[#5a5549] font-body">
+                      {showResources ? 'Hide' : 'Open'}
+                      {showResources ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    </span>
+                  </button>
 
-                  {localKinds.length > 0 && (
-                    <div className="mt-5 space-y-3">
-                      {localKinds.map((kind) => {
-                        const meta = localSectionMeta[kind];
-                        const items = groupedLocalResources[kind];
-
-                        return (
-                          <div
-                            key={kind}
-                            className={`rounded-[24px] border px-4 py-4 ${meta.containerClass}`}
-                          >
-                            <p className={`text-xs uppercase tracking-[0.18em] font-body mb-3 ${meta.labelClass}`}>
-                              {meta.heading}
-                            </p>
-                            <div className="space-y-3">
-                              {items.map((resource) => (
-                                <div key={resource.id}>
-                                  <a
-                                    href={resource.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-sm text-text-main hover:text-primary transition-colors font-body"
-                                  >
-                                    <ExternalLink size={12} />
-                                    <span className="font-medium">{resource.label}</span>
-                                  </a>
-                                  <p className="mt-1 text-sm text-[#625e53] font-body leading-relaxed">
-                                    {resource.description}
-                                  </p>
-                                  <p className="mt-1 text-xs text-[#8a8377] font-body">
-                                    Verified {resource.verifiedAt}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
-
-                  {action.supportItems && action.supportItems.length > 0 && (
-                    <div className="mt-5 rounded-[24px] border border-[#efdfbc] bg-[#fff7e7] px-4 py-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-[#9a6a27] font-body mb-2">
-                        Helpful items
-                      </p>
-                      <p className="text-sm text-[#625e53] font-body leading-relaxed mb-3">
-                        Optional items families often explore while building routines or waiting for services to start.
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {action.supportItems.map((item) => (
-                          <a
-                            key={item.url}
-                            href={item.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-full border border-[#e7d4a8] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 transition-all font-body"
-                          >
-                            {item.label}
-                            <ExternalLink size={11} />
-                          </a>
-                        ))}
-                      </div>
-                    </div>
+                  {showResources && (
+                    <div className="mt-4 border-t border-[#ece3d4] pt-4">{resourcesContent}</div>
                   )}
                 </div>
               )}
-            </div>
-          )}
 
-          <div className="rounded-[24px] border border-[#e4dac8] bg-white/82 px-4 py-4">
+              <div className="rounded-[24px] border border-[#e4dac8] bg-white/82 px-4 py-4">
+                <button
+                  type="button"
+                  onClick={() => setShowTools((current) => !current)}
+                  aria-expanded={showTools}
+                  className="flex w-full items-start justify-between gap-3 text-left"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f6f1ff] text-[#675985]">
+                      <Bot size={16} />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                        Drafts and outreach log
+                      </p>
+                      <h4 className="mt-1 font-heading text-xl text-text-main">
+                        Open the AI helper only when this step actually needs it.
+                      </h4>
+                      <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                        {toolsSummary ||
+                          'Generate a draft, save it, and log real outreach here without making every card feel heavy.'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-3 py-1.5 text-xs text-[#5a5549] font-body">
+                    {showTools ? 'Hide' : 'Open'}
+                    {showTools ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </span>
+                </button>
+
+                {showTools && (
+                  <div className="mt-4 border-t border-[#ece3d4] pt-4">{toolsContent}</div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {mobileMode && mobilePanel && (
+          <div className="fixed inset-0 z-50">
             <button
               type="button"
-              onClick={() => setShowTools((current) => !current)}
-              aria-expanded={showTools}
-              className="flex w-full items-start justify-between gap-3 text-left"
-            >
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f6f1ff] text-[#675985]">
-                  <Bot size={16} />
-                </div>
+              aria-label="Close panel"
+              onClick={() => setMobilePanel(null)}
+              className="absolute inset-0 bg-[#2f271d]/45"
+            />
+            <div className="absolute inset-x-0 bottom-0 max-h-[84vh] overflow-hidden rounded-t-[32px] border border-[#ddd3bf] bg-[#fffdf8] shadow-[0_-16px_48px_-24px_rgba(24,18,10,0.55)]">
+              <div className="flex items-start justify-between gap-3 border-b border-[#ebe2d3] px-4 py-4">
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                    Drafts and outreach log
+                    {mobilePanels[mobilePanel].eyebrow}
                   </p>
-                  <h4 className="mt-1 font-heading text-xl text-text-main">
-                    Open the AI helper only when this step actually needs it.
+                  <h4 className="mt-1 font-heading text-2xl text-text-main">
+                    {mobilePanels[mobilePanel].title}
                   </h4>
                   <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                    {toolsSummary ||
-                      'Generate a draft, save it, and log real outreach here without making every card feel heavy.'}
+                    {mobilePanels[mobilePanel].description}
                   </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setMobilePanel(null)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ddd3bf] bg-white text-[#5a5549]"
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-3 py-1.5 text-xs text-[#5a5549] font-body">
-                {showTools ? 'Hide' : 'Open'}
-                {showTools ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-              </span>
-            </button>
 
-            {showTools && (
-              <div className="mt-4 border-t border-[#ece3d4] pt-4">
-                <ActionAIAssistant
-                  actionId={action.id}
-                  actionTitle={action.title}
-                  actionDescription={action.description}
-                  entry={entry}
-                  onUpdate={(updates) => onUpdateEntry(action.id, updates)}
-                />
-
-                <ActionExecutionWorkspace
-                  entry={entry}
-                  status={status}
-                  onUpdate={(updates) => onUpdateEntry(action.id, updates)}
-                />
+              <div className="max-h-[calc(84vh-116px)] overflow-y-auto px-4 pb-6 pt-4">
+                {mobilePanel === 'tracker' && (
+                  <ActionStepTracker
+                    actionId={action.id}
+                    action={action}
+                    actionTitle={action.title}
+                    entry={entry}
+                    status={status}
+                    defaultExpanded
+                    onUpdate={(updates) => onUpdateEntry(action.id, updates)}
+                  />
+                )}
+                {mobilePanel === 'resources' && resourcesContent}
+                {mobilePanel === 'tools' && toolsContent}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-6 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

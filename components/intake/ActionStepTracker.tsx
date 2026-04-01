@@ -25,6 +25,7 @@ interface ActionStepTrackerProps {
   actionTitle: string;
   entry?: ActionPlanProgressEntry;
   status: ActionPlanStatus;
+  defaultExpanded?: boolean;
   onUpdate: (updates: Partial<ActionPlanProgressEntry>) => void;
 }
 
@@ -65,6 +66,7 @@ export default function ActionStepTracker({
   actionTitle,
   entry,
   status,
+  defaultExpanded = false,
   onUpdate,
 }: ActionStepTrackerProps) {
   const normalizedEntry = createActionPlanEntry(entry, {});
@@ -74,7 +76,7 @@ export default function ActionStepTracker({
     followUpState.tone,
     normalizedEntry
   );
-  const [isExpanded, setIsExpanded] = useState(shouldStartExpanded);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded || shouldStartExpanded);
   const notePreview = normalizedEntry.notes?.trim()
     ? shortenText(normalizedEntry.notes.trim())
     : 'No notes saved yet.';
@@ -89,10 +91,10 @@ export default function ActionStepTracker({
     : 'Add a follow-up first';
 
   useEffect(() => {
-    if (shouldStartExpanded) {
+    if (defaultExpanded || shouldStartExpanded) {
       setIsExpanded(true);
     }
-  }, [shouldStartExpanded]);
+  }, [defaultExpanded, shouldStartExpanded]);
 
   return (
     <div className="mt-5 rounded-[24px] border border-[#e4dac8] bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,244,237,0.95))] px-4 py-4">
