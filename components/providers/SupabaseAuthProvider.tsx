@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
+import { buildAppUrl } from '@/lib/appUrl';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 
@@ -81,7 +82,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         const { error } = await supabase.auth.signInWithOtp({
           email,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/intake`,
+            emailRedirectTo: buildAppUrl('/auth/callback?next=/intake', window.location.origin),
           },
         });
 

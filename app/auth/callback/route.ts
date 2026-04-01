@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { buildAppUrl } from '@/lib/appUrl';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const nextPath = requestUrl.searchParams.get('next') ?? '/intake';
-  const redirectUrl = new URL(nextPath, requestUrl.origin);
+  const redirectUrl = new URL(buildAppUrl(nextPath, requestUrl.origin));
   const supabase = getSupabaseServerClient();
 
   if (!supabase) {
