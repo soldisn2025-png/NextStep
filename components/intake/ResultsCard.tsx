@@ -392,6 +392,16 @@ export default function ResultsCard({
         ({ action }) => action.id === selectedMobileRecommendation.action.id
       )
     : -1;
+  const activeMobileTabLabel =
+    mobileTabs.find((tab) => tab.id === mobileTab)?.label ?? 'Plan';
+  const mobileHeaderEyebrow =
+    mobileTab === 'focus' && selectedMobileRecommendation
+      ? `Step ${selectedMobileIndex + 1} of ${Math.max(activeRecommendations.length, 1)}`
+      : activeMobileTabLabel;
+  const mobileHeaderTitle =
+    mobileTab === 'focus'
+      ? selectedMobileRecommendation?.action.title ?? nextFocus?.title ?? emptyFocusTitle
+      : nextFocus?.title ?? 'NextStep plan';
 
   const handleZipSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -429,33 +439,34 @@ export default function ResultsCard({
     <div className={`relative lg:max-w-5xl lg:mx-auto lg:px-4 lg:py-8 ${hasLongPlan ? 'lg:pb-28' : ''}`}>
       <div className="fixed inset-0 z-40 bg-[#fbf7ef] lg:hidden">
         <div className="flex h-[100dvh] flex-col pt-[env(safe-area-inset-top)]">
-          <div className="border-b border-[#e5dccb] bg-[#fbf7ef]/95 px-4 py-3 backdrop-blur">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                  Mobile plan
+          <div className="border-b border-[#e5dccb] bg-[#fbf7ef]/95 px-3 py-2 backdrop-blur">
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                  {mobileHeaderEyebrow}
                 </p>
-                <h2 className="mt-1 font-heading text-2xl text-text-main">
-                  {nextFocus ? nextFocus.title : emptyFocusTitle}
+                <h2 className="mt-1 truncate font-heading text-lg leading-tight text-text-main">
+                  {mobileHeaderTitle}
                 </h2>
               </div>
-              <div className="rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1.5 text-sm text-[#5a5549] font-body">
-                {completionPercent}% done
+              <div className="shrink-0 rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-xs text-[#5a5549] font-body">
+                {completionPercent}%
               </div>
             </div>
-            {syncMessage && (
-              <div
-                className={`mt-3 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-body ${syncMessage.className}`}
-              >
-                {syncMessage.text}
-              </div>
-            )}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+88px)] pt-4">
+          <div className="flex-1 overflow-y-auto px-3 pb-[calc(env(safe-area-inset-bottom)+64px)] pt-3">
             <div className="space-y-4">
           {mobileTab === 'focus' && (
             <>
+              {syncMessage && (
+                <div
+                  className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-body ${syncMessage.className}`}
+                >
+                  {syncMessage.text}
+                </div>
+              )}
+
               {activeRecommendations.length > 1 && (
                 <div className="overflow-x-auto pb-1">
                   <div className="flex gap-2">
@@ -464,7 +475,7 @@ export default function ResultsCard({
                         key={action.id}
                         type="button"
                         onClick={() => setSelectedMobileActionId(action.id)}
-                        className={`min-w-[136px] rounded-[18px] border px-3 py-3 text-left transition-colors ${
+                        className={`min-w-[104px] rounded-[16px] border px-3 py-2 text-left transition-colors ${
                           selectedMobileRecommendation?.action.id === action.id
                             ? 'border-[#d5cfaf] bg-[#f8f3e6]'
                             : 'border-[#e6dccb] bg-white/85'
@@ -473,10 +484,10 @@ export default function ResultsCard({
                         <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
                           Step {index + 1}
                         </p>
-                        <p className="mt-1 text-sm text-text-main font-body leading-snug">
+                        <p className="mt-1 truncate text-sm text-text-main font-body leading-snug">
                           {action.title}
                         </p>
-                        <p className="mt-2 text-xs text-[#8a8377] font-body">
+                        <p className="mt-1 text-[11px] text-[#8a8377] font-body">
                           {planMapStatusMeta[status].label}
                         </p>
                       </button>
@@ -842,7 +853,7 @@ export default function ResultsCard({
             </div>
           </div>
 
-          <div className="border-t border-[#e5dccb] bg-[#fffdf8]/95 px-4 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)] backdrop-blur">
+          <div className="border-t border-[#e5dccb] bg-[#fffdf8]/95 px-3 py-1 pb-[calc(env(safe-area-inset-bottom)+4px)] backdrop-blur">
           <div className="grid grid-cols-4 gap-2">
             {mobileTabs.map((tab) => {
               const Icon = tab.icon;
@@ -853,11 +864,11 @@ export default function ResultsCard({
                   key={tab.id}
                   type="button"
                   onClick={() => setMobileTab(tab.id)}
-                  className={`inline-flex flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-xs font-body transition-colors ${
+                  className={`inline-flex flex-col items-center justify-center gap-0.5 rounded-[14px] px-2 py-1.5 text-[11px] font-body transition-colors ${
                     isActive ? 'bg-[#f0eadb] text-[#5a5549]' : 'text-[#8a8377]'
                   }`}
                 >
-                  <Icon size={16} />
+                  <Icon size={14} />
                   {tab.label}
                 </button>
               );
