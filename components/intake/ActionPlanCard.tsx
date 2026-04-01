@@ -178,13 +178,13 @@ export default function ActionPlanCard({
   const [mobilePanel, setMobilePanel] = useState<MobilePanel | null>(null);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
   const resourceSummary = [
+    providerSearchKind && savedZip ? `nearby search for ${savedZip}` : null,
     action.resources?.length
       ? getPluralLabel(action.resources.length, 'trusted link')
       : null,
     localResources.length
       ? getPluralLabel(localResources.length, 'local listing')
       : null,
-    providerSearchKind ? 'live nearby search' : null,
     action.supportItems?.length
       ? getPluralLabel(action.supportItems.length, 'support item')
       : null,
@@ -233,6 +233,19 @@ export default function ActionPlanCard({
   };
   const resourcesContent = (
     <>
+      {savedZip && providerSearchKind && (
+        <div className="mb-5 rounded-[24px] border border-[#dbe4f8] bg-[#eef3ff] px-4 py-4">
+          <p className="text-xs uppercase tracking-[0.18em] text-[#516a8a] font-body mb-2">
+            Nearby provider search
+          </p>
+          <p className="text-sm text-[#625e53] font-body leading-relaxed">
+            Ranked public listings near ZIP {savedZip} are available below. This is the fastest way to move from advice into actual provider options.
+          </p>
+        </div>
+      )}
+
+      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+
       {action.resources && action.resources.length > 0 && (
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-2">
@@ -292,8 +305,6 @@ export default function ActionPlanCard({
           })}
         </div>
       )}
-
-      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
 
       {action.supportItems && action.supportItems.length > 0 && (
         <div className="mt-5 rounded-[24px] border border-[#efdfbc] bg-[#fff7e7] px-4 py-4">
@@ -565,10 +576,15 @@ export default function ActionPlanCard({
                     <MapPin size={16} />
                   </div>
                   <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                    Resources
+                    Nearby search
                   </p>
+                  {savedZip && providerSearchKind && (
+                    <p className="mt-2 text-sm text-text-main font-body leading-relaxed">
+                      Top nearby options for ZIP {savedZip}
+                    </p>
+                  )}
                   <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                    {resourceSummary || 'Links, local listings, and nearby search'}
+                    {resourceSummary || 'Nearby providers, local listings, and trusted links'}
                   </p>
                 </button>
               )}

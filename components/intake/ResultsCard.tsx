@@ -1,7 +1,7 @@
 'use client';
 
 import type { FormEvent } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Archive,
   ArrowLeft,
@@ -13,12 +13,18 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
+  LogIn,
+  LogOut,
   Map,
+  Mail,
   RefreshCcw,
   RotateCcw,
   Target,
   Trophy,
+  UserRound,
+  X,
 } from 'lucide-react';
+import { useSupabaseAuth } from '@/components/providers/SupabaseAuthProvider';
 import { getActionPlanGuidance } from '@/lib/actionPlan';
 import {
   createActionPlanEntry,
@@ -181,12 +187,27 @@ export default function ResultsCard({
   onSaveDocumentAnalysis,
   onStartOver,
 }: ResultsCardProps) {
+  const { user, isConfigured, isLoading, magicLinkSentTo, sendMagicLink, signOut } =
+    useSupabaseAuth();
   const [zipInput, setZipInput] = useState(savedZip);
   const [zipError, setZipError] = useState('');
+  const [showMobileAuthSheet, setShowMobileAuthSheet] = useState(false);
+  const [mobileAuthEmail, setMobileAuthEmail] = useState(accountEmail ?? '');
+  const [mobileAuthError, setMobileAuthError] = useState('');
+  const [isSubmittingMobileAuth, setIsSubmittingMobileAuth] = useState(false);
+  const stepScrollerRef = useRef<HTMLDivElement | null>(null);
+  const [mobileStepCanScrollLeft, setMobileStepCanScrollLeft] = useState(false);
+  const [mobileStepCanScrollRight, setMobileStepCanScrollRight] = useState(false);
 
   useEffect(() => {
     setZipInput(savedZip);
   }, [savedZip]);
+
+  useEffect(() => {
+    if (accountEmail) {
+      setMobileAuthEmail(accountEmail);
+    }
+  }, [accountEmail]);
 
   const locationMatch = useMemo(() => getLocationMatch(savedZip), [savedZip]);
   const hasSupportedRegion = Boolean(locationMatch && locationMatch.regionIds.length > 0);
@@ -392,6 +413,19 @@ export default function ResultsCard({
         ({ action }) => action.id === selectedMobileRecommendation.action.id
       )
     : -1;
+  const syncMobileStepOverflow = () => {
+    const container = stepScrollerRef.current;
+
+    if (!container) {
+      setMobileStepCanScrollLeft(false);
+      setMobileStepCanScrollRight(false);
+      return;
+    }
+
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    setMobileStepCanScrollLeft(container.scrollLeft > 8);
+    setMobileStepCanScrollRight(maxScrollLeft - container.scrollLeft > 8);
+  };
   const activeMobileTabLabel =
     mobileTabs.find((tab) => tab.id === mobileTab)?.label ?? 'Plan';
   const mobileHeaderEyebrow =
@@ -402,6 +436,44 @@ export default function ResultsCard({
     mobileTab === 'focus'
       ? selectedMobileRecommendation?.action.title ?? nextFocus?.title ?? emptyFocusTitle
       : nextFocus?.title ?? 'NextStep plan';
+  const showMobileSyncCta = isConfigured && !isLoading && !user;
+
+  useEffect(() => {
+    if (mobileTab !== 'focus') {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      syncMobileStepOverflow();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [mobileTab, activeRecommendations.length, selectedMobileActionId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.addEventListener('resize', syncMobileStepOverflow);
+    return () => window.removeEventListener('resize', syncMobileStepOverflow);
+  }, []);
+
+  useEffect(() => {
+    if (mobileTab !== 'focus' || !selectedMobileRecommendation) {
+      return;
+    }
+
+    const selectedElement = document.getElementById(
+      `mobile-step-chip-${selectedMobileRecommendation.action.id}`
+    );
+
+    selectedElement?.scrollIntoView({
+      behavior: 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    });
+  }, [mobileTab, selectedMobileRecommendation]);
 
   const handleZipSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -414,6 +486,26 @@ export default function ResultsCard({
 
     setZipError('');
     onSavedZipChange(normalized);
+  };
+
+  const handleMobileAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const normalizedEmail = mobileAuthEmail.trim();
+
+    if (!normalizedEmail) {
+      setMobileAuthError('Enter an email address.');
+      return;
+    }
+
+    setIsSubmittingMobileAuth(true);
+    setMobileAuthError('');
+
+    const result = await sendMagicLink(normalizedEmail);
+    if (result.error) {
+      setMobileAuthError(result.error);
+    }
+
+    setIsSubmittingMobileAuth(false);
   };
 
   const handleClearZip = () => {
@@ -449,8 +541,33 @@ export default function ResultsCard({
                   {mobileHeaderTitle}
                 </h2>
               </div>
-              <div className="shrink-0 rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-xs text-[#5a5549] font-body">
-                {completionPercent}%
+              <div className="flex shrink-0 items-center gap-2">
+                {isLoading ? (
+                  <div className="inline-flex items-center rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-[11px] text-[#5a5549] font-body">
+                    <RefreshCcw size={12} className="animate-spin" />
+                  </div>
+                ) : user ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileAuthSheet(true)}
+                    className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-[11px] text-[#5a5549] font-body"
+                  >
+                    <UserRound size={12} />
+                    Account
+                  </button>
+                ) : showMobileSyncCta ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileAuthSheet(true)}
+                    className="inline-flex items-center gap-1 rounded-full bg-[#6d6b47] px-2.5 py-1 text-[11px] text-white font-body"
+                  >
+                    <LogIn size={12} />
+                    Sign in
+                  </button>
+                ) : null}
+                <div className="rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-xs text-[#5a5549] font-body">
+                  {completionPercent}%
+                </div>
               </div>
             </div>
           </div>
@@ -460,22 +577,50 @@ export default function ResultsCard({
           {mobileTab === 'focus' && (
             <>
               {syncMessage && (
-                <div
-                  className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-body ${syncMessage.className}`}
-                >
-                  {syncMessage.text}
-                </div>
+                showMobileSyncCta ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileAuthSheet(true)}
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-body ${syncMessage.className}`}
+                  >
+                    Sign in to sync across devices
+                  </button>
+                ) : (
+                  <div
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-body ${syncMessage.className}`}
+                  >
+                    {syncMessage.text}
+                  </div>
+                )
               )}
 
               {activeRecommendations.length > 1 && (
-                <div className="overflow-x-auto pb-1">
-                  <div className="flex gap-2">
+                <div className="relative">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                      Plan steps
+                    </p>
+                    {activeRecommendations.length > 3 && (
+                      <p className="text-[11px] text-[#8a8377] font-body">
+                        {mobileStepCanScrollRight || mobileStepCanScrollLeft
+                          ? 'Swipe for more'
+                          : `${activeRecommendations.length} steps`}
+                      </p>
+                    )}
+                  </div>
+                  <div
+                    ref={stepScrollerRef}
+                    onScroll={syncMobileStepOverflow}
+                    className="overflow-x-auto pb-1"
+                  >
+                    <div className="flex gap-2">
                     {activeRecommendations.map(({ action, status }, index) => (
                       <button
+                        id={`mobile-step-chip-${action.id}`}
                         key={action.id}
                         type="button"
                         onClick={() => setSelectedMobileActionId(action.id)}
-                        className={`min-w-[104px] rounded-[16px] border px-3 py-2 text-left transition-colors ${
+                        className={`min-w-[148px] max-w-[148px] rounded-[16px] border px-3 py-2 text-left transition-colors ${
                           selectedMobileRecommendation?.action.id === action.id
                             ? 'border-[#d5cfaf] bg-[#f8f3e6]'
                             : 'border-[#e6dccb] bg-white/85'
@@ -484,7 +629,16 @@ export default function ResultsCard({
                         <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
                           Step {index + 1}
                         </p>
-                        <p className="mt-1 truncate text-sm text-text-main font-body leading-snug">
+                        <p
+                          className="mt-1 text-sm text-text-main font-body leading-snug"
+                          style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            minHeight: '3.6rem',
+                          }}
+                        >
                           {action.title}
                         </p>
                         <p className="mt-1 text-[11px] text-[#8a8377] font-body">
@@ -493,6 +647,13 @@ export default function ResultsCard({
                       </button>
                     ))}
                   </div>
+                </div>
+                  {mobileStepCanScrollLeft && (
+                    <div className="pointer-events-none absolute inset-y-[30px] left-0 w-8 bg-gradient-to-r from-[#fbf7ef] to-transparent" />
+                  )}
+                  {mobileStepCanScrollRight && (
+                    <div className="pointer-events-none absolute inset-y-[30px] right-0 w-8 bg-gradient-to-l from-[#fbf7ef] to-transparent" />
+                  )}
                 </div>
               )}
 
@@ -847,6 +1008,107 @@ export default function ResultsCard({
                   <ArrowLeft size={14} />
                   Start over
                 </button>
+              </div>
+            </div>
+          )}
+
+          {showMobileAuthSheet && (
+            <div className="fixed inset-0 z-50">
+              <button
+                type="button"
+                aria-label="Close account sheet"
+                onClick={() => {
+                  setShowMobileAuthSheet(false);
+                  setMobileAuthError('');
+                }}
+                className="absolute inset-0 bg-[#2f271d]/45"
+              />
+              <div className="absolute inset-x-0 bottom-0 rounded-t-[28px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-4 shadow-[0_-16px_48px_-24px_rgba(24,18,10,0.55)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                      Account sync
+                    </p>
+                    <h3 className="mt-1 font-heading text-2xl text-text-main">
+                      {user ? 'Signed in' : 'Sign in to sync'}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMobileAuthSheet(false);
+                      setMobileAuthError('');
+                    }}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#ddd3bf] bg-white text-[#5a5549]"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {!isConfigured ? (
+                  <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
+                    Account sync is not configured in this deployment yet.
+                  </p>
+                ) : user ? (
+                  <>
+                    <p className="mt-3 text-sm text-[#625e53] font-body break-all">
+                      {user.email}
+                    </p>
+                    <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
+                      This device is connected and your plan can sync across devices.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void signOut()}
+                      className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body"
+                    >
+                      <LogOut size={14} />
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
+                      Enter your email and we will send a magic sign-in link.
+                    </p>
+                    <form onSubmit={handleMobileAuthSubmit} className="mt-4 space-y-3">
+                      <label htmlFor="mobileAuthEmail" className="sr-only">
+                        Email address
+                      </label>
+                      <input
+                        id="mobileAuthEmail"
+                        type="email"
+                        autoComplete="email"
+                        value={mobileAuthEmail}
+                        onChange={(event) => setMobileAuthEmail(event.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-3 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isSubmittingMobileAuth}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#6d6b47] px-4 py-3 text-sm text-white font-body disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {isSubmittingMobileAuth ? (
+                          <RefreshCcw size={14} className="animate-spin" />
+                        ) : (
+                          <Mail size={14} />
+                        )}
+                        {isSubmittingMobileAuth ? 'Sending link' : 'Email me a sign-in link'}
+                      </button>
+                    </form>
+                    {magicLinkSentTo && (
+                      <p className="mt-3 text-sm text-[#4f6d4e] font-body">
+                        Link sent to {magicLinkSentTo}.
+                      </p>
+                    )}
+                    {mobileAuthError && (
+                      <p className="mt-3 text-sm text-[#a25547] font-body">
+                        {mobileAuthError}
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}
