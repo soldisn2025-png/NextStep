@@ -576,6 +576,13 @@ export default function ResultsCard({
             <div className="space-y-4">
           {mobileTab === 'focus' && (
             <>
+              {inProgressCount === 0 && completedCount === 0 && activeRecommendations.length > 0 && (
+                <div className="rounded-[20px] border border-[#f0dcc0] bg-[#fff7e8] px-4 py-3">
+                  <p className="text-sm text-[#95611f] font-body leading-relaxed">
+                    <strong className="font-medium">Your plan is ready.</strong> Review your top step below — tap a status button to get started.
+                  </p>
+                </div>
+              )}
               {syncMessage && (
                 showMobileSyncCta ? (
                   <button
@@ -1115,8 +1122,8 @@ export default function ResultsCard({
             </div>
           </div>
 
-          <div className="border-t border-[#e5dccb] bg-[#fffdf8]/95 px-3 py-1 pb-[calc(env(safe-area-inset-bottom)+4px)] backdrop-blur">
-          <div className="grid grid-cols-4 gap-2">
+          <div className="border-t border-[#e5dccb] bg-[#fffdf8]/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+6px)] backdrop-blur">
+          <div className="grid grid-cols-4 gap-1">
             {mobileTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = mobileTab === tab.id;
@@ -1126,11 +1133,11 @@ export default function ResultsCard({
                   key={tab.id}
                   type="button"
                   onClick={() => setMobileTab(tab.id)}
-                  className={`inline-flex flex-col items-center justify-center gap-0.5 rounded-[14px] px-2 py-1.5 text-[11px] font-body transition-colors ${
+                  className={`inline-flex flex-col items-center justify-center gap-1 rounded-[14px] px-2 py-2 text-xs font-body transition-colors min-h-[52px] ${
                     isActive ? 'bg-[#f0eadb] text-[#5a5549]' : 'text-[#8a8377]'
                   }`}
                 >
-                  <Icon size={14} />
+                  <Icon size={18} />
                   {tab.label}
                 </button>
               );

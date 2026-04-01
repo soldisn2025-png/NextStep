@@ -20,6 +20,20 @@ export default function StepWrapper({
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* Mobile-only branding bar */}
+      <div className="flex items-center justify-between mb-4 lg:hidden">
+        <Link
+          href="/"
+          aria-label="Go to NextStep home"
+          className="font-heading text-lg text-text-main leading-none"
+        >
+          NextStep
+        </Link>
+        <span className="text-xs text-gray-400 font-body">
+          Step {currentStep} of {totalSteps}
+        </span>
+      </div>
+
       {/* Progress bar */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
@@ -27,7 +41,7 @@ export default function StepWrapper({
             <button
               onClick={onBack}
               aria-label="Go back to previous step"
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors p-1 -ml-1 rounded"
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors min-h-[44px] min-w-[44px] -ml-2 px-2 rounded-lg"
             >
               <ArrowLeft size={16} />
               <span>Back</span>
@@ -36,13 +50,13 @@ export default function StepWrapper({
             <Link
               href="/"
               aria-label="Go back to home"
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors p-1 -ml-1 rounded"
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors min-h-[44px] min-w-[44px] -ml-2 px-2 rounded-lg"
             >
               <ArrowLeft size={16} />
               <span>Home</span>
             </Link>
           )}
-          <span className="text-sm text-gray-500 font-body">
+          <span className="text-sm text-gray-500 font-body hidden lg:block">
             Step {currentStep} of {totalSteps}
           </span>
         </div>
