@@ -253,6 +253,7 @@ export default function ResultsCard({
   );
   const [mobileTab, setMobileTab] = useState<MobileTab>('focus');
   const [selectedMobileActionId, setSelectedMobileActionId] = useState<string | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const weeklyFocusAction =
     weeklyCheckIn?.focusActionId
@@ -331,6 +332,42 @@ export default function ResultsCard({
   ];
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    const syncViewport = () => setIsMobileViewport(mediaQuery.matches);
+
+    syncViewport();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', syncViewport);
+      return () => mediaQuery.removeEventListener('change', syncViewport);
+    }
+
+    mediaQuery.addListener(syncViewport);
+    return () => mediaQuery.removeListener(syncViewport);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileViewport || typeof document === 'undefined') {
+      return;
+    }
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [isMobileViewport]);
+
+  useEffect(() => {
     if (activeRecommendations.length === 0) {
       setSelectedMobileActionId(null);
       return;
@@ -389,32 +426,34 @@ export default function ResultsCard({
   };
 
   return (
-    <div className={`max-w-5xl mx-auto px-4 py-8 ${hasLongPlan ? 'pb-28' : ''}`}>
-      <div className="lg:hidden">
-        <div className="sticky top-0 z-30 -mx-4 border-b border-[#e5dccb] bg-[#fbf7ef]/95 px-4 py-3 backdrop-blur">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                Mobile plan
-              </p>
-              <h2 className="mt-1 font-heading text-2xl text-text-main">
-                {nextFocus ? nextFocus.title : emptyFocusTitle}
-              </h2>
+    <div className={`relative lg:max-w-5xl lg:mx-auto lg:px-4 lg:py-8 ${hasLongPlan ? 'lg:pb-28' : ''}`}>
+      <div className="fixed inset-0 z-40 bg-[#fbf7ef] lg:hidden">
+        <div className="flex h-[100dvh] flex-col pt-[env(safe-area-inset-top)]">
+          <div className="border-b border-[#e5dccb] bg-[#fbf7ef]/95 px-4 py-3 backdrop-blur">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                  Mobile plan
+                </p>
+                <h2 className="mt-1 font-heading text-2xl text-text-main">
+                  {nextFocus ? nextFocus.title : emptyFocusTitle}
+                </h2>
+              </div>
+              <div className="rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1.5 text-sm text-[#5a5549] font-body">
+                {completionPercent}% done
+              </div>
             </div>
-            <div className="rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1.5 text-sm text-[#5a5549] font-body">
-              {completionPercent}% done
-            </div>
+            {syncMessage && (
+              <div
+                className={`mt-3 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-body ${syncMessage.className}`}
+              >
+                {syncMessage.text}
+              </div>
+            )}
           </div>
-          {syncMessage && (
-            <div
-              className={`mt-3 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-body ${syncMessage.className}`}
-            >
-              {syncMessage.text}
-            </div>
-          )}
-        </div>
 
-        <div className="space-y-4 pt-4">
+          <div className="flex-1 overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+88px)] pt-4">
+            <div className="space-y-4">
           {mobileTab === 'focus' && (
             <>
               {activeRecommendations.length > 1 && (
@@ -800,9 +839,10 @@ export default function ResultsCard({
               </div>
             </div>
           )}
-        </div>
+            </div>
+          </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e5dccb] bg-[#fffdf8]/95 px-4 py-2 backdrop-blur">
+          <div className="border-t border-[#e5dccb] bg-[#fffdf8]/95 px-4 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)] backdrop-blur">
           <div className="grid grid-cols-4 gap-2">
             {mobileTabs.map((tab) => {
               const Icon = tab.icon;
@@ -824,6 +864,7 @@ export default function ResultsCard({
             })}
           </div>
         </div>
+      </div>
       </div>
 
       <div className="hidden lg:block">
