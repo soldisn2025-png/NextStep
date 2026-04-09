@@ -340,7 +340,15 @@ export default function ResultsCard({
       icon: FileText,
     },
   ];
-  const mobileTabs: Array<{
+  // A panel is considered usable if it doesn't depend on an unsupported browser feature.
+  // Currently only the browser-alerts section within Reminders depends on notification support,
+  // but the Reminders panel itself (follow-up tracking, calendar export) always works.
+  // Weekly Reset and Paperwork Tool are always available.
+  // The Tools tab is hidden only if every workspace panel becomes unavailable.
+  const usableWorkspacePanelIds = new Set<WorkspacePanel>(['reminders', 'check-in', 'documents']);
+  const hasUsableToolsPanels = usableWorkspacePanelIds.size > 0;
+
+  const allMobileTabs: Array<{
     id: MobileTab;
     label: string;
     icon: typeof Target;
@@ -350,6 +358,9 @@ export default function ResultsCard({
     { id: 'tools', label: 'Tools', icon: BellRing },
     { id: 'history', label: 'History', icon: Archive },
   ];
+  const mobileTabs = allMobileTabs.filter(
+    (tab) => tab.id !== 'tools' || hasUsableToolsPanels
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -457,6 +468,14 @@ export default function ResultsCard({
     window.addEventListener('resize', syncMobileStepOverflow);
     return () => window.removeEventListener('resize', syncMobileStepOverflow);
   }, []);
+
+  // If the active tab is no longer visible (e.g. Tools tab hidden), fall back to Focus
+  useEffect(() => {
+    const visibleTabIds = mobileTabs.map((t) => t.id);
+    if (!visibleTabIds.includes(mobileTab)) {
+      setMobileTab('focus');
+    }
+  }, [mobileTabs, mobileTab]);
 
   useEffect(() => {
     if (mobileTab !== 'focus' || !selectedMobileRecommendation) {
@@ -1150,7 +1169,7 @@ export default function ResultsCard({
           </div>
 
           <div className="border-t border-[#e5dccb] bg-[#fffdf8]/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+6px)] backdrop-blur">
-          <div className="grid grid-cols-4 gap-1">
+          <div className={`grid gap-1 ${mobileTabs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {mobileTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = mobileTab === tab.id;
