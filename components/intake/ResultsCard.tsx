@@ -13,7 +13,6 @@ import {
   ChevronRight,
   ClipboardList,
   FileText,
-  LogIn,
   LogOut,
   Map,
   Mail,
@@ -555,19 +554,12 @@ export default function ResultsCard({
                     <UserRound size={12} />
                     Account
                   </button>
-                ) : showMobileSyncCta ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowMobileAuthSheet(true)}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#6d6b47] px-2.5 py-1 text-[11px] text-white font-body"
-                  >
-                    <LogIn size={12} />
-                    Sign in
-                  </button>
                 ) : null}
-                <div className="rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-xs text-[#5a5549] font-body">
-                  {completionPercent}%
-                </div>
+                {user && (
+                  <div className="rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-xs text-[#5a5549] font-body">
+                    {completionPercent}%
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -583,22 +575,12 @@ export default function ResultsCard({
                   </p>
                 </div>
               )}
-              {syncMessage && (
-                showMobileSyncCta ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowMobileAuthSheet(true)}
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-body ${syncMessage.className}`}
-                  >
-                    Sign in to sync across devices
-                  </button>
-                ) : (
-                  <div
-                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-body ${syncMessage.className}`}
-                  >
-                    {syncMessage.text}
-                  </div>
-                )
+              {syncMessage && !showMobileSyncCta && (
+                <div
+                  className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-body ${syncMessage.className}`}
+                >
+                  {syncMessage.text}
+                </div>
               )}
 
               {activeRecommendations.length > 1 && (
@@ -747,6 +729,18 @@ export default function ResultsCard({
                   <p className="text-sm text-[#5d6e55] font-body leading-relaxed">
                     There is no active step right now. Switch to History if you want to review completed or skipped items.
                   </p>
+                </div>
+              )}
+
+              {showMobileSyncCta && (
+                <div className="flex justify-center pt-2 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileAuthSheet(true)}
+                    className="text-sm text-[#7e786c] hover:text-primary transition-colors font-body"
+                  >
+                    Save your plan → Sign in
+                  </button>
                 </div>
               )}
             </>
