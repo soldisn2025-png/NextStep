@@ -30,11 +30,15 @@ import ActionAIAssistant from './ActionAIAssistant';
 import ActionExecutionWorkspace from './ActionExecutionWorkspace';
 import ActionStepTracker from './ActionStepTracker';
 import NearbyProviders from './NearbyProviders';
+import TherapistGuide from './TherapistGuide';
 
 interface ActionPlanCardProps {
   action: RecommendedAction;
   displayIndex: number;
   savedZip: string;
+  childAge: string;
+  diagnoses: string[];
+  topConcerns: string[];
   entry?: ActionPlanProgressEntry;
   mobileMode?: boolean;
   onUpdateStatus: (actionId: string, status: ActionPlanStatus) => void;
@@ -147,6 +151,9 @@ export default function ActionPlanCard({
   action,
   displayIndex,
   savedZip,
+  childAge,
+  diagnoses,
+  topConcerns,
   entry,
   mobileMode = false,
   onUpdateStatus,
@@ -257,6 +264,15 @@ export default function ActionPlanCard({
       )}
 
       {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+
+      {potentialProviderSearchKind && (
+        <TherapistGuide
+          actionId={action.id}
+          childAge={childAge}
+          diagnoses={diagnoses}
+          topConcerns={topConcerns}
+        />
+      )}
 
       {action.resources && action.resources.length > 0 && (
         <div>

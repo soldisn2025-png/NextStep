@@ -707,6 +707,9 @@ export default function ResultsCard({
                     action={selectedMobileRecommendation.action}
                     displayIndex={selectedMobileIndex + 1}
                     savedZip={savedZip}
+                    childAge={answers.childAge}
+                    diagnoses={answers.diagnoses}
+                    topConcerns={answers.topConcerns}
                     entry={selectedMobileRecommendation.entry}
                     mobileMode
                     onUpdateStatus={updateActionStatus}
@@ -1480,6 +1483,9 @@ export default function ResultsCard({
             action={action}
             displayIndex={index + 1}
             savedZip={savedZip}
+            childAge={answers.childAge}
+            diagnoses={answers.diagnoses}
+            topConcerns={answers.topConcerns}
             entry={entry}
             onUpdateStatus={updateActionStatus}
             onUpdateEntry={onUpdateActionEntry}
