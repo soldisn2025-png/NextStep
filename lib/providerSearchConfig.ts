@@ -40,6 +40,9 @@ const ACTION_PROVIDER_KIND: Record<string, ProviderSearchKind> = {
   'find-slp': 'speech',
   'find-ot': 'ot',
   'explore-aba': 'aba',
+  'explore-aba-under6': 'aba',
+  'explore-aba-6-12': 'aba',
+  'explore-aba-teen': 'aba',
 };
 
 export function getProviderSearchKindForAction(actionId: string): ProviderSearchKind | null {
