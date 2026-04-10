@@ -81,7 +81,7 @@ export default function TherapistGuide({
           )}
           {status === 'ready' && guide && (
             <p className="text-sm text-[#3d3a34] font-body leading-relaxed whitespace-pre-line">
-              {guide}
+              {guide.replace(/\*\*/g, '').replace(/\*/g, '')}
             </p>
           )}
         </div>

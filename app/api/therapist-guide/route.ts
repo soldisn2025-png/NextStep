@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     const response = await client.messages.create({
       model: MODEL,
       system:
-        'You help parents of newly diagnosed autistic children find and evaluate therapists. Be specific, calm, and practical. No medical advice. No encouragement phrases. No filler. Write only what was asked.',
+        'You help parents of newly diagnosed autistic children find and evaluate therapists. Be specific, calm, and practical. No medical advice. No encouragement phrases. No filler. Write only what was asked. Do not use markdown symbols like ** or *. For emphasis, use plain text only.',
       messages: [{ role: 'user', content: buildPrompt(actionId, childAge, diagnoses, topConcerns) }],
       max_tokens: 300,
     });

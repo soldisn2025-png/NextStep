@@ -263,8 +263,6 @@ export default function ActionPlanCard({
         </div>
       )}
 
-      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
-
       {potentialProviderSearchKind && (
         <TherapistGuide
           actionId={action.id}
@@ -273,6 +271,8 @@ export default function ActionPlanCard({
           topConcerns={topConcerns}
         />
       )}
+
+      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
 
       {action.resources && action.resources.length > 0 && (
         <div>
