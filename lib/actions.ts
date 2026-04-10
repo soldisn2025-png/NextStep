@@ -50,11 +50,35 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
       { label: 'Find your state OT association (AOTA)', url: 'https://www.aota.org/community/get-involved/state-associations' },
     ],
   },
-  'explore-aba': {
-    id: 'explore-aba',
-    title: 'Learn about ABA therapy',
+  'explore-aba-under6': {
+    id: 'explore-aba-under6',
+    title: 'Start ABA therapy — act now',
     description:
-      'Applied Behavior Analysis (ABA) is one of the most researched therapies for autism. It targets communication, social skills, and adaptive behavior. Ask your pediatrician which local therapy models may fit your child and family.',
+      'This is the golden window. Early intensive ABA (25-40 hrs/week) has the strongest evidence base for this age. Insurance coverage is highest and most centers prioritize under-6. Do not wait — get on waitlists now even before funding is confirmed.',
+    category: 'therapy',
+    urgency: 'immediate',
+    resources: [
+      { label: 'What is ABA? (Autism Speaks)', url: 'https://www.autismspeaks.org/applied-behavior-analysis' },
+      { label: 'ABA therapy overview (Autism Science Foundation)', url: 'https://autismsciencefoundation.org/what-is-autism/aba-applied-behavior-analysis/' },
+    ],
+  },
+  'explore-aba-6-12': {
+    id: 'explore-aba-6-12',
+    title: 'Get ABA therapy started',
+    description:
+      'ABA is still the core intervention. However, centers vary on age acceptance. Confirm insurance coverage first, then get on multiple waitlists simultaneously. School-based ABA through IEP is also an option worth requesting.',
+    category: 'therapy',
+    urgency: 'immediate',
+    resources: [
+      { label: 'What is ABA? (Autism Speaks)', url: 'https://www.autismspeaks.org/applied-behavior-analysis' },
+      { label: 'ABA therapy overview (Autism Science Foundation)', url: 'https://autismsciencefoundation.org/what-is-autism/aba-applied-behavior-analysis/' },
+    ],
+  },
+  'explore-aba-teen': {
+    id: 'explore-aba-teen',
+    title: 'Explore ABA-informed programs for adolescents',
+    description:
+      'Center-based ABA becomes harder to access at this age. Focus on ABA-informed transition planning and life skills programs. Look for BCBAs who specialize in adolescents — they exist but are fewer.',
     category: 'therapy',
     urgency: 'soon',
     resources: [

@@ -30,3 +30,4 @@ Parents in panic mode right after an autism diagnosis. Many children also have c
 - No jargon in UI copy. Parents are stressed, not clinicians.
 - Before building anything new, ask: does this reduce or add cognitive load?
 - Commit messages must describe what changed and why
+- Never ask parents to assess their child's severity or verbal ability — newly diagnosed parents cannot accurately self-report this. Use age as the primary clinical proxy instead.

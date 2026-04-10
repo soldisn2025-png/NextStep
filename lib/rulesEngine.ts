@@ -21,6 +21,8 @@ export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] 
   const { childAge, diagnosedBy, diagnoses, currentSupport, topConcerns } = answers;
 
   const isUnder3 = childAge === 'Under 2' || childAge === '2–3 years';
+  const isUnder6 = isUnder3 || childAge === '4–5 years';
+  const is6to12 = childAge === '6–8 years' || childAge === '9–12 years';
   const isSchoolAge = ['4–5 years', '6–8 years', '9–12 years', '13 or older'].includes(childAge);
   const isTeen = childAge === '13 or older';
   const notDiagnosed = diagnosedBy === 'Not officially diagnosed yet';
@@ -55,7 +57,9 @@ export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] 
 
   // ── ABA therapy ───────────────────────────────────────────────────────────
   if (hasASD && !currentSupport.includes('ABA therapy')) {
-    add('explore-aba');
+    if (isUnder6) add('explore-aba-under6');
+    else if (is6to12) add('explore-aba-6-12');
+    else add('explore-aba-teen');
   }
 
   // ── Occupational therapy ──────────────────────────────────────────────────
