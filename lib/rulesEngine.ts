@@ -31,6 +31,7 @@ export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] 
   const hasADHD = diagnoses.includes('ADHD');
   const hasSpeech = diagnoses.includes('Speech/Language Delay');
   const hasSensory = diagnoses.includes('Sensory Processing Disorder');
+  const hasID = diagnoses.includes('Intellectual Disability');
   const noIEP = !currentSupport.includes('Special education services (IEP/IFSP)');
   const noSLP = !currentSupport.includes('Speech therapy (SLP)');
   const noOT = !currentSupport.includes('Occupational therapy (OT)');
@@ -75,6 +76,11 @@ export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] 
   // ── ADHD co-occurring ─────────────────────────────────────────────────────
   if (hasADHD) {
     add('adhd-management');
+  }
+
+  // ── Intellectual Disability ───────────────────────────────────────────────
+  if (hasID) {
+    add('intellectual-disability');
   }
 
   // ── Transition planning for teens ─────────────────────────────────────────

@@ -143,7 +143,7 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
     id: 'adhd-management',
     title: 'Explore ADHD evaluation and management',
     description:
-      'If ADHD co-occurs with autism, both need attention. A developmental pediatrician or psychiatrist can help you understand behavioral therapy, medication, and school accommodations such as a 504 Plan or IEP.',
+      'ADHD co-occurs in 40-70% of autistic children. ABA therapy addresses behavioral symptoms first. For older children or when behavioral therapy alone isn\'t enough, consult a developmental pediatrician or child psychiatrist about medication options — stimulants and non-stimulants are both used, but response varies. Do not start medication without specialist guidance.',
     category: 'therapy',
     urgency: 'soon',
     resources: [
@@ -202,6 +202,18 @@ export const ALL_ACTIONS: Record<string, RecommendedAction> = {
       { label: 'Fidget and sensory toys (Amazon)', url: 'https://www.amazon.com/s?k=autism+sensory+fidget+toys' },
       { label: 'Noise-canceling headphones for kids (Amazon)', url: 'https://www.amazon.com/s?k=noise+canceling+headphones+kids+autism' },
       { label: 'Weighted blankets for children (Amazon)', url: 'https://www.amazon.com/s?k=weighted+blanket+kids+autism' },
+    ],
+  },
+  'intellectual-disability': {
+    id: 'intellectual-disability',
+    title: 'Contact your county Regional Center for Intellectual Disability services',
+    description:
+      'Intellectual Disability support is primarily coordinated through your county\'s Regional Center or Developmental Disabilities services — not through private therapy. Contact your county Regional Center immediately to open a case. They will assess your child and coordinate services including respite care, day programs, and skill-building support.',
+    category: 'therapy',
+    urgency: 'immediate',
+    resources: [
+      { label: 'Find your state DD services office (NASDDDS)', url: 'https://www.nasddds.org/member-agencies/' },
+      { label: 'Regional Center services overview (The Arc)', url: 'https://thearc.org/our-initiatives/resource-advocacy/' },
     ],
   },
 };
