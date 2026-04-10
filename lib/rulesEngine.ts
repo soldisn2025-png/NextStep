@@ -10,12 +10,18 @@ function pick(id: string): RecommendedAction {
 export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] {
   const seen = new Set<string>();
   const results: RecommendedAction[] = [];
+  const pinToTop = new Set<string>();
 
   function add(id: string) {
     if (!seen.has(id)) {
       seen.add(id);
       results.push(pick(id));
     }
+  }
+
+  function pin(id: string) {
+    add(id);
+    pinToTop.add(id);
   }
 
   const { childAge, diagnosedBy, diagnoses, currentSupport, topConcerns } = answers;
@@ -36,6 +42,11 @@ export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] 
   const noSLP = !currentSupport.includes('Speech therapy (SLP)');
   const noOT = !currentSupport.includes('Occupational therapy (OT)');
 
+  const concernsStartFromScratch = topConcerns.includes("I don't know where to start");
+  const concernsCommunication = topConcerns.includes("My child's communication");
+  const concernsBehavior = topConcerns.includes("My child's behavior at home");
+  const concernsSchool = topConcerns.includes('School and education planning');
+
   // ── IMMEDIATE: official diagnosis ────────────────────────────────────────
   if (notDiagnosed) {
     add('official-diagnosis');
@@ -48,19 +59,26 @@ export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] 
 
   // ── IMMEDIATE: IEP for school-age kids not already in special ed ─────────
   if (isSchoolAge && noIEP) {
-    add('request-iep');
+    if (concernsSchool) pin('request-iep');
+    else add('request-iep');
   }
 
   // ── Speech therapy ────────────────────────────────────────────────────────
-  if ((hasSpeech || topConcerns.includes("My child's communication")) && noSLP) {
-    add('find-slp');
+  if ((hasSpeech || concernsCommunication) && noSLP) {
+    if (concernsCommunication) pin('find-slp');
+    else add('find-slp');
   }
 
   // ── ABA therapy ───────────────────────────────────────────────────────────
   if (hasASD && !currentSupport.includes('ABA therapy')) {
-    if (isUnder6) add('explore-aba-under6');
-    else if (is6to12) add('explore-aba-6-12');
-    else add('explore-aba-teen');
+    const abaId = isUnder6 ? 'explore-aba-under6' : is6to12 ? 'explore-aba-6-12' : 'explore-aba-teen';
+    if (concernsBehavior) pin(abaId);
+    else add(abaId);
+  }
+
+  // ── Behavior at home: surface ADHD management even without formal diagnosis ─
+  if (concernsBehavior) {
+    add('adhd-management');
   }
 
   // ── Occupational therapy ──────────────────────────────────────────────────
@@ -122,12 +140,14 @@ export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] 
     add('parent-wellbeing');
   }
 
-  // ── Fallback: always include parent wellbeing and connect-parents ─────────
-  add('connect-parents');
-  add('parent-wellbeing');
-
   // Sort: immediate → soon → when-ready
-  return results.sort(
+  const sorted = results.sort(
     (a, b) => URGENCY_ORDER[a.urgency] - URGENCY_ORDER[b.urgency]
   );
+
+  if (concernsStartFromScratch || pinToTop.size === 0) return sorted;
+
+  const pinned = sorted.filter(r => pinToTop.has(r.id));
+  const rest = sorted.filter(r => !pinToTop.has(r.id));
+  return [...pinned, ...rest];
 }
