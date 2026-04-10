@@ -15,6 +15,7 @@ import {
   FileText,
   LogOut,
   Map,
+  MapPin,
   Mail,
   RefreshCcw,
   RotateCcw,
@@ -190,6 +191,8 @@ export default function ResultsCard({
     useSupabaseAuth();
   const [zipInput, setZipInput] = useState(savedZip);
   const [zipError, setZipError] = useState('');
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsError, setGpsError] = useState('');
   const [showMobileAuthSheet, setShowMobileAuthSheet] = useState(false);
   const [mobileAuthEmail, setMobileAuthEmail] = useState(accountEmail ?? '');
   const [mobileAuthError, setMobileAuthError] = useState('');
@@ -506,6 +509,39 @@ export default function ResultsCard({
     onSavedZipChange(normalized);
   };
 
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsError('GPS is not supported by your browser — please enter your ZIP manually.');
+      return;
+    }
+    setGpsLoading(true);
+    setGpsError('');
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(`/api/reverse-geocode?lat=${latitude}&lng=${longitude}`);
+          const data = await res.json();
+          if (!res.ok || !data.zip) {
+            setGpsError('Could not determine your ZIP — please enter it manually.');
+            return;
+          }
+          setZipInput(data.zip);
+          setZipError('');
+          onSavedZipChange(data.zip);
+        } catch {
+          setGpsError('Could not determine your ZIP — please enter it manually.');
+        } finally {
+          setGpsLoading(false);
+        }
+      },
+      () => {
+        setGpsError('Location access denied — please enter your ZIP manually.');
+        setGpsLoading(false);
+      }
+    );
+  };
+
   const handleMobileAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalizedEmail = mobileAuthEmail.trim();
@@ -685,6 +721,15 @@ export default function ResultsCard({
                       <p className="mt-1 mb-3 text-sm text-[#625e53] font-body leading-relaxed">
                         Enter your ZIP code to see local therapists and services for each step.
                       </p>
+                      <button
+                        type="button"
+                        onClick={handleUseLocation}
+                        disabled={gpsLoading}
+                        className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2.5 text-sm text-[#5a5549] font-body disabled:opacity-60"
+                      >
+                        <MapPin size={15} />
+                        {gpsLoading ? 'Getting your location...' : 'Use my location'}
+                      </button>
                       <form onSubmit={handleZipSubmit} className="flex gap-2">
                         <input
                           inputMode="numeric"
@@ -706,7 +751,9 @@ export default function ResultsCard({
                           Search
                         </button>
                       </form>
-                      {zipError && <p className="mt-2 text-sm text-red-500 font-body">{zipError}</p>}
+                      {(zipError || gpsError) && (
+                        <p className="mt-2 text-sm text-red-500 font-body">{zipError || gpsError}</p>
+                      )}
                     </div>
                   )}
 
@@ -813,6 +860,15 @@ export default function ResultsCard({
                   Local help
                 </p>
                 <form onSubmit={handleZipSubmit} className="mt-3 space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleUseLocation}
+                    disabled={gpsLoading}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-3 text-sm text-[#5a5549] font-body disabled:opacity-60"
+                  >
+                    <MapPin size={15} />
+                    {gpsLoading ? 'Getting your location...' : 'Use my location'}
+                  </button>
                   <input
                     inputMode="numeric"
                     autoComplete="postal-code"
@@ -843,8 +899,10 @@ export default function ResultsCard({
                     )}
                   </div>
                 </form>
-                {zipError && <p className="mt-2 text-sm text-red-500 font-body">{zipError}</p>}
-                {!zipError && savedZip && hasSupportedRegion && locationMatch?.primaryRegionLabel && (
+                {(zipError || gpsError) && (
+                  <p className="mt-2 text-sm text-red-500 font-body">{zipError || gpsError}</p>
+                )}
+                {!zipError && !gpsError && savedZip && hasSupportedRegion && locationMatch?.primaryRegionLabel && (
                   <p className="mt-3 text-sm text-success font-body">
                     Showing curated local resources for {locationMatch.primaryRegionLabel}.
                   </p>
