@@ -31,10 +31,6 @@ interface SnapshotRow {
 }
 
 function isAuthorized(request: NextRequest) {
-  if (request.headers.get('x-vercel-cron')) {
-    return true;
-  }
-
   const secret = process.env.REMINDER_CRON_SECRET;
   if (!secret) {
     return false;

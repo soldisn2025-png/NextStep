@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { ActionAssistantMode } from '@/lib/types';
+import { aiRateLimit } from '@/lib/rateLimit';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -63,7 +65,23 @@ function buildPrompt(body: Required<Pick<ActionAssistantRequestBody, 'actionTitl
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+    const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Authentication not configured.' }, { status: 503 });
+  }
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return NextResponse.json({ error: 'Sign in to use this feature.' }, { status: 401 });
+  }
+
+  const { success } = await aiRateLimit.limit(user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait a moment before trying again.' },
+      { status: 429 }
+    );
+  }
+const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
       { error: 'The AI helper is not configured in this deployment.', code: 'missing_api_key' },
@@ -75,8 +93,12 @@ export async function POST(request: NextRequest) {
   try {
     body = (await request.json()) as ActionAssistantRequestBody;
   } catch {
-    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'The AI helper is temporarily unavailable.', code: 'assistant_failed' },
+      { status: 500 }
+    );
   }
+
 
   const actionTitle = trimInput(body.actionTitle, 180);
   const actionDescription = trimInput(body.actionDescription, 900);

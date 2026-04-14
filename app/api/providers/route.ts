@@ -10,6 +10,13 @@ const VALID_PROVIDER_KINDS: ProviderSearchKind[] = ['speech', 'ot', 'aba'];
 function isProviderKind(value: string | null): value is ProviderSearchKind {
   return Boolean(value && VALID_PROVIDER_KINDS.includes(value as ProviderSearchKind));
 }
+  if (!/^\d{5}$/.test(zip)) {
+    return NextResponse.json(
+      { error: 'A valid 5-digit ZIP code is required.' },
+      { status: 400 }
+    );
+  }
+
 
 export async function GET(request: NextRequest) {
   const zip = request.nextUrl.searchParams.get('zip') ?? '';
