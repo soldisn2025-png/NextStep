@@ -29,10 +29,18 @@ export async function POST() {
     return NextResponse.json({ error: 'Sign in to use this feature.' }, { status: 401 });
   }
 
+  const hasRedisUrl = Boolean(process.env.UPSTASH_REDIS_REST_URL);
+  const hasRedisToken = Boolean(process.env.UPSTASH_REDIS_REST_TOKEN);
+
   const result = await aiRateLimit.limit(user.id);
+
   const payload = {
     source: 'app-rate-limit',
     identifier: 'user.id',
+    env: {
+      hasRedisUrl,
+      hasRedisToken,
+    },
     result: serializeRateLimitResult(result),
   };
 
