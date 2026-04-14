@@ -4,7 +4,6 @@ import { DocumentAnalysisType } from '@/lib/types';
 import { aiRateLimit } from '@/lib/rateLimit';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 
-
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -48,12 +47,42 @@ function getDocumentPrompt(type: DocumentAnalysisType) {
   }
 }
 
+function getProviderStatus(error: unknown): number | null {
+  if (typeof error !== 'object' || error === null) {
+    return null;
+  }
+
+  if (!('status' in error)) {
+    return null;
+  }
+
+  const status = (error as { status?: unknown }).status;
+  return typeof status === 'number' ? status : null;
+}
+
+function getProviderMessage(error: unknown) {
+  const providerStatus = getProviderStatus(error);
+
+  if (providerStatus === 429) {
+    return 'The AI provider is rate limiting requests right now. Please wait a moment and try again.';
+  }
+
+  return error instanceof Error
+    ? error.message
+    : 'The document analyzer is temporarily unavailable.';
+}
+
 export async function POST(request: NextRequest) {
-    const supabase = getSupabaseServerClient();
+  const supabase = getSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: 'Authentication not configured.' }, { status: 503 });
   }
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
   if (userError || !user) {
     return NextResponse.json({ error: 'Sign in to use this feature.' }, { status: 401 });
   }
@@ -65,7 +94,8 @@ export async function POST(request: NextRequest) {
       { status: 429 }
     );
   }
-const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
       { error: 'The document analyzer is not configured in this deployment.', code: 'missing_api_key' },
@@ -122,6 +152,7 @@ const apiKey = process.env.ANTHROPIC_API_KEY;
       .map((block) => block.text)
       .join('\n\n')
       .trim();
+
     if (!output) {
       return NextResponse.json(
         { error: 'The document analyzer returned an empty result.' },
@@ -130,12 +161,24 @@ const apiKey = process.env.ANTHROPIC_API_KEY;
     }
 
     return NextResponse.json({ output }, { status: 200 });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'The document analyzer is temporarily unavailable.';
+  } catch (error: unknown) {
+    const providerStatus = getProviderStatus(error);
+
+    if (providerStatus === 429) {
+      return NextResponse.json(
+        {
+          error: getProviderMessage(error),
+          code: 'provider_rate_limited',
+        },
+        { status: 429 }
+      );
+    }
 
     return NextResponse.json(
-      { error: message, code: 'document_analysis_failed' },
+      {
+        error: getProviderMessage(error),
+        code: 'document_analysis_failed',
+      },
       { status: 500 }
     );
   }
