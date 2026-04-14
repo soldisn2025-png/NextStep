@@ -1,9 +1,14 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 
-function buildRateLimit() {
+// Minimal interface — only what the routes use.
+interface RateLimiter {
+  limit(identifier: string): Promise<{ success: boolean }>;
+}
+
+function buildRateLimit(): RateLimiter {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    // No Redis configured — return a passthrough limiter (always allows)
+    // No Redis configured — passthrough allows every request.
     return { limit: async (_id: string) => ({ success: true }) };
   }
   return new Ratelimit({
