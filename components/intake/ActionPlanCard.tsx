@@ -171,6 +171,7 @@ export default function ActionPlanCard({
   const localResources = savedZip ? getLocalResourcesForAction(action.id, savedZip) : [];
   const potentialProviderSearchKind = getProviderSearchKindForAction(action.id);
   const providerSearchKind = savedZip ? potentialProviderSearchKind : null;
+  const visibleTrustedResources = !potentialProviderSearchKind ? action.resources ?? [] : [];
   const groupedLocalResources = groupLocalResources(localResources);
   const localKinds = (Object.keys(groupedLocalResources) as LocalResource['kind'][]).filter(
     (kind) => groupedLocalResources[kind].length > 0
@@ -178,8 +179,7 @@ export default function ActionPlanCard({
   const savedDraftCount = entry?.savedDrafts?.length ?? 0;
   const executionLogCount = entry?.executionLog?.length ?? 0;
   const hasResourceHub = Boolean(
-    (action.resources?.length ?? 0) > 0 ||
-      localKinds.length > 0 ||
+    localKinds.length > 0 ||
       potentialProviderSearchKind ||
       (action.supportItems?.length ?? 0) > 0
   );
@@ -189,9 +189,6 @@ export default function ActionPlanCard({
   const [showMobileDetails, setShowMobileDetails] = useState(false);
   const resourceSummary = [
     providerSearchKind && savedZip ? `nearby search for ${savedZip}` : null,
-    action.resources?.length
-      ? getPluralLabel(action.resources.length, 'trusted link')
-      : null,
     localResources.length
       ? getPluralLabel(localResources.length, 'local listing')
       : null,
@@ -266,28 +263,6 @@ export default function ActionPlanCard({
       )}
 
       {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
-
-      {action.resources && action.resources.length > 0 && (
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-2">
-            Trusted resources
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {action.resources.map((resource) => (
-              <a
-                key={resource.url}
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 hover:shadow-sm transition-all font-body"
-              >
-                {resource.label}
-                <ExternalLink size={11} />
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
 
       {localKinds.length > 0 && (
         <div className="mt-5 space-y-3">
@@ -369,6 +344,27 @@ export default function ActionPlanCard({
         onUpdate={(updates) => onUpdateEntry(action.id, updates)}
       />
     </>
+  );
+  const visibleTrustedResourcesSection = visibleTrustedResources.length > 0 && (
+    <div className="mt-5 rounded-[24px] border border-[#e5dccb] bg-white/88 px-4 py-4">
+      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+        Helpful verified resources
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {visibleTrustedResources.map((resource) => (
+          <a
+            key={resource.url}
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#ddd3bf] bg-white px-3 py-1.5 text-xs text-primary hover:border-primary/40 hover:shadow-sm transition-all font-body"
+          >
+            {resource.label}
+            <ExternalLink size={11} />
+          </a>
+        ))}
+      </div>
+    </div>
   );
   const focusActionButtons = (
     <div className="mt-5 flex flex-col gap-3">
@@ -456,6 +452,7 @@ export default function ActionPlanCard({
             />
           )}
           {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+          {visibleTrustedResourcesSection}
         </div>
       ) : (
       <div className="relative">
@@ -688,6 +685,8 @@ export default function ActionPlanCard({
                 topConcerns={topConcerns}
               />
             )}
+
+            {visibleTrustedResourcesSection}
 
             <div className="mt-5 space-y-3">
               {hasResourceHub && (
