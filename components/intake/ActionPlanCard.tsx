@@ -265,15 +265,6 @@ export default function ActionPlanCard({
         </div>
       )}
 
-      {potentialProviderSearchKind && (
-        <TherapistGuide
-          actionId={action.id}
-          childAge={childAge}
-          diagnoses={diagnoses}
-          topConcerns={topConcerns}
-        />
-      )}
-
       {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
 
       {action.resources && action.resources.length > 0 && (
@@ -449,16 +440,21 @@ export default function ActionPlanCard({
     >
       {mobileMode && focusMode ? (
         <div className="relative">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-            Step {displayIndex}
-          </p>
-          <h3 className="mt-3 font-heading text-[2rem] leading-tight text-text-main">
+          <h3 className="font-heading text-[2rem] leading-tight text-text-main">
             {action.title}
           </h3>
           <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
             {action.description}
           </p>
           {focusActionButtons}
+          {potentialProviderSearchKind && (
+            <TherapistGuide
+              actionId={action.id}
+              childAge={childAge}
+              diagnoses={diagnoses}
+              topConcerns={topConcerns}
+            />
+          )}
         </div>
       ) : (
       <div className="relative">
@@ -682,6 +678,15 @@ export default function ActionPlanCard({
               status={status}
               onUpdate={(updates) => onUpdateEntry(action.id, updates)}
             />
+
+            {potentialProviderSearchKind && (
+              <TherapistGuide
+                actionId={action.id}
+                childAge={childAge}
+                diagnoses={diagnoses}
+                topConcerns={topConcerns}
+              />
+            )}
 
             <div className="mt-5 space-y-3">
               {hasResourceHub && (
