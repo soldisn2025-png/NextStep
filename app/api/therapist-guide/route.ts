@@ -32,6 +32,7 @@ function buildPrompt(
   topConcerns: string[],
 ): string {
   const specialist = SPECIALIST_MAP[actionId] ?? 'a specialist for this area';
+
   return [
     `Child age: ${childAge || 'not specified'}`,
     `Diagnoses: ${diagnoses.length > 0 ? diagnoses.join(', ') : 'not specified'}`,
@@ -41,10 +42,11 @@ function buildPrompt(
     `Write a short guide for this parent on what to look for when choosing ${specialist}.`,
     'Include:',
     "1. One sentence on what type of specialist to prioritize and why, based on this child's age and diagnoses",
-    '2. Exactly 3 specific questions to ask before starting — concrete and decision-oriented',
+    '2. Exactly 3 specific questions to ask before starting - concrete and decision-oriented',
     '3. One clear red flag to watch out for',
     '',
-    'Rules: 150 words maximum. No jargon — write for a stressed parent, not a clinician. No filler phrases.',
+    'Rules: 150 words maximum. No jargon - write for a stressed parent, not a clinician. No filler phrases.',
+    'Do not use ** for bold or any markdown symbols. Use plain text only. For emphasis, rephrase the sentence to make it naturally stand out - do not use any special characters.',
   ].join('\n');
 }
 
@@ -79,10 +81,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const client = new Anthropic({ apiKey });
+    const systemPrompt =
+      'You help parents of newly diagnosed autistic children find and evaluate therapists. Be specific, calm, and practical. No medical advice. No encouragement phrases. No filler. Write only what was asked. Do not use ** for bold or any markdown symbols. Use plain text only. For emphasis, rephrase the sentence to make it naturally stand out - do not use any special characters.';
     const response = await client.messages.create({
       model: MODEL,
-      system:
-        'You help parents of newly diagnosed autistic children find and evaluate therapists. Be specific, calm, and practical. No medical advice. No encouragement phrases. No filler. Write only what was asked. Do not use markdown symbols like ** or *. For emphasis, use plain text only.',
+      system: systemPrompt,
       messages: [{ role: 'user', content: buildPrompt(actionId, childAge, diagnoses, topConcerns) }],
       max_tokens: 300,
     });
