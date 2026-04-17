@@ -455,6 +455,7 @@ export default function ActionPlanCard({
               topConcerns={topConcerns}
             />
           )}
+          {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
         </div>
       ) : (
       <div className="relative">
