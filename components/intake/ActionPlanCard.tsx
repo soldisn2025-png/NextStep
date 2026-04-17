@@ -41,6 +41,7 @@ interface ActionPlanCardProps {
   topConcerns: string[];
   entry?: ActionPlanProgressEntry;
   mobileMode?: boolean;
+  focusMode?: boolean;
   onUpdateStatus: (actionId: string, status: ActionPlanStatus) => void;
   onUpdateEntry: (actionId: string, updates: Partial<ActionPlanProgressEntry>) => void;
 }
@@ -156,6 +157,7 @@ export default function ActionPlanCard({
   topConcerns,
   entry,
   mobileMode = false,
+  focusMode = false,
   onUpdateStatus,
   onUpdateEntry,
 }: ActionPlanCardProps) {
@@ -377,6 +379,24 @@ export default function ActionPlanCard({
       />
     </>
   );
+  const focusActionButtons = (
+    <div className="mt-5 flex flex-col gap-3">
+      <button
+        type="button"
+        onClick={() => onUpdateStatus(action.id, 'done')}
+        className="inline-flex w-full items-center justify-center rounded-[18px] bg-[#5c7f55] px-4 py-3 text-sm text-white font-body transition-colors hover:bg-[#4d6b47]"
+      >
+        Mark as Done
+      </button>
+      <button
+        type="button"
+        onClick={() => onUpdateStatus(action.id, 'skipped')}
+        className="inline-flex w-full items-center justify-center rounded-[18px] border border-[#ddd3bf] bg-white px-4 py-3 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
+      >
+        Skip for now
+      </button>
+    </div>
+  );
   const actionButtons = (
     <div className="flex flex-wrap gap-2">
       {status !== 'done' && status !== 'skipped' && (
@@ -427,6 +447,20 @@ export default function ActionPlanCard({
       id={`action-${action.id}`}
       className={`relative overflow-hidden rounded-[30px] border px-4 py-4 shadow-[0_24px_64px_-42px_rgba(54,44,28,0.5)] before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] sm:px-6 sm:py-6 ${statusMeta[status].cardClass} ${urgency.accentClass}`}
     >
+      {mobileMode && focusMode ? (
+        <div className="relative">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
+            Step {displayIndex}
+          </p>
+          <h3 className="mt-3 font-heading text-[2rem] leading-tight text-text-main">
+            {action.title}
+          </h3>
+          <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
+            {action.description}
+          </p>
+          {focusActionButtons}
+        </div>
+      ) : (
       <div className="relative">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-wrap items-center gap-2">
@@ -787,6 +821,7 @@ export default function ActionPlanCard({
           </p>
         </div>
       </div>
+      )}
     </div>
   );
 }

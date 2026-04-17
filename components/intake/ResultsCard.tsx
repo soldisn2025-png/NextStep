@@ -1,7 +1,7 @@
 'use client';
 
 import type { FormEvent } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Archive,
   ArrowLeft,
@@ -9,7 +9,6 @@ import {
   BellRing,
   CheckCircle2,
   CircleOff,
-  ChevronLeft,
   ChevronRight,
   ClipboardList,
   FileText,
@@ -197,9 +196,7 @@ export default function ResultsCard({
   const [mobileAuthEmail, setMobileAuthEmail] = useState(accountEmail ?? '');
   const [mobileAuthError, setMobileAuthError] = useState('');
   const [isSubmittingMobileAuth, setIsSubmittingMobileAuth] = useState(false);
-  const stepScrollerRef = useRef<HTMLDivElement | null>(null);
-  const [mobileStepCanScrollLeft, setMobileStepCanScrollLeft] = useState(false);
-  const [mobileStepCanScrollRight, setMobileStepCanScrollRight] = useState(false);
+  const [showFocusReadyBanner, setShowFocusReadyBanner] = useState(false);
 
   useEffect(() => {
     setZipInput(savedZip);
@@ -421,55 +418,41 @@ export default function ResultsCard({
     activeRecommendations.find(({ action }) => action.id === selectedMobileActionId) ??
     activeRecommendations[0] ??
     null;
-  const selectedMobileIndex = selectedMobileRecommendation
-    ? activeRecommendations.findIndex(
+  const selectedMobilePlanIndex = selectedMobileRecommendation
+    ? recommendationsWithState.findIndex(
         ({ action }) => action.id === selectedMobileRecommendation.action.id
       )
     : -1;
-  const syncMobileStepOverflow = () => {
-    const container = stepScrollerRef.current;
-
-    if (!container) {
-      setMobileStepCanScrollLeft(false);
-      setMobileStepCanScrollRight(false);
-      return;
-    }
-
-    const maxScrollLeft = container.scrollWidth - container.clientWidth;
-    setMobileStepCanScrollLeft(container.scrollLeft > 8);
-    setMobileStepCanScrollRight(maxScrollLeft - container.scrollLeft > 8);
-  };
   const activeMobileTabLabel =
     mobileTabs.find((tab) => tab.id === mobileTab)?.label ?? 'Plan';
   const mobileHeaderEyebrow =
-    mobileTab === 'focus' && selectedMobileRecommendation
-      ? `Step ${selectedMobileIndex + 1} of ${Math.max(activeRecommendations.length, 1)}`
-      : activeMobileTabLabel;
+    mobileTab === 'focus' ? 'Focus' : activeMobileTabLabel;
   const mobileHeaderTitle =
     mobileTab === 'focus'
-      ? selectedMobileRecommendation?.action.title ?? nextFocus?.title ?? emptyFocusTitle
+      ? ''
       : nextFocus?.title ?? 'NextStep plan';
   const showMobileSyncCta = isConfigured && !isLoading && !user;
-
-  useEffect(() => {
-    if (mobileTab !== 'focus') {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      syncMobileStepOverflow();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-  }, [mobileTab, activeRecommendations.length, selectedMobileActionId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    window.addEventListener('resize', syncMobileStepOverflow);
-    return () => window.removeEventListener('resize', syncMobileStepOverflow);
+    const hasSeenBanner =
+      window.sessionStorage.getItem('nextstep-focus-ready-banner-seen') === '1';
+
+    if (hasSeenBanner) {
+      return;
+    }
+
+    setShowFocusReadyBanner(true);
+    window.sessionStorage.setItem('nextstep-focus-ready-banner-seen', '1');
+
+    const timeout = window.setTimeout(() => {
+      setShowFocusReadyBanner(false);
+    }, 4500);
+
+    return () => window.clearTimeout(timeout);
   }, []);
 
   // If the active tab is no longer visible (e.g. Tools tab hidden), fall back to Focus
@@ -479,22 +462,6 @@ export default function ResultsCard({
       setMobileTab('focus');
     }
   }, [mobileTabs, mobileTab]);
-
-  useEffect(() => {
-    if (mobileTab !== 'focus' || !selectedMobileRecommendation) {
-      return;
-    }
-
-    const selectedElement = document.getElementById(
-      `mobile-step-chip-${selectedMobileRecommendation.action.id}`
-    );
-
-    selectedElement?.scrollIntoView({
-      behavior: 'smooth',
-      inline: 'center',
-      block: 'nearest',
-    });
-  }, [mobileTab, selectedMobileRecommendation]);
 
   const handleZipSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -591,9 +558,11 @@ export default function ResultsCard({
                 <p className="text-[10px] uppercase tracking-[0.18em] text-[#8a8377] font-body">
                   {mobileHeaderEyebrow}
                 </p>
-                <h2 className="mt-1 truncate font-heading text-lg leading-tight text-text-main">
-                  {mobileHeaderTitle}
-                </h2>
+                {mobileTab !== 'focus' && (
+                  <h2 className="mt-1 truncate font-heading text-lg leading-tight text-text-main">
+                    {mobileHeaderTitle}
+                  </h2>
+                )}
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 {isLoading ? (
@@ -623,7 +592,10 @@ export default function ResultsCard({
             <div className="space-y-4">
           {mobileTab === 'focus' && (
             <>
-              {inProgressCount === 0 && completedCount === 0 && activeRecommendations.length > 0 && (
+              {showFocusReadyBanner &&
+                inProgressCount === 0 &&
+                completedCount === 0 &&
+                activeRecommendations.length > 0 && (
                 <div className="rounded-[20px] border border-[#f0dcc0] bg-[#fff7e8] px-4 py-3">
                   <p className="text-sm text-[#95611f] font-body leading-relaxed">
                     <strong className="font-medium">Your plan is ready.</strong> Review your top step below — tap a status button to get started.
@@ -638,80 +610,22 @@ export default function ResultsCard({
                 </div>
               )}
 
-              {activeRecommendations.length > 1 && (
-                <div className="relative">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                      Plan steps
-                    </p>
-                    {activeRecommendations.length > 3 && (
-                      <p className="text-[11px] text-[#8a8377] font-body">
-                        {mobileStepCanScrollRight || mobileStepCanScrollLeft
-                          ? 'Swipe for more'
-                          : `${activeRecommendations.length} steps`}
-                      </p>
-                    )}
-                  </div>
-                  <div
-                    ref={stepScrollerRef}
-                    onScroll={syncMobileStepOverflow}
-                    className="overflow-x-auto pb-1"
-                  >
-                    <div className="flex gap-2">
-                    {activeRecommendations.map(({ action, status }, index) => (
-                      <button
-                        id={`mobile-step-chip-${action.id}`}
-                        key={action.id}
-                        type="button"
-                        onClick={() => setSelectedMobileActionId(action.id)}
-                        className={`min-w-[148px] max-w-[148px] rounded-[16px] border px-3 py-2 text-left transition-colors ${
-                          selectedMobileRecommendation?.action.id === action.id
-                            ? 'border-[#d5cfaf] bg-[#f8f3e6]'
-                            : 'border-[#e6dccb] bg-white/85'
-                        }`}
-                      >
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                          Step {index + 1}
-                        </p>
-                        <p
-                          className="mt-1 text-sm text-text-main font-body leading-snug"
-                          style={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            minHeight: '3.6rem',
-                          }}
-                        >
-                          {action.title}
-                        </p>
-                        <p className="mt-1 text-[11px] text-[#8a8377] font-body">
-                          {planMapStatusMeta[status].label}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                  {mobileStepCanScrollLeft && (
-                    <div className="pointer-events-none absolute inset-y-[30px] left-0 w-8 bg-gradient-to-r from-[#fbf7ef] to-transparent" />
-                  )}
-                  {mobileStepCanScrollRight && (
-                    <div className="pointer-events-none absolute inset-y-[30px] right-0 w-8 bg-gradient-to-l from-[#fbf7ef] to-transparent" />
-                  )}
-                </div>
-              )}
-
               {selectedMobileRecommendation ? (
                 <>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
+                    Step {selectedMobilePlanIndex + 1} of {recommendationsWithState.length}
+                  </p>
+
                   <ActionPlanCard
                     action={selectedMobileRecommendation.action}
-                    displayIndex={selectedMobileIndex + 1}
+                    displayIndex={selectedMobilePlanIndex + 1}
                     savedZip={savedZip}
                     childAge={answers.childAge}
                     diagnoses={answers.diagnoses}
                     topConcerns={answers.topConcerns}
                     entry={selectedMobileRecommendation.entry}
                     mobileMode
+                    focusMode
                     onUpdateStatus={updateActionStatus}
                     onUpdateEntry={onUpdateActionEntry}
                   />
@@ -760,37 +674,14 @@ export default function ResultsCard({
                     </div>
                   )}
 
-                  {activeRecommendations.length > 1 && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        disabled={selectedMobileIndex <= 0}
-                        onClick={() =>
-                          selectedMobileIndex > 0 &&
-                          setSelectedMobileActionId(
-                            activeRecommendations[selectedMobileIndex - 1]?.action.id ?? null
-                          )
-                        }
-                        className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-3 text-sm text-[#5a5549] font-body disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <ChevronLeft size={14} />
-                        Previous
-                      </button>
-                      <button
-                        type="button"
-                        disabled={selectedMobileIndex >= activeRecommendations.length - 1}
-                        onClick={() =>
-                          selectedMobileIndex < activeRecommendations.length - 1 &&
-                          setSelectedMobileActionId(
-                            activeRecommendations[selectedMobileIndex + 1]?.action.id ?? null
-                          )
-                        }
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6d6b47] px-4 py-3 text-sm text-white font-body disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Next
-                        <ChevronRight size={14} />
-                      </button>
-                    </div>
+                  {recommendationsWithState.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setMobileTab('plan')}
+                      className="pt-1 text-sm text-primary font-body underline-offset-2 hover:underline"
+                    >
+                      View all steps →
+                    </button>
                   )}
                 </>
               ) : (
