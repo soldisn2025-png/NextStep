@@ -888,6 +888,8 @@ export default function ResultsCard({
                   </div>
                 )}
               </div>
+
+              <FeedbackCard mobile />
             </>
           )}
 
@@ -1039,8 +1041,6 @@ export default function ResultsCard({
                   })}
                 </div>
               </details>
-
-              <FeedbackCard mobile />
 
               <div className="flex justify-center pt-2">
                 <button
