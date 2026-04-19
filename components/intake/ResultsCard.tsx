@@ -177,11 +177,11 @@ function getSyncMessage(syncStatus: PlanSyncStatus, accountEmail: string | null)
 function FeedbackCard({ mobile = false }: { mobile?: boolean }) {
   return (
     <div
-      className={`rounded-[28px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,243,235,0.98))] shadow-[0_20px_55px_-45px_rgba(54,44,28,0.5)] ${
+      className={`rounded-[28px] border border-[#d7dfd0] bg-[linear-gradient(180deg,rgba(247,251,246,0.98),rgba(239,246,241,0.98))] shadow-[0_20px_55px_-45px_rgba(54,44,28,0.38)] ${
         mobile ? 'px-4 py-4' : 'px-5 py-5'
       }`}
     >
-      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+      <p className="text-xs uppercase tracking-[0.18em] text-[#6f7f6c] font-body">
         Help improve NextStep
       </p>
       <h3 className="mt-2 font-heading text-2xl text-text-main">Your feedback helps shape what comes next.</h3>
