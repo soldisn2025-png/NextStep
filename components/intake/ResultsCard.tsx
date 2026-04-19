@@ -113,6 +113,9 @@ const planMapStatusMeta: Record<
 type WorkspacePanel = 'reminders' | 'check-in' | 'documents';
 type MobileTab = 'focus' | 'plan' | 'tools' | 'history';
 
+const FEEDBACK_EMAIL = 'soldisn2025@gmail.com';
+const FEEDBACK_MAILTO = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('NextStep feedback')}`;
+
 function getInitialWorkspacePanel(
   overdueFollowUpCount: number,
   dueSoonCount: number,
@@ -169,6 +172,39 @@ function getSyncMessage(syncStatus: PlanSyncStatus, accountEmail: string | null)
     default:
       return null;
   }
+}
+
+function FeedbackCard({ mobile = false }: { mobile?: boolean }) {
+  return (
+    <div
+      className={`rounded-[28px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,243,235,0.98))] shadow-[0_20px_55px_-45px_rgba(54,44,28,0.5)] ${
+        mobile ? 'px-4 py-4' : 'px-5 py-5'
+      }`}
+    >
+      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+        Help improve NextStep
+      </p>
+      <h3 className="mt-2 font-heading text-2xl text-text-main">Your feedback helps shape what comes next.</h3>
+      <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
+        If something felt confusing, missing, or especially helpful, please send a note. Even a short message helps make this calmer and more useful for other families.
+      </p>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <a
+          href={FEEDBACK_MAILTO}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
+        >
+          <Mail size={14} />
+          Email feedback
+        </a>
+        <a
+          href={FEEDBACK_MAILTO}
+          className="text-sm text-primary font-body break-all hover:underline"
+        >
+          {FEEDBACK_EMAIL}
+        </a>
+      </div>
+    </div>
+  );
 }
 
 export default function ResultsCard({
@@ -1004,6 +1040,8 @@ export default function ResultsCard({
                 </div>
               </details>
 
+              <FeedbackCard mobile />
+
               <div className="flex justify-center pt-2">
                 <button
                   onClick={onStartOver}
@@ -1561,6 +1599,10 @@ export default function ResultsCard({
           })}
         </div>
       </details>
+
+      <div className="mt-6">
+        <FeedbackCard />
+      </div>
 
       <div className="mt-8 rounded-[30px] border border-[#e3dac9] bg-[linear-gradient(180deg,rgba(255,255,255,0.8),rgba(244,239,231,0.95))] px-6 py-8 text-center shadow-[0_22px_55px_-50px_rgba(54,44,28,0.6)]">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f3eee3] text-[#7a724b]">
