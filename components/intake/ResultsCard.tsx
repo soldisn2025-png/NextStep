@@ -196,12 +196,6 @@ function FeedbackCard({ mobile = false }: { mobile?: boolean }) {
           <Mail size={14} />
           Email feedback
         </a>
-        <a
-          href={FEEDBACK_MAILTO}
-          className="text-sm text-primary font-body break-all hover:underline"
-        >
-          {FEEDBACK_EMAIL}
-        </a>
       </div>
     </div>
   );
