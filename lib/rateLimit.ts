@@ -30,3 +30,21 @@ function buildRateLimit(): RateLimiter {
 }
 
 export const aiRateLimit = buildRateLimit();
+
+function buildProviderRateLimit(): RateLimiter {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return {
+      limit: async (_id: string) => ({
+        success: true,
+      }),
+    };
+  }
+
+  return new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(30, '60 s'),
+    prefix: 'nextstep:providers',
+  });
+}
+
+export const providerRateLimit = buildProviderRateLimit();

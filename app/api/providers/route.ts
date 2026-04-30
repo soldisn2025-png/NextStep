@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchProvidersByZip, ProviderSearchError } from '@/lib/providerSearch';
 import { ProviderSearchKind } from '@/lib/types';
+import { providerRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,6 +13,16 @@ function isProviderKind(value: string | null): value is ProviderSearchKind {
 }
 
 export async function GET(request: NextRequest) {
+  const ip =
+    request.ip ??
+    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+    '127.0.0.1';
+
+  const { success } = await providerRateLimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const zip = request.nextUrl.searchParams.get('zip') ?? '';
   const kind = request.nextUrl.searchParams.get('kind');
 
