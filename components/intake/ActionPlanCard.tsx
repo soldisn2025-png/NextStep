@@ -747,13 +747,17 @@ export default function ActionPlanCard({
                       </div>
                       <div>
                         <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                          Local help and resources
+                          {locale === 'ko-KR' ? '기관 정보 및 참고 링크' : 'Local help and resources'}
                         </p>
                         <h4 className="mt-1 font-heading text-xl text-text-main">
-                          Keep providers and reference links out of the way until you need them.
+                          {locale === 'ko-KR'
+                            ? '필요할 때 아래 기관 정보와 링크를 활용하세요.'
+                            : 'Find providers and reference links here.'}
                         </h4>
                         <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                          {resourceSummary || 'Open this section to see trusted links, local programs, and nearby provider options.'}
+                          {resourceSummary || (locale === 'ko-KR'
+                            ? '이 섹션을 열면 신뢰할 수 있는 링크와 주변 기관 정보를 볼 수 있습니다.'
+                            : 'Open this section to see trusted links, local programs, and nearby provider options.')}
                         </p>
                       </div>
                     </div>
@@ -782,14 +786,17 @@ export default function ActionPlanCard({
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                        Drafts and outreach log
+                        {locale === 'ko-KR' ? '초안 및 연락 기록' : 'Drafts and outreach log'}
                       </p>
                       <h4 className="mt-1 font-heading text-xl text-text-main">
-                        Open the AI helper only when this step actually needs it.
+                        {locale === 'ko-KR'
+                          ? '필요할 때 AI 도우미를 활용하세요.'
+                          : 'Let AI help with this step.'}
                       </h4>
                       <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                        {toolsSummary ||
-                          'Generate a draft, save it, and log real outreach here without making every card feel heavy.'}
+                        {toolsSummary || (locale === 'ko-KR'
+                          ? '초안을 만들고, 저장하고, 실제 연락한 내역을 기록하세요.'
+                          : 'Generate a draft, save it, and log real outreach here without making every card feel heavy.')}
                       </p>
                     </div>
                   </div>

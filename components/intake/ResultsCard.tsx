@@ -199,11 +199,11 @@ function FeedbackCard({ mobile = false, locale = 'en-US' as AppLocale }: { mobil
         {isKorean ? 'NextStep 개선에 참여하기' : 'Help improve NextStep'}
       </p>
       <h3 className="mt-2 font-heading text-2xl text-text-main">
-        {isKorean ? '의견이 앱을 더 좋게 만들어 줍니다.' : 'Your feedback helps shape what comes next.'}
+        {isKorean ? '여러분의 의견이 큰 도움이 됩니다.' : 'Your feedback helps shape what comes next.'}
       </h3>
       <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
         {isKorean
-          ? '혼란스럽거나 도움이 되었거나, 아쉬웠던 점이 있다면 짧게라도 보내주세요. 다른 가족들에게 더 도움이 되도록 만드는 데 활용됩니다.'
+          ? '헷갈린 부분, 도움이 된 것, 아쉬운 점 — 짧게라도 알려주시면 비슷한 상황의 가족들에게 더 나은 앱을 만드는 데 반영됩니다.'
           : 'If something felt confusing, missing, or especially helpful, please send a note. Even a short message helps make this calmer and more useful for other families.'}
       </p>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1287,13 +1287,15 @@ export default function ResultsCard({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-              Plan map
+              {isKorean ? '전체 단계 보기' : 'Plan map'}
             </p>
             <h3 className="mt-2 font-heading text-2xl text-text-main">
-              See the whole plan before opening the details.
+              {isKorean ? '세부 내용 열기 전에 전체 단계를 먼저 확인하세요.' : 'See the whole plan before opening the details.'}
             </h3>
             <p className="mt-2 max-w-2xl text-sm text-[#625e53] font-body leading-relaxed">
-              Jump straight to the next step, keep one workspace open at a time, and leave the heavy tools folded away until they are needed.
+              {isKorean
+                ? '다음 단계로 바로 이동하고, 워크스페이스는 하나씩 열어 사용하세요.'
+                : 'Jump straight to the next step, keep one workspace open at a time, and leave the heavy tools folded away until they are needed.'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

@@ -156,7 +156,7 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
   },
   'parent-community-kr': {
     id: 'parent-community-kr',
-    title: '같은 처지의 부모들과 연결되기',
+    title: '다른 부모들과 연대하기',
     description:
       '공식 기관은 제도를 알려주고, 부모 커뮤니티는 실제 대기, 치료실, 학교 경험을 알려줄 수 있습니다. 다만 온라인 경험담은 참고 자료로만 보세요.',
     firstMove: '전국장애인부모연대, 한국자폐인사랑협회, 지역 부모 모임 중 하나를 조용히 둘러보는 것부터 시작하세요.',

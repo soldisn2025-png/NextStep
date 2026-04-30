@@ -156,7 +156,7 @@ export default function ActionAIAssistant({
             {isKorean ? 'AI 도우미' : 'AI helper'}
           </div>
           <h4 className="mt-3 font-heading text-xl text-text-main">
-            {isKorean ? '판단을 대신하는 게 아니라 작업 부담을 줄여드립니다.' : 'Use AI to remove friction, not replace judgment.'}
+            {isKorean ? '필요한 이메일 초안, 전화 스크립트를 만들어보세요.' : 'Use AI to remove friction, not replace judgment.'}
           </h4>
           <p className="mt-2 max-w-2xl text-sm text-[#625e53] font-body leading-relaxed">
             {isKorean
