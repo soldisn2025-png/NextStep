@@ -33,26 +33,14 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
     id: 'find-developmental-ped-kr',
     title: '발달소아과 또는 소아정신과 진료 예약하기',
     description:
-      '유명한 발달 전문의는 예약이 오래 걸릴 수 있습니다. 한 곳만 기다리기보다 여러 병원과 진료과를 동시에 확인하는 편이 현실적입니다.',
-    firstMove: '상급종합병원뿐 아니라 지역 대학병원 재활의학과, 소아정신건강의학과, 발달클리닉까지 함께 전화해 가장 빠른 초진 일정을 확인하세요.',
-    whileWaiting: '기다리는 동안 언어치료나 작업치료는 발달지연을 근거로 먼저 시작할 수 있는지 확인하세요.',
+      '유명한 발달 전문의는 예약이 오래 걸릴 수 있습니다. 서울의 유명 병원만 기다리지 말고, 지역 대학병원, 재활의학과, 소아정신건강의학과, 민간 발달클리닉까지 넓게 확인하면 더 빨리 첫 평가를 받을 수 있습니다.',
+    firstMove: '전화할 병원 목록을 5곳 이상 만드세요. 상급종합병원부터 지역 재활의학과, 소아정신건강의학과, 민간 발달클리닉까지 넓게 잡고, 초진 대기 기간과 취소 자리 알림 가능 여부를 같은 날 확인하세요.',
+    whileWaiting: '기다리는 동안 언어치료나 작업치료는 발달지연을 근거로 먼저 시작할 수 있는지 확인하세요. 다른 병원에서 받은 평가 결과도 이후 진료에 도움이 됩니다.',
     category: 'doctor',
     urgency: 'immediate',
     resources: [
       { label: '대한소아청소년정신의학회', url: 'https://www.kacap.or.kr/' },
       { label: '대한재활의학회', url: 'https://www.karm.or.kr/' },
-    ],
-  },
-  'shorter-queue-strategy-kr': {
-    id: 'shorter-queue-strategy-kr',
-    title: '대기 시간을 줄이는 진료 예약 전략 세우기',
-    description:
-      '서울의 유명 병원만 기다리면 시간이 길어질 수 있습니다. 지역 병원, 다른 진료과, 취소 자리, 민간 발달클리닉을 함께 확인하면 더 빨리 첫 평가를 받을 가능성이 높아집니다.',
-    firstMove: '전화할 병원 목록을 5곳 이상 만들고, 초진 대기 기간과 취소 자리 알림 가능 여부를 같은 날 확인하세요.',
-    whileWaiting: '한 병원을 기다리는 동안 다른 곳에서 받은 평가 결과도 이후 진료에 도움이 될 수 있습니다.',
-    category: 'doctor',
-    urgency: 'immediate',
-    resources: [
       { label: '건강보험심사평가원 병원 찾기', url: 'https://www.hira.or.kr/' },
       { label: '국민건강보험 병의원 찾기', url: 'https://www.nhis.or.kr/' },
     ],

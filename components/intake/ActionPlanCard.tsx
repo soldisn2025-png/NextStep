@@ -433,7 +433,9 @@ export default function ActionPlanCard({
           }`}
         >
           <Play size={14} />
-          {status === 'in-progress' ? 'Working on this' : 'Start this'}
+          {status === 'in-progress'
+            ? (locale === 'ko-KR' ? '진행 중' : 'Working on this')
+            : (locale === 'ko-KR' ? '시작하기' : 'Start this')}
         </button>
       )}
       {status !== 'skipped' && (
@@ -444,7 +446,7 @@ export default function ActionPlanCard({
             className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
           >
             <X size={14} />
-            Skip this
+            {locale === 'ko-KR' ? '건너뛰기' : 'Skip this'}
           </button>
           <button
             type="button"
@@ -458,7 +460,9 @@ export default function ActionPlanCard({
             }`}
           >
             {status === 'done' ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
-            {status === 'done' ? 'Reopen step' : 'Mark as done'}
+            {status === 'done'
+              ? (locale === 'ko-KR' ? '다시 시작' : 'Reopen step')
+              : (locale === 'ko-KR' ? '완료' : 'Mark as done')}
           </button>
         </>
       )}
@@ -479,7 +483,7 @@ export default function ActionPlanCard({
             {action.description}
           </p>
           {focusActionButtons}
-          {potentialProviderSearchKind && (
+          {potentialProviderSearchKind && locale !== 'ko-KR' && (
             <TherapistGuide
               actionId={action.id}
               childAge={childAge}
@@ -513,7 +517,7 @@ export default function ActionPlanCard({
           </div>
           <div className="text-left md:text-right">
             <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-              Step {displayIndex}
+              {locale === 'ko-KR' ? `단계 ${displayIndex}` : `Step ${displayIndex}`}
             </p>
             {updatedAt && (
               <p className="mt-1 text-xs text-[#8a8377] font-body">
@@ -598,7 +602,7 @@ export default function ActionPlanCard({
           <div className="mt-5 grid gap-3 lg:grid-cols-2">
             <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
               <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-                First move
+                {locale === 'ko-KR' ? '첫 번째 행동' : 'First move'}
               </p>
               <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
                 {guidance.firstMove}
@@ -606,11 +610,13 @@ export default function ActionPlanCard({
             </div>
             <div className="rounded-[24px] border border-[#e5dccb] bg-white/80 px-4 py-4">
               <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-                While you wait
+                {locale === 'ko-KR' ? '기다리는 동안' : 'While you wait'}
               </p>
               <p className="mt-2 text-sm text-[#4f4b42] font-body leading-relaxed">
                 {guidance.whileWaiting ??
-                  'If this step feels blocked, write down what is slowing you down so the next call or appointment gets more specific.'}
+                  (locale === 'ko-KR'
+                    ? '막히는 느낌이 들면 무엇이 걸리는지 적어 두면 다음 통화나 방문에서 더 구체적으로 말할 수 있습니다.'
+                    : 'If this step feels blocked, write down what is slowing you down so the next call or appointment gets more specific.')}
               </p>
             </div>
           </div>
@@ -713,7 +719,7 @@ export default function ActionPlanCard({
               onUpdate={(updates) => onUpdateEntry(action.id, updates)}
             />
 
-            {potentialProviderSearchKind && (
+            {potentialProviderSearchKind && locale !== 'ko-KR' && (
               <TherapistGuide
                 actionId={action.id}
                 childAge={childAge}
@@ -853,12 +859,16 @@ export default function ActionPlanCard({
             {!mobileMode && actionButtons}
             {status !== 'done' && status !== 'skipped' && (
               <p className={`${mobileMode ? '' : 'mt-2 '}text-xs text-[#8a8377] font-body`}>
-                Done steps move into the green completed section. Skipped steps move into the skipped section.
+                {locale === 'ko-KR'
+                  ? '완료된 단계는 초록색 섹션으로, 건너뛴 단계는 건너뛴 섹션으로 이동합니다.'
+                  : 'Done steps move into the green completed section. Skipped steps move into the skipped section.'}
               </p>
             )}
           </div>
           <p className="text-xs text-[#8a8377] font-body">
-            Saved on this device{savedZip ? ` | ZIP ${savedZip}` : ''}.
+            {locale === 'ko-KR'
+              ? `이 기기에 저장됨${savedZip ? ` | ${savedZip}` : ''}.`
+              : `Saved on this device${savedZip ? ` | ZIP ${savedZip}` : ''}.`}
           </p>
         </div>
       </div>

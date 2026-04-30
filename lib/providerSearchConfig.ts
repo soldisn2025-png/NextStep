@@ -55,7 +55,6 @@ const ACTION_PROVIDER_KIND: Record<string, ProviderSearchKind> = {
   'find-ot-kr': 'ot',
   'behavior-therapy-kr': 'aba',
   'find-developmental-ped-kr': 'doctor',
-  'shorter-queue-strategy-kr': 'doctor',
 };
 
 export function getProviderSearchKindForAction(actionId: string): ProviderSearchKind | null {
