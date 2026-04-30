@@ -3,10 +3,10 @@ import { RecommendedAction } from './types';
 export const KR_ACTIONS: Record<string, RecommendedAction> = {
   'request-special-ed-kr': {
     id: 'request-special-ed-kr',
-    title: '교육지원청에 특수교육대상자 선정 신청하기',
+    title: '교육청에 특수교육대상자 선정 신청하기',
     description:
-      '특수교육 지원은 학교가 허락해 주는 제도가 아니라 법에 근거한 신청 절차입니다. 학교와 먼저 상의할 수는 있지만, 실제 선정과 배치는 교육지원청 절차를 통해 진행됩니다.',
-    firstMove: '거주 지역 교육지원청 특수교육지원센터에 전화해 특수교육대상자 선정 신청 절차와 필요 서류를 물어보세요.',
+      '특수교육 지원은 학교가 허락해 주는 제도가 아니라 법에 근거한 신청 절차입니다. 학교와 먼저 상의할 수는 있지만, 실제 선정과 배치는 교육청 절차를 통해 진행됩니다.',
+    firstMove: '거주 지역 교육청 특수교육지원센터에 전화해 특수교육대상자 선정 신청 절차와 필요 서류를 물어보세요.',
     whileWaiting: '어린이집, 유치원, 학교의 관찰 메모와 기존 검사 결과를 한 폴더에 모아 두세요.',
     category: 'school',
     urgency: 'immediate',
@@ -20,7 +20,7 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
     title: '개별화교육계획 이해하고 요청하기',
     description:
       '개별화교육계획은 자녀에게 필요한 교육 목표와 지원을 문서로 정리하는 과정입니다. 특수학급, 통합학급, 특수학교 중 무엇이 맞는지는 자녀 상황과 지역 여건에 따라 달라질 수 있습니다.',
-    firstMove: '학교 또는 교육지원청에 개별화교육지원팀 회의가 어떻게 열리는지 물어보고, 부모 의견을 문서로 준비하세요.',
+    firstMove: '학교 또는 교육청에 개별화교육지원팀 회의가 어떻게 열리는지 물어보고, 부모 의견을 문서로 준비하세요.',
     whileWaiting: '자녀가 학교에서 어려워하는 시간, 과목, 상황을 짧게 기록해 두면 회의에서 훨씬 구체적으로 말할 수 있습니다.',
     category: 'school',
     urgency: 'soon',
@@ -75,7 +75,7 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
   },
   'find-slp-kr': {
     id: 'find-slp-kr',
-    title: '언어재활사 찾기',
+    title: '언어치료사 찾기',
     description:
       '말이 늦거나 의사소통이 어렵다면 진단명이 확정되기 전에도 언어평가와 언어치료를 알아볼 수 있습니다. 지역에 따라 대기가 길 수 있으니 여러 곳을 동시에 확인하세요.',
     firstMove: '집이나 어린이집/학교 근처의 언어치료실 3곳 이상에 초기 평가 가능일과 대기 기간을 물어보세요.',
@@ -171,7 +171,7 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
   },
   'parent-wellbeing-kr': {
     id: 'parent-wellbeing-kr',
-    title: '내 자신을 돌보는 것도 할 일입니다',
+    title: '내 자신을 돌보는 것도 중요합니다',
     description:
       '부모가 지치면 정보도, 치료도, 학교 대응도 오래 이어가기 어렵습니다. 지금은 완벽한 부모가 되는 것이 아니라 버틸 수 있는 구조를 만드는 시간이기도 합니다.',
     firstMove: '이번 주에 부모상담, 지역 센터 상담, 믿을 수 있는 사람에게 도움 요청 중 하나만 선택하세요.',

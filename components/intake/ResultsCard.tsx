@@ -999,6 +999,7 @@ export default function ResultsCard({
                 <ReminderCenter
                   className=""
                   items={activeRecommendations.map(({ action, entry }) => ({ action, entry }))}
+                  locale={locale}
                 />
               )}
 
@@ -1007,6 +1008,7 @@ export default function ResultsCard({
                   className=""
                   analyses={documentAnalyses}
                   onSaveAnalysis={onSaveDocumentAnalysis}
+                  locale={locale}
                 />
               )}
 
@@ -1599,6 +1601,7 @@ export default function ResultsCard({
           <ReminderCenter
             className="mt-4"
             items={activeRecommendations.map(({ action, entry }) => ({ action, entry }))}
+            locale={locale}
           />
         )}
 
@@ -1607,6 +1610,7 @@ export default function ResultsCard({
             className="mt-4"
             analyses={documentAnalyses}
             onSaveAnalysis={onSaveDocumentAnalysis}
+            locale={locale}
           />
         )}
 
@@ -1680,7 +1684,7 @@ export default function ResultsCard({
           <CheckCircle2 size={20} />
         </div>
         <h3 className="mt-4 font-heading text-2xl text-text-main">
-          {isKorean ? '실제 계획을 만들고 있습니다.' : 'You are building a real plan.'}
+          {isKorean ? '내 아이를 위한 의미있는 계획의 시작' : 'You are building a real plan.'}
         </h3>
         <p className="mt-3 max-w-2xl mx-auto text-sm text-[#625e53] font-body leading-relaxed">
           {isKorean

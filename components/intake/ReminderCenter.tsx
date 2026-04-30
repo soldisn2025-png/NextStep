@@ -15,11 +15,12 @@ import {
   downloadReminderCalendarFile,
   getReminderLeadDaysLabel,
 } from '@/lib/reminders';
-import { ActionPlanProgressEntry, RecommendedAction } from '@/lib/types';
+import { ActionPlanProgressEntry, AppLocale, RecommendedAction } from '@/lib/types';
 import SmsReminderSetup from './SmsReminderSetup';
 
 interface ReminderCenterProps {
   className?: string;
+  locale?: AppLocale;
   items: Array<{
     action: RecommendedAction;
     entry: ActionPlanProgressEntry;
@@ -53,7 +54,17 @@ function getNotificationKey(actionId: string, followUpDate: string, reminderLead
   return `${actionId}:${followUpDate}:${reminderLeadDays === null ? 'none' : reminderLeadDays}`;
 }
 
-export default function ReminderCenter({ className = 'mt-6', items }: ReminderCenterProps) {
+function getLeadDaysLabelKr(leadDays: number | null): string {
+  if (leadDays === null) return '앱 내 알림만';
+  if (leadDays === 0) return '당일 아침';
+  if (leadDays === 1) return '1일 전';
+  if (leadDays === 3) return '3일 전';
+  if (leadDays === 7) return '1주 전';
+  return `${leadDays}일 전`;
+}
+
+export default function ReminderCenter({ className = 'mt-6', locale, items }: ReminderCenterProps) {
+  const isKorean = locale === 'ko-KR';
   const reminderItems = useMemo(() => buildReminderItems(items), [items]);
   const [notificationPermission, setNotificationPermission] = useState<
     NotificationPermission | 'unsupported'
@@ -131,13 +142,15 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.22em] text-[#6d6658] font-body">
             <BellRing size={13} className="text-[#7a724b]" />
-            Reminder center
+            {isKorean ? '알림 센터' : 'Reminder center'}
           </div>
           <h3 className="mt-4 font-heading text-[2rem] leading-tight text-text-main">
-            Put follow-ups on a clock.
+            {isKorean ? '추적 일정을 시간에 맞춰 관리하세요.' : 'Put follow-ups on a clock.'}
           </h3>
           <p className="mt-3 max-w-2xl text-sm text-[#625e53] font-body leading-relaxed">
-            Once a step has a next follow-up date, it appears here automatically. That gives the dashboard a reason to be reopened and gives users a shortlist of what needs attention now.
+            {isKorean
+              ? '다음 연락 날짜가 있는 단계는 여기에 자동으로 표시됩니다. 지금 확인이 필요한 항목을 한눈에 볼 수 있습니다.'
+              : 'Once a step has a next follow-up date, it appears here automatically. That gives the dashboard a reason to be reopened and gives users a shortlist of what needs attention now.'}
           </p>
         </div>
 
@@ -145,10 +158,12 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
           <div className="grid gap-3 lg:max-w-sm">
             <div className="rounded-[24px] border border-[#e3dac9] bg-white/88 px-4 py-4">
               <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                Browser alerts
+                {isKorean ? '브라우저 알림' : 'Browser alerts'}
               </p>
               <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                Alerts are optional and local to this device. They can fire when the user opens the app, but this is not push messaging yet.
+                {isKorean
+                  ? '알림은 선택 사항이며 이 기기에서만 작동합니다. 앱을 열 때 알림이 표시될 수 있습니다.'
+                  : 'Alerts are optional and local to this device. They can fire when the user opens the app, but this is not push messaging yet.'}
               </p>
               {notificationPermission === 'default' && (
                 <button
@@ -160,24 +175,24 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
                   className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body transition-colors hover:bg-[#5a583a]"
                 >
                   <Bell size={14} />
-                  Enable browser alerts
+                  {isKorean ? '브라우저 알림 켜기' : 'Enable browser alerts'}
                 </button>
               )}
               {notificationPermission === 'granted' && (
                 <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d4e4c8] bg-[#edf6e7] px-3 py-2 text-sm text-[#4f6d4e] font-body">
                   <BellRing size={14} />
-                  Browser alerts enabled on this device
+                  {isKorean ? '이 기기에서 브라우저 알림이 켜져 있습니다' : 'Browser alerts enabled on this device'}
                 </p>
               )}
               {notificationPermission === 'denied' && (
                 <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#efd2ca] bg-[#fff2ef] px-3 py-2 text-sm text-[#a25547] font-body">
                   <BellOff size={14} />
-                  Browser alerts are blocked in this browser
+                  {isKorean ? '이 브라우저에서 알림이 차단되어 있습니다' : 'Browser alerts are blocked in this browser'}
                 </p>
               )}
             </div>
 
-            <SmsReminderSetup />
+            <SmsReminderSetup locale={locale} />
           </div>
         )}
       </div>
@@ -185,31 +200,39 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <div className="rounded-[22px] border border-[#e7decd] bg-[#fffdf8] px-4 py-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-            Total follow-ups
+            {isKorean ? '전체 추적 항목' : 'Total follow-ups'}
           </p>
           <p className="mt-2 font-heading text-2xl text-text-main">{reminderItems.length}</p>
-          <p className="text-xs text-[#8a8377] font-body">active steps with a follow-up date</p>
+          <p className="text-xs text-[#8a8377] font-body">
+            {isKorean ? '다음 연락 날짜가 있는 단계' : 'active steps with a follow-up date'}
+          </p>
         </div>
         <div className="rounded-[22px] border border-[#f0dcc0] bg-[#fff7e8] px-4 py-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-            Due this week
+            {isKorean ? '이번 주 예정' : 'Due this week'}
           </p>
           <p className="mt-2 font-heading text-2xl text-text-main">{dueSoonCount}</p>
-          <p className="text-xs text-[#8a8377] font-body">follow-ups in the next 7 days</p>
+          <p className="text-xs text-[#8a8377] font-body">
+            {isKorean ? '다음 7일 이내' : 'follow-ups in the next 7 days'}
+          </p>
         </div>
         <div className="rounded-[22px] border border-[#efd2ca] bg-[#fff2ef] px-4 py-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-            Overdue
+            {isKorean ? '기한 초과' : 'Overdue'}
           </p>
           <p className="mt-2 font-heading text-2xl text-text-main">{overdueCount}</p>
-          <p className="text-xs text-[#8a8377] font-body">follow-ups that already slipped</p>
+          <p className="text-xs text-[#8a8377] font-body">
+            {isKorean ? '기한이 지난 추적 항목' : 'follow-ups that already slipped'}
+          </p>
         </div>
       </div>
 
       {reminderItems.length === 0 ? (
         <div className="mt-4 rounded-[24px] border border-dashed border-[#ddd3bf] bg-white/78 px-4 py-5">
           <p className="text-sm text-[#625e53] font-body leading-relaxed">
-            No follow-ups are scheduled yet. Add a `Next follow-up` date to any step to create an in-app reminder and optional calendar alarm.
+            {isKorean
+              ? "아직 예정된 추적 항목이 없습니다. 단계에 '다음 연락 날짜'를 추가하면 앱 내 알림과 캘린더 알람을 설정할 수 있습니다."
+              : "No follow-ups are scheduled yet. Add a `Next follow-up` date to any step to create an in-app reminder and optional calendar alarm."}
           </p>
         </div>
       ) : (
@@ -234,12 +257,12 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
                       }`}
                     >
                       {item.dueState === 'overdue'
-                        ? 'Overdue'
+                        ? (isKorean ? '기한 초과' : 'Overdue')
                         : item.dueState === 'today'
-                          ? 'Today'
+                          ? (isKorean ? '오늘' : 'Today')
                           : item.dueState === 'soon'
-                            ? 'Soon'
-                            : 'Scheduled'}
+                            ? (isKorean ? '곧' : 'Soon')
+                            : (isKorean ? '예정됨' : 'Scheduled')}
                     </span>
                     <span className="inline-flex items-center rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#6f6a5b] font-body">
                       <Clock3 size={12} className="mr-1.5" />
@@ -247,17 +270,25 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
                     </span>
                     {item.entry.reminderLeadDays !== null && (
                       <span className="inline-flex items-center rounded-full border border-[#d9deee] bg-[#f4f6fc] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#5b5f82] font-body">
-                        Alert {getReminderLeadDaysLabel(item.entry.reminderLeadDays ?? null)}
+                        {isKorean
+                          ? getLeadDaysLabelKr(item.entry.reminderLeadDays ?? null)
+                          : `Alert ${getReminderLeadDaysLabel(item.entry.reminderLeadDays ?? null)}`}
                       </span>
                     )}
                   </div>
                   <h4 className="mt-3 font-heading text-2xl text-text-main">{item.action.title}</h4>
                   <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                    {item.daysUntil < 0
-                      ? `This follow-up is ${Math.abs(item.daysUntil)} day${Math.abs(item.daysUntil) === 1 ? '' : 's'} overdue.`
-                      : item.daysUntil === 0
-                        ? 'This follow-up is due today.'
-                        : `This follow-up is in ${item.daysUntil} day${item.daysUntil === 1 ? '' : 's'}.`}
+                    {isKorean
+                      ? item.daysUntil < 0
+                        ? `이 추적 항목이 ${Math.abs(item.daysUntil)}일 지났습니다.`
+                        : item.daysUntil === 0
+                          ? '오늘 연락 예정입니다.'
+                          : `${item.daysUntil}일 후 연락 예정입니다.`
+                      : item.daysUntil < 0
+                        ? `This follow-up is ${Math.abs(item.daysUntil)} day${Math.abs(item.daysUntil) === 1 ? '' : 's'} overdue.`
+                        : item.daysUntil === 0
+                          ? 'This follow-up is due today.'
+                          : `This follow-up is in ${item.daysUntil} day${item.daysUntil === 1 ? '' : 's'}.`}
                   </p>
                 </div>
 
@@ -266,7 +297,7 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
                     href={`#action-${item.action.id}`}
                     className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
                   >
-                    Jump to step
+                    {isKorean ? '단계로 이동' : 'Jump to step'}
                     <ChevronRight size={14} />
                   </a>
                   <button
@@ -275,7 +306,7 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
                     className="inline-flex items-center gap-2 rounded-full bg-[#6d6b47] px-4 py-2 text-sm text-white font-body transition-colors hover:bg-[#5a583a]"
                   >
                     <CalendarPlus2 size={14} />
-                    Add to calendar
+                    {isKorean ? '캘린더에 추가' : 'Add to calendar'}
                   </button>
                 </div>
               </div>
@@ -284,7 +315,9 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
 
           {reminderItems.length > previewItems.length && (
             <p className="text-xs text-[#8a8377] font-body">
-              {reminderItems.length - previewItems.length} more follow-up reminder{reminderItems.length - previewItems.length === 1 ? '' : 's'} are scheduled lower in the step list.
+              {isKorean
+                ? `아래 단계에 ${reminderItems.length - previewItems.length}개의 추적 알림이 더 있습니다.`
+                : `${reminderItems.length - previewItems.length} more follow-up reminder${reminderItems.length - previewItems.length === 1 ? '' : 's'} are scheduled lower in the step list.`}
             </p>
           )}
         </div>
@@ -293,7 +326,9 @@ export default function ReminderCenter({ className = 'mt-6', items }: ReminderCe
       {overdueCount > 0 && (
         <div className="mt-4 inline-flex items-start gap-2 rounded-[20px] border border-[#efd2ca] bg-[#fff2ef] px-4 py-3 text-sm text-[#8e5146] font-body">
           <TriangleAlert size={16} className="mt-0.5" />
-          Overdue follow-ups should usually become the next focus unless there is a more urgent evaluation or school deadline.
+          {isKorean
+            ? '기한이 지난 항목은 더 급한 평가나 학교 마감이 없는 한 우선 처리하는 것이 좋습니다.'
+            : 'Overdue follow-ups should usually become the next focus unless there is a more urgent evaluation or school deadline.'}
         </div>
       )}
     </div>
