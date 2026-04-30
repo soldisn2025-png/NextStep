@@ -579,7 +579,7 @@ export default function ResultsCard({
   };
 
   return (
-    <div className={`relative lg:max-w-5xl lg:mx-auto lg:px-4 lg:py-8 ${hasLongPlan ? 'lg:pb-28' : ''}`}>
+    <div className="relative lg:max-w-5xl lg:mx-auto lg:px-4 lg:py-8 lg:pb-28">
       <div className="fixed inset-0 z-40 bg-[#fbf7ef] lg:hidden">
         <div className="flex h-[100dvh] flex-col pt-[env(safe-area-inset-top)]">
           <div className="border-b border-[#e5dccb] bg-[#fbf7ef]/95 px-3 py-2 backdrop-blur">
@@ -1228,13 +1228,6 @@ export default function ResultsCard({
               </span>
             )}
             <a
-              href="#plan-tools"
-              className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
-            >
-              Plan tools
-              <ChevronRight size={14} />
-            </a>
-            <a
               href="#action-list"
               className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
             >
@@ -1301,103 +1294,6 @@ export default function ResultsCard({
           </div>
         )}
       </div>
-
-      <div
-        id="plan-tools"
-        className="mt-6 rounded-[28px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(247,243,235,0.96))] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.55)]"
-      >
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-              Plan tools
-            </p>
-            <h3 className="mt-2 font-heading text-2xl text-text-main">
-              Keep one workspace open at a time.
-            </h3>
-            <p className="mt-2 max-w-2xl text-sm text-[#625e53] font-body leading-relaxed">
-              The plan stays readable when reminders, weekly reset, and paperwork support stop stacking on top of one another.
-            </p>
-          </div>
-          <a
-            href="#action-list"
-            className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
-          >
-            Back to active steps
-            <ChevronRight size={14} />
-          </a>
-        </div>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {workspacePanels.map((panel) => {
-            const Icon = panel.icon;
-            const isActive = activeWorkspacePanel === panel.id;
-
-            return (
-              <button
-                key={panel.id}
-                type="button"
-                onClick={() => setActiveWorkspacePanel(panel.id)}
-                className={`rounded-[22px] border px-4 py-4 text-left transition-colors ${
-                  isActive
-                    ? 'border-[#d5cfaf] bg-[#f8f3e6] shadow-[0_18px_40px_-34px_rgba(54,44,28,0.28)]'
-                    : 'border-[#e6dccb] bg-white/80 hover:border-[#d3c7ae] hover:bg-white'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#7a724b]">
-                      <Icon size={16} />
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                        {panel.label}
-                      </p>
-                      <p className="mt-1 text-sm text-text-main font-body">
-                        {panel.countLabel}
-                      </p>
-                    </div>
-                  </div>
-                  {isActive && (
-                    <span className="inline-flex items-center rounded-full border border-[#d5cfaf] bg-white px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#6b6642] font-body">
-                      Open
-                    </span>
-                  )}
-                </div>
-                <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
-                  {panel.summary}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {activeWorkspacePanel === 'reminders' && (
-        <ReminderCenter
-          className="mt-4"
-          items={activeRecommendations.map(({ action, entry }) => ({ action, entry }))}
-        />
-      )}
-
-      {activeWorkspacePanel === 'documents' && (
-        <DocumentActionPanel
-          className="mt-4"
-          analyses={documentAnalyses}
-          onSaveAnalysis={onSaveDocumentAnalysis}
-        />
-      )}
-
-      {activeWorkspacePanel === 'check-in' && (
-        <WeeklyCheckInPanel
-          className="mt-4"
-          checkIn={weeklyCheckIn}
-          activeRecommendations={activeRecommendations.map(({ action }) => action)}
-          dueFollowUpCount={dueSoonCount}
-          overdueFollowUpCount={overdueFollowUpCount}
-          currentFocusActionId={nextFocus?.id ?? null}
-          onSave={onWeeklyCheckInChange}
-        />
-      )}
 
       <div id="action-list" className="mt-7 space-y-5">
         {activeRecommendations.map(({ action, entry }, index) => (
@@ -1553,6 +1449,98 @@ export default function ResultsCard({
       </div>
 
       <details
+        id="plan-tools"
+        className="mt-8 rounded-[28px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(247,243,235,0.96))] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.55)]"
+      >
+        <summary className="cursor-pointer list-none">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f3eee3] text-[#7a724b]">
+              <Target size={18} />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                Plan tools
+              </p>
+              <h3 className="mt-1 font-heading text-xl text-text-main">
+                Reminders, weekly reset, and paperwork support
+              </h3>
+            </div>
+          </div>
+        </summary>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {workspacePanels.map((panel) => {
+            const Icon = panel.icon;
+            const isActive = activeWorkspacePanel === panel.id;
+
+            return (
+              <button
+                key={panel.id}
+                type="button"
+                onClick={() => setActiveWorkspacePanel(panel.id)}
+                className={`rounded-[22px] border px-4 py-4 text-left transition-colors ${
+                  isActive
+                    ? 'border-[#d5cfaf] bg-[#f8f3e6] shadow-[0_18px_40px_-34px_rgba(54,44,28,0.28)]'
+                    : 'border-[#e6dccb] bg-white/80 hover:border-[#d3c7ae] hover:bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#7a724b]">
+                      <Icon size={16} />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                        {panel.label}
+                      </p>
+                      <p className="mt-1 text-sm text-text-main font-body">
+                        {panel.countLabel}
+                      </p>
+                    </div>
+                  </div>
+                  {isActive && (
+                    <span className="inline-flex items-center rounded-full border border-[#d5cfaf] bg-white px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#6b6642] font-body">
+                      Open
+                    </span>
+                  )}
+                </div>
+                <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
+                  {panel.summary}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        {activeWorkspacePanel === 'reminders' && (
+          <ReminderCenter
+            className="mt-4"
+            items={activeRecommendations.map(({ action, entry }) => ({ action, entry }))}
+          />
+        )}
+
+        {activeWorkspacePanel === 'documents' && (
+          <DocumentActionPanel
+            className="mt-4"
+            analyses={documentAnalyses}
+            onSaveAnalysis={onSaveDocumentAnalysis}
+          />
+        )}
+
+        {activeWorkspacePanel === 'check-in' && (
+          <WeeklyCheckInPanel
+            className="mt-4"
+            checkIn={weeklyCheckIn}
+            activeRecommendations={activeRecommendations.map(({ action }) => action)}
+            dueFollowUpCount={dueSoonCount}
+            overdueFollowUpCount={overdueFollowUpCount}
+            currentFocusActionId={nextFocus?.id ?? null}
+            onSave={onWeeklyCheckInChange}
+          />
+        )}
+      </details>
+
+      <details
         id="intake-details"
         className="mt-8 rounded-[28px] border border-[#ddd3bf] bg-white/75 px-5 py-5 shadow-[0_20px_55px_-48px_rgba(54,44,28,0.65)]"
       >
@@ -1625,15 +1613,13 @@ export default function ResultsCard({
       </div>
       </div>
 
-      {hasLongPlan && (
-        <a
-          href="#plan-map"
-          className="fixed bottom-5 right-5 z-40 hidden items-center gap-2 rounded-full border border-[#d5cfaf] bg-[#6d6b47] px-4 py-3 text-sm text-white shadow-[0_18px_40px_-24px_rgba(54,44,28,0.75)] transition-colors hover:bg-[#5a583a] focus:outline-none focus:ring-2 focus:ring-[#7f7a57]/30 lg:inline-flex"
-        >
-          <ArrowUp size={15} />
-          Back to plan map
-        </a>
-      )}
+      <a
+        href="#plan-map"
+        className="fixed bottom-5 right-5 z-40 hidden items-center gap-2 rounded-full border border-[#d5cfaf] bg-[#6d6b47] px-4 py-3 text-sm text-white shadow-[0_18px_40px_-24px_rgba(54,44,28,0.75)] transition-colors hover:bg-[#5a583a] focus:outline-none focus:ring-2 focus:ring-[#7f7a57]/30 lg:inline-flex"
+      >
+        <ArrowUp size={15} />
+        Back to plan map
+      </a>
     </div>
   );
 }

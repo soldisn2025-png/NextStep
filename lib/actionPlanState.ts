@@ -288,3 +288,19 @@ export function getWeeklyCheckInState(checkedInAt?: string | null) {
     daysSince,
   };
 }
+
+export function getTrackerShouldStartExpanded(
+  status: ActionPlanStatus,
+  tone: 'neutral' | 'success' | 'warning' | 'danger',
+  entry: ActionPlanProgressEntry
+): boolean {
+  if (status === 'in-progress') {
+    return true;
+  }
+
+  if (tone === 'warning' || tone === 'danger') {
+    return true;
+  }
+
+  return false;
+}

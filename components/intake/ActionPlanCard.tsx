@@ -55,6 +55,10 @@ const categoryMeta: Record<
   insurance: { label: 'Insurance', className: 'bg-[#fff3e1] text-[#8a6641] border-[#f0debd]' },
   community: { label: 'Community', className: 'bg-[#edf7ef] text-[#4a6a54] border-[#d3e6d5]' },
   parent: { label: 'For You', className: 'bg-[#fbf0ef] text-[#8a5e5b] border-[#f0d6d2]' },
+  doctor: { label: 'Medical', className: 'bg-[#edf4ff] text-[#48607f] border-[#d6e3f8]' },
+  government: { label: 'Government', className: 'bg-[#fff3e1] text-[#8a6641] border-[#f0debd]' },
+  daily: { label: 'Daily Life', className: 'bg-[#edf7ef] text-[#4a6a54] border-[#d3e6d5]' },
+  resources: { label: 'Resources', className: 'bg-[#f5f2ec] text-[#726a5f] border-[#e2dbcf]' },
 };
 
 const statusMeta: Record<
@@ -183,7 +187,7 @@ export default function ActionPlanCard({
       potentialProviderSearchKind ||
       (action.supportItems?.length ?? 0) > 0
   );
-  const [showResources, setShowResources] = useState(false);
+  const [showResources, setShowResources] = useState(hasResourceHub);
   const [showTools, setShowTools] = useState(savedDraftCount > 0 || executionLogCount > 0);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel | null>(null);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
@@ -432,7 +436,7 @@ export default function ActionPlanCard({
   return (
     <div
       id={`action-${action.id}`}
-      className={`relative overflow-hidden rounded-[30px] border px-4 py-4 shadow-[0_24px_64px_-42px_rgba(54,44,28,0.5)] before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] sm:px-6 sm:py-6 ${statusMeta[status].cardClass} ${urgency.accentClass}`}
+      className={`relative overflow-hidden rounded-[30px] border px-4 py-4 shadow-[0_24px_64px_-42px_rgba(54,44,28,0.5)] before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-[''] sm:px-6 sm:py-6 lg:scroll-mt-20 ${statusMeta[status].cardClass} ${urgency.accentClass}`}
     >
       {mobileMode && focusMode ? (
         <div className="relative">
