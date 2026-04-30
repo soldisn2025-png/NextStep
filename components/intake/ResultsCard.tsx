@@ -9,6 +9,7 @@ import {
   BellRing,
   CheckCircle2,
   CircleOff,
+  ChevronDown,
   ChevronRight,
   ClipboardList,
   FileText,
@@ -1314,10 +1315,10 @@ export default function ResultsCard({
         {completedRecommendations.length > 0 && (
           <details
             id="completed-steps"
-            className="rounded-[28px] border border-[#d7e1c7] bg-[#f7fbf2] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.65)]"
+            className="group rounded-[28px] border border-[#d7e1c7] bg-[#f7fbf2] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.65)]"
           >
             <summary className="cursor-pointer list-none">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf6e7] text-[#5a754e]">
                     <Trophy size={18} />
@@ -1331,9 +1332,7 @@ export default function ResultsCard({
                     </h3>
                   </div>
                 </div>
-                <p className="text-sm text-[#5d6e55] font-body">
-                  Open completed steps only when you want to verify or reopen them.
-                </p>
+                <ChevronDown size={18} className="shrink-0 text-[#8a8377] transition-transform duration-200 group-open:rotate-180" />
               </div>
             </summary>
 
@@ -1382,10 +1381,10 @@ export default function ResultsCard({
         {skippedRecommendations.length > 0 && (
           <details
             id="skipped-steps"
-            className="rounded-[28px] border border-[#ddd5c8] bg-[#f7f4ef] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.5)]"
+            className="group rounded-[28px] border border-[#ddd5c8] bg-[#f7f4ef] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.5)]"
           >
             <summary className="cursor-pointer list-none">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#ece6dd] text-[#726a5f]">
                     <CircleOff size={18} />
@@ -1399,9 +1398,7 @@ export default function ResultsCard({
                     </h3>
                   </div>
                 </div>
-                <p className="text-sm text-[#696356] font-body">
-                  Use skip when a suggestion does not fit right now. It will not count against progress.
-                </p>
+                <ChevronDown size={18} className="shrink-0 text-[#8a8377] transition-transform duration-200 group-open:rotate-180" />
               </div>
             </summary>
 
@@ -1450,21 +1447,24 @@ export default function ResultsCard({
 
       <details
         id="plan-tools"
-        className="mt-8 rounded-[28px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(247,243,235,0.96))] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.55)]"
+        className="group mt-8 rounded-[28px] border border-[#ddd3bf] bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(247,243,235,0.96))] px-5 py-5 shadow-[0_22px_55px_-45px_rgba(54,44,28,0.55)]"
       >
         <summary className="cursor-pointer list-none">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f3eee3] text-[#7a724b]">
-              <Target size={18} />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f3eee3] text-[#7a724b]">
+                <Target size={18} />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                  Plan tools
+                </p>
+                <h3 className="mt-1 font-heading text-xl text-text-main">
+                  Reminders, weekly reset, and paperwork support
+                </h3>
+              </div>
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                Plan tools
-              </p>
-              <h3 className="mt-1 font-heading text-xl text-text-main">
-                Reminders, weekly reset, and paperwork support
-              </h3>
-            </div>
+            <ChevronDown size={18} className="shrink-0 text-[#8a8377] transition-transform duration-200 group-open:rotate-180" />
           </div>
         </summary>
 
@@ -1542,19 +1542,22 @@ export default function ResultsCard({
 
       <details
         id="intake-details"
-        className="mt-8 rounded-[28px] border border-[#ddd3bf] bg-white/75 px-5 py-5 shadow-[0_20px_55px_-48px_rgba(54,44,28,0.65)]"
+        className="group mt-8 rounded-[28px] border border-[#ddd3bf] bg-white/75 px-5 py-5 shadow-[0_20px_55px_-48px_rgba(54,44,28,0.65)]"
       >
         <summary className="cursor-pointer list-none select-none">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf4ff] text-primary">
-              <ClipboardList size={18} />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf4ff] text-primary">
+                <ClipboardList size={18} />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
+                  Intake details
+                </p>
+                <h3 className="mt-1 font-heading text-xl text-text-main">Review your answers</h3>
+              </div>
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                Intake details
-              </p>
-              <h3 className="mt-1 font-heading text-xl text-text-main">Review your answers</h3>
-            </div>
+            <ChevronDown size={18} className="shrink-0 text-[#8a8377] transition-transform duration-200 group-open:rotate-180" />
           </div>
         </summary>
 
