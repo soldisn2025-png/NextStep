@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Heart, ClipboardList, Users } from 'lucide-react';
+import { ArrowRight, Heart, ClipboardList, Users, Smartphone } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -62,6 +62,21 @@ export default function Home() {
             <p className="text-sm font-medium text-text-main font-body">Built for parents</p>
             <p className="text-xs text-gray-500 font-body mt-0.5">Your answers shape the next steps — nothing generic.</p>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-6 w-full flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-white flex items-center justify-center">
+          <Smartphone size={18} className="text-accent" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-text-main font-body">
+            Want NextStep on your phone?
+          </p>
+          <p className="text-xs text-gray-600 font-body mt-1 leading-relaxed">
+            You can use this link anytime. If you want a button on your home screen,
+            tap Share on iPhone or the menu on Android, then tap Add to Home Screen.
+          </p>
         </div>
       </div>
     </div>

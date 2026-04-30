@@ -1,11 +1,11 @@
 {
-  "name": "NextStep — Autism Guidance",
+  "name": "NextStep",
   "short_name": "NextStep",
   "description": "Personalized next steps for parents of newly diagnosed autistic children.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F9FAFB",
-  "theme_color": "#2D6A9F",
+  "background_color": "#f5f0e8",
+  "theme_color": "#f5f0e8",
   "orientation": "portrait",
   "icons": [
     {

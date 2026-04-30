@@ -7,15 +7,23 @@ import Footer from '@/components/shared/Footer';
 export const metadata: Metadata = {
   title: 'NextStep — Post-Diagnosis Autism Guidance',
   description: 'You just got a diagnosis. Here\'s what to do next. A guided tool for parents of newly diagnosed autistic children.',
+  applicationName: 'NextStep',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'NextStep',
   },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    apple: '/icon-192.png',
+  },
   other: {
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
+    'mobile-web-app-capable': 'yes',
   },
 };
 
@@ -23,7 +31,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#2D6A9F',
+  themeColor: '#f5f0e8',
 };
 
 export default function RootLayout({
