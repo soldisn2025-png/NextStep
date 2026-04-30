@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarRange, CheckCheck, ListTodo, RefreshCcw } from 'lucide-react';
 import { getWeeklyCheckInState } from '@/lib/actionPlanState';
-import { RecommendedAction, WeeklyCheckInEntry } from '@/lib/types';
+import { AppLocale, RecommendedAction, WeeklyCheckInEntry } from '@/lib/types';
 
 interface WeeklyCheckInPanelProps {
   className?: string;
   checkIn: WeeklyCheckInEntry | null;
+  locale?: AppLocale;
   activeRecommendations: RecommendedAction[];
   dueFollowUpCount: number;
   overdueFollowUpCount: number;
@@ -18,6 +19,7 @@ interface WeeklyCheckInPanelProps {
 export default function WeeklyCheckInPanel({
   className = 'mt-6',
   checkIn,
+  locale,
   activeRecommendations,
   dueFollowUpCount,
   overdueFollowUpCount,
@@ -28,6 +30,8 @@ export default function WeeklyCheckInPanel({
   const [blocker, setBlocker] = useState(checkIn?.blocker ?? '');
   const [focusActionId, setFocusActionId] = useState(checkIn?.focusActionId ?? currentFocusActionId ?? '');
   const [savedFlash, setSavedFlash] = useState(false);
+
+  const isKorean = locale === 'ko-KR';
 
   useEffect(() => {
     setSummary(checkIn?.summary ?? '');
@@ -45,6 +49,17 @@ export default function WeeklyCheckInPanel({
   }, [savedFlash]);
 
   const checkInState = getWeeklyCheckInState(checkIn?.checkedInAt);
+
+  const checkInLabel = isKorean
+    ? checkInState.daysSince === null
+      ? '아직 체크인하지 않았습니다.'
+      : checkInState.daysSince >= 7
+        ? `마지막 체크인이 ${checkInState.daysSince}일 전입니다.`
+        : checkInState.daysSince === 0
+          ? '오늘 체크인했습니다.'
+          : `${checkInState.daysSince}일 전에 체크인했습니다.`
+    : checkInState.label;
+
   const focusOptions = useMemo(
     () =>
       activeRecommendations.map((action) => ({
@@ -60,37 +75,43 @@ export default function WeeklyCheckInPanel({
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white/80 px-3 py-1 text-xs uppercase tracking-[0.22em] text-[#6d6658] font-body">
             <RefreshCcw size={13} className="text-[#7a724b]" />
-            Weekly check-in
+            {isKorean ? '주간 체크인' : 'Weekly check-in'}
           </div>
           <h3 className="mt-4 font-heading text-[2rem] leading-tight text-text-main">
-            Re-enter the plan with current information.
+            {isKorean ? '현재 상황으로 계획을 업데이트하세요.' : 'Re-enter the plan with current information.'}
           </h3>
           <p className="mt-3 max-w-2xl text-sm text-[#625e53] font-body leading-relaxed">
-            This is the retention loop. Instead of reopening the dashboard just to look around, update what changed, name the blocker, and decide the next focus for the week.
+            {isKorean
+              ? '이번 주 변화를 입력하고, 막히는 부분을 확인하고, 다음 집중 단계를 결정하세요.'
+              : 'This is the retention loop. Instead of reopening the dashboard just to look around, update what changed, name the blocker, and decide the next focus for the week.'}
           </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-[22px] border border-[#e7decd] bg-[#fffdf8] px-4 py-4">
               <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                Check-in status
+                {isKorean ? '체크인 상태' : 'Check-in status'}
               </p>
               <p className={`mt-2 text-sm font-body leading-snug ${checkInState.needsAttention ? 'text-[#9a5a4c]' : 'text-[#5c6b53]'}`}>
-                {checkInState.label}
+                {checkInLabel}
               </p>
             </div>
             <div className="rounded-[22px] border border-[#f0dcc0] bg-[#fff7e8] px-4 py-4">
               <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                Follow-ups due
+                {isKorean ? '예정된 추적' : 'Follow-ups due'}
               </p>
               <p className="mt-2 font-heading text-2xl text-text-main">{dueFollowUpCount}</p>
-              <p className="text-xs text-[#8a8377] font-body">within the next 7 days</p>
+              <p className="text-xs text-[#8a8377] font-body">
+                {isKorean ? '다음 7일 이내' : 'within the next 7 days'}
+              </p>
             </div>
             <div className="rounded-[22px] border border-[#efd2ca] bg-[#fff2ef] px-4 py-4">
               <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                Overdue
+                {isKorean ? '기한 초과' : 'Overdue'}
               </p>
               <p className="mt-2 font-heading text-2xl text-text-main">{overdueFollowUpCount}</p>
-              <p className="text-xs text-[#8a8377] font-body">follow-ups that need attention</p>
+              <p className="text-xs text-[#8a8377] font-body">
+                {isKorean ? '추적 항목 있음' : 'follow-ups that need attention'}
+              </p>
             </div>
           </div>
         </div>
@@ -103,13 +124,17 @@ export default function WeeklyCheckInPanel({
                 className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body"
               >
                 <CheckCheck size={13} />
-                What changed this week?
+                {isKorean ? '이번 주 달라진 점은?' : 'What changed this week?'}
               </label>
               <textarea
                 id="weekly-summary"
                 value={summary}
                 onChange={(event) => setSummary(event.target.value)}
-                placeholder="Example: We called two SLP clinics, one needs a referral, the other has a 3-month waitlist."
+                placeholder={
+                  isKorean
+                    ? '예: SLP 두 곳에 전화했습니다. 한 곳은 의뢰서가 필요하고, 다른 곳은 3개월 대기가 있습니다.'
+                    : 'Example: We called two SLP clinics, one needs a referral, the other has a 3-month waitlist.'
+                }
                 className="mt-3 min-h-[92px] w-full resize-y rounded-[18px] border border-[#e3dac9] bg-[#fffdf9] px-4 py-3 text-sm text-text-main font-body outline-none transition-all placeholder:text-[#9b9487] focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
               />
             </div>
@@ -120,13 +145,17 @@ export default function WeeklyCheckInPanel({
                 className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body"
               >
                 <ListTodo size={13} />
-                What still feels blocked?
+                {isKorean ? '아직 막히는 부분은?' : 'What still feels blocked?'}
               </label>
               <textarea
                 id="weekly-blocker"
                 value={blocker}
                 onChange={(event) => setBlocker(event.target.value)}
-                placeholder="Example: Insurance keeps bouncing us between departments and I still do not know if OT needs prior authorization."
+                placeholder={
+                  isKorean
+                    ? '예: 보험사가 계속 부서를 넘기고, 작업치료 사전 승인이 필요한지 아직 모릅니다.'
+                    : 'Example: Insurance keeps bouncing us between departments and I still do not know if OT needs prior authorization.'
+                }
                 className="mt-3 min-h-[92px] w-full resize-y rounded-[18px] border border-[#e3dac9] bg-[#fffdf9] px-4 py-3 text-sm text-text-main font-body outline-none transition-all placeholder:text-[#9b9487] focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
               />
             </div>
@@ -137,7 +166,7 @@ export default function WeeklyCheckInPanel({
                 className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body"
               >
                 <CalendarRange size={13} />
-                Focus this week
+                {isKorean ? '이번 주 집중 단계' : 'Focus this week'}
               </label>
               <select
                 id="weekly-focus"
@@ -145,7 +174,9 @@ export default function WeeklyCheckInPanel({
                 onChange={(event) => setFocusActionId(event.target.value)}
                 className="mt-3 w-full rounded-[18px] border border-[#e3dac9] bg-[#fffdf9] px-4 py-3 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
               >
-                <option value="">Follow the default suggested focus</option>
+                <option value="">
+                  {isKorean ? '기본 추천 단계 따르기' : 'Follow the default suggested focus'}
+                </option>
                 {focusOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
@@ -157,7 +188,9 @@ export default function WeeklyCheckInPanel({
 
           <div className="mt-4 flex flex-col gap-3 border-t border-[#ece3d4] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[#8a8377] font-body">
-              Saved check-ins stay on this device and shift the current-focus card at the top.
+              {isKorean
+                ? '체크인은 이 기기에 저장되며 맨 위의 집중 카드를 업데이트합니다.'
+                : 'Saved check-ins stay on this device and shift the current-focus card at the top.'}
             </p>
             <button
               type="button"
@@ -172,13 +205,13 @@ export default function WeeklyCheckInPanel({
               }}
               className="inline-flex items-center justify-center rounded-full bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body transition-colors hover:bg-[#5a583a]"
             >
-              Save weekly check-in
+              {isKorean ? '주간 체크인 저장' : 'Save weekly check-in'}
             </button>
           </div>
 
           {savedFlash && (
             <p className="mt-3 text-sm text-[#4f6d4e] font-body">
-              Weekly check-in saved.
+              {isKorean ? '주간 체크인이 저장되었습니다.' : 'Weekly check-in saved.'}
             </p>
           )}
         </div>

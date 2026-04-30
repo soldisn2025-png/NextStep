@@ -16,32 +16,49 @@ import {
   createDraftId,
   EXECUTION_LOG_META,
   formatExecutionTimestamp,
-  getActionAssistantModeLabel,
 } from '@/lib/executionTools';
 import {
   ActionExecutionDraft,
   ActionPlanProgressEntry,
   ActionPlanStatus,
+  AppLocale,
   ExecutionLogType,
 } from '@/lib/types';
 
 interface ActionExecutionWorkspaceProps {
   entry?: ActionPlanProgressEntry;
   status: ActionPlanStatus;
+  locale?: AppLocale;
   onUpdate: (updates: Partial<ActionPlanProgressEntry>) => void;
 }
 
 const quickActionButtons: Array<{
   type: ExecutionLogType;
   label: string;
+  labelKr: string;
   icon: typeof MailCheck;
 }> = [
-  { type: 'email-sent', label: 'Email sent', icon: MailCheck },
-  { type: 'call-made', label: 'Call made', icon: PhoneCall },
-  { type: 'voicemail-left', label: 'Voicemail left', icon: PhoneOutgoing },
-  { type: 'meeting-booked', label: 'Meeting booked', icon: Users },
-  { type: 'form-submitted', label: 'Form submitted', icon: ClipboardCheck },
+  { type: 'email-sent', label: 'Email sent', labelKr: '이메일 발송', icon: MailCheck },
+  { type: 'call-made', label: 'Call made', labelKr: '전화 완료', icon: PhoneCall },
+  { type: 'voicemail-left', label: 'Voicemail left', labelKr: '음성메시지 남김', icon: PhoneOutgoing },
+  { type: 'meeting-booked', label: 'Meeting booked', labelKr: '미팅 예약', icon: Users },
+  { type: 'form-submitted', label: 'Form submitted', labelKr: '양식 제출', icon: ClipboardCheck },
 ];
+
+const EXECUTION_LOG_LABELS_KR: Record<ExecutionLogType, string> = {
+  'email-sent': '이메일 발송',
+  'call-made': '전화 완료',
+  'voicemail-left': '음성메시지 남김',
+  'meeting-booked': '미팅 예약',
+  'form-submitted': '양식 제출',
+};
+
+const MODE_LABELS_KR: Record<string, string> = {
+  'draft-email': '이메일 초안',
+  'call-script': '전화 스크립트',
+  'meeting-questions': '미팅 질문',
+  'summarize-notes': '메모 요약',
+};
 
 function getTodayDateValue() {
   return new Date().toISOString().slice(0, 10);
@@ -50,6 +67,7 @@ function getTodayDateValue() {
 export default function ActionExecutionWorkspace({
   entry,
   status,
+  locale,
   onUpdate,
 }: ActionExecutionWorkspaceProps) {
   const savedDrafts = entry?.savedDrafts ?? [];
@@ -58,6 +76,8 @@ export default function ActionExecutionWorkspace({
   const [draftEditor, setDraftEditor] = useState('');
   const [logNote, setLogNote] = useState('');
   const [copied, setCopied] = useState(false);
+
+  const isKorean = locale === 'ko-KR';
 
   const selectedDraft = useMemo(
     () => savedDrafts.find((draft) => draft.id === selectedDraftId) ?? savedDrafts[0] ?? null,
@@ -123,6 +143,21 @@ export default function ActionExecutionWorkspace({
     setLogNote('');
   };
 
+  const getDraftModeLabel = (draft: ActionExecutionDraft) => {
+    if (isKorean) {
+      return MODE_LABELS_KR[draft.mode] ?? draft.mode;
+    }
+    const meta = EXECUTION_LOG_META[draft.mode as ExecutionLogType];
+    if (meta) return meta.label;
+    switch (draft.mode) {
+      case 'draft-email': return 'Draft email';
+      case 'call-script': return 'Call script';
+      case 'meeting-questions': return 'Meeting questions';
+      case 'summarize-notes': return 'Summary';
+      default: return 'Saved draft';
+    }
+  };
+
   const latestActivity = executionLog.slice(0, 4);
 
   return (
@@ -130,15 +165,21 @@ export default function ActionExecutionWorkspace({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-[#8a8377] font-body">
-            Execution workspace
+            {isKorean ? '실행 워크스페이스' : 'Execution workspace'}
           </p>
-          <h4 className="mt-2 font-heading text-xl text-text-main">Turn drafts into actual outreach.</h4>
+          <h4 className="mt-2 font-heading text-xl text-text-main">
+            {isKorean ? '초안을 실제 행동으로 옮기세요.' : 'Turn drafts into actual outreach.'}
+          </h4>
           <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-            Save the AI output you want to keep, edit it here, and log what you actually sent, called, or scheduled.
+            {isKorean
+              ? '저장하고 싶은 AI 결과를 수정하고, 실제로 보내거나 전화한 내용을 기록하세요.'
+              : 'Save the AI output you want to keep, edit it here, and log what you actually sent, called, or scheduled.'}
           </p>
         </div>
         <p className="text-xs text-[#8a8377] font-body leading-relaxed lg:max-w-xs lg:text-right">
-          Logging a real action automatically records today as the last contact date and keeps the step in progress.
+          {isKorean
+            ? '실제 행동을 기록하면 오늘이 마지막 연락일로 자동 저장됩니다.'
+            : 'Logging a real action automatically records today as the last contact date and keeps the step in progress.'}
         </p>
       </div>
 
@@ -157,12 +198,14 @@ export default function ActionExecutionWorkspace({
                       : 'border-[#ddd3bf] bg-white text-[#5a5549] hover:border-[#7f7a57] hover:text-[#504b40]'
                   }`}
                 >
-                  {getActionAssistantModeLabel(draft.mode)}
+                  {getDraftModeLabel(draft)}
                 </button>
               ))
             ) : (
               <p className="text-sm text-[#8a8377] font-body">
-                No saved drafts yet. Generate one in the AI helper and save it to this step.
+                {isKorean
+                  ? '저장된 초안이 없습니다. AI 도우미에서 생성 후 저장하세요.'
+                  : 'No saved drafts yet. Generate one in the AI helper and save it to this step.'}
               </p>
             )}
           </div>
@@ -172,10 +215,12 @@ export default function ActionExecutionWorkspace({
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                    {getActionAssistantModeLabel(selectedDraft.mode)}
+                    {getDraftModeLabel(selectedDraft)}
                   </p>
                   <p className="mt-1 text-xs text-[#8a8377] font-body">
-                    Updated {formatExecutionTimestamp(selectedDraft.updatedAt)}
+                    {isKorean
+                      ? `${formatExecutionTimestamp(selectedDraft.updatedAt)} 수정됨`
+                      : `Updated ${formatExecutionTimestamp(selectedDraft.updatedAt)}`}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -185,7 +230,7 @@ export default function ActionExecutionWorkspace({
                     className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-3 py-2 text-xs text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
                   >
                     <Copy size={13} />
-                    {copied ? 'Copied' : 'Copy'}
+                    {copied ? (isKorean ? '복사됨' : 'Copied') : (isKorean ? '복사' : 'Copy')}
                   </button>
                   <button
                     type="button"
@@ -193,7 +238,7 @@ export default function ActionExecutionWorkspace({
                     className="inline-flex items-center gap-2 rounded-full bg-[#6d6b47] px-3 py-2 text-xs text-white font-body transition-colors hover:bg-[#5a583a]"
                   >
                     <Save size={13} />
-                    Save edits
+                    {isKorean ? '수정 저장' : 'Save edits'}
                   </button>
                 </div>
               </div>
@@ -210,7 +255,7 @@ export default function ActionExecutionWorkspace({
         <div className="grid gap-3">
           <div className="rounded-[20px] border border-[#e6dccb] bg-white/88 px-4 py-4">
             <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-              Log real activity
+              {isKorean ? '활동 기록' : 'Log real activity'}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {quickActionButtons.map((button) => {
@@ -224,7 +269,7 @@ export default function ActionExecutionWorkspace({
                     className="inline-flex items-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-3 py-2 text-xs text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
                   >
                     <Icon size={13} />
-                    {button.label}
+                    {isKorean ? button.labelKr : button.label}
                   </button>
                 );
               })}
@@ -232,7 +277,11 @@ export default function ActionExecutionWorkspace({
             <textarea
               value={logNote}
               onChange={(event) => setLogNote(event.target.value)}
-              placeholder="Optional note: who responded, what was asked for, or what to do next."
+              placeholder={
+                isKorean
+                  ? '선택 메모: 누가 응답했는지, 무엇을 요청했는지, 다음 할 일을 적으세요.'
+                  : 'Optional note: who responded, what was asked for, or what to do next.'
+              }
               className="mt-3 min-h-[92px] w-full resize-y rounded-[18px] border border-[#e3dac9] bg-[#fffdf9] px-4 py-3 text-sm text-text-main font-body outline-none transition-all placeholder:text-[#9b9487] focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
             />
           </div>
@@ -241,19 +290,20 @@ export default function ActionExecutionWorkspace({
             <div className="flex items-center gap-2">
               <CheckCheck size={14} className="text-[#7a724b]" />
               <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                Recent activity
+                {isKorean ? '최근 활동' : 'Recent activity'}
               </p>
             </div>
             {latestActivity.length > 0 ? (
               <div className="mt-3 space-y-3">
                 {latestActivity.map((item) => {
                   const meta = EXECUTION_LOG_META[item.type];
+                  const label = isKorean ? EXECUTION_LOG_LABELS_KR[item.type] : meta.label;
 
                   return (
                     <div key={item.id} className="rounded-[16px] border border-[#ece3d4] bg-[#fffdf8] px-3 py-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.16em] font-body ${meta.toneClass}`}>
-                          {meta.label}
+                          {label}
                         </span>
                         <span className="text-xs text-[#8a8377] font-body">
                           {formatExecutionTimestamp(item.createdAt)}
@@ -270,7 +320,9 @@ export default function ActionExecutionWorkspace({
               </div>
             ) : (
               <p className="mt-3 text-sm text-[#8a8377] font-body">
-                No outreach has been logged yet for this step.
+                {isKorean
+                  ? '아직 기록된 활동이 없습니다.'
+                  : 'No outreach has been logged yet for this step.'}
               </p>
             )}
           </div>

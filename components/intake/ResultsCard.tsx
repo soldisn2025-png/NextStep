@@ -187,7 +187,8 @@ function getSyncMessage(syncStatus: PlanSyncStatus, accountEmail: string | null)
   }
 }
 
-function FeedbackCard({ mobile = false }: { mobile?: boolean }) {
+function FeedbackCard({ mobile = false, locale = 'en-US' as AppLocale }: { mobile?: boolean; locale?: AppLocale }) {
+  const isKorean = locale === 'ko-KR';
   return (
     <div
       className={`rounded-[28px] border border-[#d7dfd0] bg-[linear-gradient(180deg,rgba(247,251,246,0.98),rgba(239,246,241,0.98))] shadow-[0_20px_55px_-45px_rgba(54,44,28,0.38)] ${
@@ -195,11 +196,15 @@ function FeedbackCard({ mobile = false }: { mobile?: boolean }) {
       }`}
     >
       <p className="text-xs uppercase tracking-[0.18em] text-[#6f7f6c] font-body">
-        Help improve NextStep
+        {isKorean ? 'NextStep 개선에 참여하기' : 'Help improve NextStep'}
       </p>
-      <h3 className="mt-2 font-heading text-2xl text-text-main">Your feedback helps shape what comes next.</h3>
+      <h3 className="mt-2 font-heading text-2xl text-text-main">
+        {isKorean ? '의견이 앱을 더 좋게 만들어 줍니다.' : 'Your feedback helps shape what comes next.'}
+      </h3>
       <p className="mt-3 text-sm text-[#625e53] font-body leading-relaxed">
-        If something felt confusing, missing, or especially helpful, please send a note. Even a short message helps make this calmer and more useful for other families.
+        {isKorean
+          ? '혼란스럽거나 도움이 되었거나, 아쉬웠던 점이 있다면 짧게라도 보내주세요. 다른 가족들에게 더 도움이 되도록 만드는 데 활용됩니다.'
+          : 'If something felt confusing, missing, or especially helpful, please send a note. Even a short message helps make this calmer and more useful for other families.'}
       </p>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <a
@@ -207,7 +212,7 @@ function FeedbackCard({ mobile = false }: { mobile?: boolean }) {
           className="inline-flex items-center justify-center gap-2 rounded-full border border-[#ddd3bf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body transition-colors hover:border-[#7f7a57] hover:text-[#504b40]"
         >
           <Mail size={14} />
-          Email feedback
+          {isKorean ? '피드백 이메일 보내기' : 'Email feedback'}
         </a>
       </div>
     </div>
@@ -344,6 +349,15 @@ export default function ResultsCard({
       : null;
 
   const syncMessage = getSyncMessage(syncStatus, accountEmail);
+  const isKorean = locale === 'ko-KR';
+  const weeklyCheckInKrLabel =
+    weeklyCheckInState.daysSince === null
+      ? '아직 체크인하지 않았습니다.'
+      : weeklyCheckInState.daysSince >= 7
+        ? `마지막 체크인이 ${weeklyCheckInState.daysSince}일 전입니다.`
+        : weeklyCheckInState.daysSince === 0
+          ? '오늘 체크인했습니다.'
+          : `${weeklyCheckInState.daysSince}일 전에 체크인했습니다.`;
   const workspacePanels: Array<{
     id: WorkspacePanel;
     label: string;
@@ -353,36 +367,47 @@ export default function ResultsCard({
   }> = [
     {
       id: 'reminders',
-      label: 'Reminders',
-      summary:
-        overdueFollowUpCount > 0
+      label: isKorean ? '알림' : 'Reminders',
+      summary: isKorean
+        ? overdueFollowUpCount > 0
+          ? `기한 초과된 추적 항목 ${overdueFollowUpCount}개가 있습니다.`
+          : dueSoonCount > 0
+            ? `이번 주 추적 항목 ${dueSoonCount}개가 있습니다.`
+            : reminderItems.length > 0
+              ? '추적 항목이 예정되어 있습니다.'
+              : '예정된 추적 항목이 없습니다.'
+        : overdueFollowUpCount > 0
           ? `${overdueFollowUpCount} overdue follow-up${overdueFollowUpCount === 1 ? '' : 's'} need attention.`
           : dueSoonCount > 0
             ? `${dueSoonCount} follow-up${dueSoonCount === 1 ? '' : 's'} are due this week.`
             : reminderItems.length > 0
               ? 'Follow-ups are scheduled and ready when you need them.'
               : 'No follow-ups scheduled yet.',
-      countLabel: `${reminderItems.length} scheduled`,
+      countLabel: isKorean ? `${reminderItems.length}개 예정` : `${reminderItems.length} scheduled`,
       icon: BellRing,
     },
     {
       id: 'check-in',
-      label: 'Weekly reset',
-      summary: weeklyCheckInState.label,
-      countLabel: weeklyCheckInState.daysSince === null ? 'Not checked in yet' : `${weeklyCheckInState.daysSince}d since update`,
+      label: isKorean ? '주간 리셋' : 'Weekly reset',
+      summary: isKorean ? weeklyCheckInKrLabel : weeklyCheckInState.label,
+      countLabel: isKorean
+        ? weeklyCheckInState.daysSince === null ? '아직 체크인 안 됨' : `업데이트 후 ${weeklyCheckInState.daysSince}일`
+        : weeklyCheckInState.daysSince === null ? 'Not checked in yet' : `${weeklyCheckInState.daysSince}d since update`,
       icon: RefreshCcw,
     },
     {
       id: 'documents',
-      label: 'Paperwork tool',
-      summary:
-        documentAnalyses.length > 0
+      label: isKorean ? '서류 도구' : 'Paperwork tool',
+      summary: isKorean
+        ? documentAnalyses.length > 0
+          ? `저장된 서류 분석 ${documentAnalyses.length}개를 다시 볼 수 있습니다.`
+          : '이메일, 보고서, 거부 서신을 붙여넣어 분석하세요.'
+        : documentAnalyses.length > 0
           ? `${documentAnalyses.length} saved document analys${documentAnalyses.length === 1 ? 'is' : 'es'} ready to revisit.`
           : 'Analyze pasted emails, reports, or denial letters when they show up.',
-      countLabel:
-        documentAnalyses.length > 0
-          ? `${documentAnalyses.length} saved`
-          : 'Ready when needed',
+      countLabel: isKorean
+        ? documentAnalyses.length > 0 ? `${documentAnalyses.length}개 저장됨` : '준비됨'
+        : documentAnalyses.length > 0 ? `${documentAnalyses.length} saved` : 'Ready when needed',
       icon: FileText,
     },
   ];
@@ -399,10 +424,10 @@ export default function ResultsCard({
     label: string;
     icon: typeof Target;
   }> = [
-    { id: 'focus', label: 'Focus', icon: Target },
-    { id: 'plan', label: 'Plan', icon: Map },
-    { id: 'tools', label: 'Tools', icon: BellRing },
-    { id: 'history', label: 'History', icon: Archive },
+    { id: 'focus', label: isKorean ? '집중' : 'Focus', icon: Target },
+    { id: 'plan', label: isKorean ? '계획' : 'Plan', icon: Map },
+    { id: 'tools', label: isKorean ? '도구' : 'Tools', icon: BellRing },
+    { id: 'history', label: isKorean ? '기록' : 'History', icon: Archive },
   ];
   const mobileTabs = allMobileTabs.filter(
     (tab) => tab.id !== 'tools' || hasUsableToolsPanels
@@ -930,7 +955,7 @@ export default function ResultsCard({
                 )}
               </div>
 
-              <FeedbackCard mobile />
+              <FeedbackCard mobile locale={locale} />
             </>
           )}
 
@@ -1004,14 +1029,14 @@ export default function ResultsCard({
               {completedRecommendations.length > 0 && (
                 <div className="rounded-[28px] border border-[#d7e1c7] bg-[#f7fbf2] px-4 py-4">
                   <p className="text-xs uppercase tracking-[0.18em] text-[#73856b] font-body">
-                    Completed
+                    {isKorean ? '완료' : 'Completed'}
                   </p>
                   <div className="mt-3 space-y-3">
                     {completedRecommendations.map(({ action, entry }) => (
                       <div key={action.id} className="rounded-[20px] border border-[#d7e1c7] bg-white px-4 py-4">
                         <h4 className="font-heading text-xl text-text-main">{action.title}</h4>
                         <p className="mt-2 text-xs text-[#8a8377] font-body">
-                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : 'Completed'}
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : (isKorean ? '완료됨' : 'Completed')}
                         </p>
                         <button
                           type="button"
@@ -1019,7 +1044,7 @@ export default function ResultsCard({
                           className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body"
                         >
                           <RotateCcw size={14} />
-                          Reopen
+                          {isKorean ? '다시 시작' : 'Reopen'}
                         </button>
                       </div>
                     ))}
@@ -1030,14 +1055,14 @@ export default function ResultsCard({
               {skippedRecommendations.length > 0 && (
                 <div className="rounded-[28px] border border-[#ddd5c8] bg-[#f7f4ef] px-4 py-4">
                   <p className="text-xs uppercase tracking-[0.18em] text-[#7d7569] font-body">
-                    Skipped
+                    {isKorean ? '건너뜀' : 'Skipped'}
                   </p>
                   <div className="mt-3 space-y-3">
                     {skippedRecommendations.map(({ action, entry }) => (
                       <div key={action.id} className="rounded-[20px] border border-[#e0d8cb] bg-white px-4 py-4">
                         <h4 className="font-heading text-xl text-text-main">{action.title}</h4>
                         <p className="mt-2 text-xs text-[#8a8377] font-body">
-                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : 'Skipped'}
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : (isKorean ? '건너뜀' : 'Skipped')}
                         </p>
                         <button
                           type="button"
@@ -1045,7 +1070,7 @@ export default function ResultsCard({
                           className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body"
                         >
                           <RotateCcw size={14} />
-                          Restore
+                          {isKorean ? '복원' : 'Restore'}
                         </button>
                       </div>
                     ))}
@@ -1055,7 +1080,7 @@ export default function ResultsCard({
 
               <details className="rounded-[28px] border border-[#ddd3bf] bg-white/80 px-4 py-4">
                 <summary className="cursor-pointer list-none text-sm text-[#5a5549] font-body">
-                  Review intake answers
+                  {isKorean ? '입력 내용 확인' : 'Review intake answers'}
                 </summary>
                 <div className="mt-3 overflow-hidden rounded-[20px] border border-[#e7decd] bg-[#fffdf8]">
                   {intakeSteps.map((step, index) => {
@@ -1377,10 +1402,12 @@ export default function ResultsCard({
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-[#73856b] font-body">
-                      Completed steps
+                      {isKorean ? '완료된 단계' : 'Completed steps'}
                     </p>
                     <h3 className="mt-1 font-heading text-xl text-text-main">
-                      {completedRecommendations.length} step{completedRecommendations.length === 1 ? '' : 's'} marked done
+                      {isKorean
+                        ? `${completedRecommendations.length}단계 완료됨`
+                        : `${completedRecommendations.length} step${completedRecommendations.length === 1 ? '' : 's'} marked done`}
                     </h3>
                   </div>
                 </div>
@@ -1401,7 +1428,7 @@ export default function ResultsCard({
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center rounded-full border border-[#d4e4c8] bg-[#edf6e7] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#4f6d4e] font-body">
-                            Done
+                            {isKorean ? '완료' : 'Done'}
                           </span>
                         </div>
                         <h4 className="mt-3 font-heading text-2xl text-text-main">{action.title}</h4>
@@ -1411,7 +1438,7 @@ export default function ResultsCard({
                       </div>
                       <div className="text-left sm:text-right">
                         <p className="text-xs text-[#8a8377] font-body">
-                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : 'Completed'}
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : (isKorean ? '완료됨' : 'Completed')}
                         </p>
                         <button
                           type="button"
@@ -1419,7 +1446,7 @@ export default function ResultsCard({
                           className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body hover:border-[#7f7a57] hover:text-[#504b40] transition-colors"
                         >
                           <RotateCcw size={14} />
-                          Reopen step
+                          {isKorean ? '다시 시작' : 'Reopen step'}
                         </button>
                       </div>
                     </div>
@@ -1443,10 +1470,12 @@ export default function ResultsCard({
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.18em] text-[#7d7569] font-body">
-                      Skipped steps
+                      {isKorean ? '건너뛴 단계' : 'Skipped steps'}
                     </p>
                     <h3 className="mt-1 font-heading text-xl text-text-main">
-                      {skippedRecommendations.length} step{skippedRecommendations.length === 1 ? '' : 's'} skipped for now
+                      {isKorean
+                        ? `${skippedRecommendations.length}단계 건너뜀`
+                        : `${skippedRecommendations.length} step${skippedRecommendations.length === 1 ? '' : 's'} skipped for now`}
                     </h3>
                   </div>
                 </div>
@@ -1467,7 +1496,7 @@ export default function ResultsCard({
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center rounded-full border border-[#e2dbcf] bg-[#f5f2ec] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#726a5f] font-body">
-                            Skipped
+                            {isKorean ? '건너뜀' : 'Skipped'}
                           </span>
                         </div>
                         <h4 className="mt-3 font-heading text-2xl text-text-main">{action.title}</h4>
@@ -1477,7 +1506,7 @@ export default function ResultsCard({
                       </div>
                       <div className="text-left sm:text-right">
                         <p className="text-xs text-[#8a8377] font-body">
-                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : 'Skipped'}
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : (isKorean ? '건너뜀' : 'Skipped')}
                         </p>
                         <button
                           type="button"
@@ -1485,7 +1514,7 @@ export default function ResultsCard({
                           className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body hover:border-[#7f7a57] hover:text-[#504b40] transition-colors"
                         >
                           <RotateCcw size={14} />
-                          Restore step
+                          {isKorean ? '복원' : 'Restore step'}
                         </button>
                       </div>
                     </div>
@@ -1509,10 +1538,10 @@ export default function ResultsCard({
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                  Plan tools
+                  {isKorean ? '플랜 도구' : 'Plan tools'}
                 </p>
                 <h3 className="mt-1 font-heading text-xl text-text-main">
-                  Reminders, weekly reset, and paperwork support
+                  {isKorean ? '알림, 주간 리셋, 서류 지원' : 'Reminders, weekly reset, and paperwork support'}
                 </h3>
               </div>
             </div>
@@ -1552,7 +1581,7 @@ export default function ResultsCard({
                   </div>
                   {isActive && (
                     <span className="inline-flex items-center rounded-full border border-[#d5cfaf] bg-white px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-[#6b6642] font-body">
-                      Open
+                      {isKorean ? '열림' : 'Open'}
                     </span>
                   )}
                 </div>
@@ -1583,6 +1612,7 @@ export default function ResultsCard({
           <WeeklyCheckInPanel
             className="mt-4"
             checkIn={weeklyCheckIn}
+            locale={locale}
             activeRecommendations={activeRecommendations.map(({ action }) => action)}
             dueFollowUpCount={dueSoonCount}
             overdueFollowUpCount={overdueFollowUpCount}
@@ -1604,9 +1634,11 @@ export default function ResultsCard({
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                  Intake details
+                  {isKorean ? '입력한 내용' : 'Intake details'}
                 </p>
-                <h3 className="mt-1 font-heading text-xl text-text-main">Review your answers</h3>
+                <h3 className="mt-1 font-heading text-xl text-text-main">
+                  {isKorean ? '입력한 답변 확인' : 'Review your answers'}
+                </h3>
               </div>
             </div>
             <ChevronDown size={18} className="shrink-0 text-[#8a8377] transition-transform duration-200 group-open:rotate-180" />
@@ -1638,22 +1670,27 @@ export default function ResultsCard({
       </details>
 
       <div className="mt-6">
-        <FeedbackCard />
+        <FeedbackCard locale={locale} />
       </div>
 
       <div className="mt-8 rounded-[30px] border border-[#e3dac9] bg-[linear-gradient(180deg,rgba(255,255,255,0.8),rgba(244,239,231,0.95))] px-6 py-8 text-center shadow-[0_22px_55px_-50px_rgba(54,44,28,0.6)]">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f3eee3] text-[#7a724b]">
           <CheckCircle2 size={20} />
         </div>
-        <h3 className="mt-4 font-heading text-2xl text-text-main">You are building a real plan.</h3>
+        <h3 className="mt-4 font-heading text-2xl text-text-main">
+          {isKorean ? '실제 계획을 만들고 있습니다.' : 'You are building a real plan.'}
+        </h3>
         <p className="mt-3 max-w-2xl mx-auto text-sm text-[#625e53] font-body leading-relaxed">
-          Keep the plan simple, work one step at a time, and come back after calls or appointments to mark progress. This journey is heavy enough without forcing everything into one day.
+          {isKorean
+            ? '계획을 단순하게 유지하고, 한 번에 한 단계씩, 통화나 방문 후 돌아와서 진행 상황을 업데이트하세요.'
+            : 'Keep the plan simple, work one step at a time, and come back after calls or appointments to mark progress. This journey is heavy enough without forcing everything into one day.'}
         </p>
       </div>
 
       <p className="mt-8 text-xs text-[#8a8377] font-body text-center leading-relaxed">
-        These recommendations are general guidance based on your answers and do not
-        constitute medical or therapeutic advice. Always consult a qualified professional.
+        {isKorean
+          ? '이 권장 사항은 입력한 답변을 바탕으로 한 일반적인 가이드이며, 의학적 또는 치료적 조언이 아닙니다. 항상 전문가와 상담하세요.'
+          : 'These recommendations are general guidance based on your answers and do not constitute medical or therapeutic advice. Always consult a qualified professional.'}
       </p>
 
       <div className="mt-6 flex justify-center">
@@ -1663,7 +1700,7 @@ export default function ResultsCard({
           className="flex items-center gap-1.5 text-sm text-[#7e786c] hover:text-primary transition-colors font-body"
         >
           <ArrowLeft size={14} />
-          Start over
+          {isKorean ? '처음부터 다시' : 'Start over'}
         </button>
       </div>
       </div>
@@ -1673,7 +1710,7 @@ export default function ResultsCard({
         className="fixed bottom-5 right-5 z-40 hidden items-center gap-2 rounded-full border border-[#d5cfaf] bg-[#6d6b47] px-4 py-3 text-sm text-white shadow-[0_18px_40px_-24px_rgba(54,44,28,0.75)] transition-colors hover:bg-[#5a583a] focus:outline-none focus:ring-2 focus:ring-[#7f7a57]/30 lg:inline-flex"
       >
         <ArrowUp size={15} />
-        Back to plan map
+        {isKorean ? '계획 지도로 돌아가기' : 'Back to plan map'}
       </a>
     </div>
   );

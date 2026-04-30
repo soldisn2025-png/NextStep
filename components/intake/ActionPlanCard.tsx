@@ -370,6 +370,7 @@ export default function ActionPlanCard({
         actionId={action.id}
         actionTitle={action.title}
         actionDescription={action.description}
+        locale={locale}
         entry={entry}
         onUpdate={(updates) => onUpdateEntry(action.id, updates)}
       />
@@ -377,6 +378,7 @@ export default function ActionPlanCard({
       <ActionExecutionWorkspace
         entry={entry}
         status={status}
+        locale={locale}
         onUpdate={(updates) => onUpdateEntry(action.id, updates)}
       />
     </>
