@@ -1,4 +1,5 @@
 export type StepType = 'single-select' | 'multi-select' | 'textarea';
+export type AppLocale = 'en-US' | 'ko-KR';
 
 export interface IntakeStep {
   id: number;
@@ -25,7 +26,16 @@ export interface RecommendedAction {
   id: string;
   title: string;
   description: string;
-  category: 'therapy' | 'school' | 'insurance' | 'community' | 'parent';
+  category:
+    | 'therapy'
+    | 'school'
+    | 'insurance'
+    | 'community'
+    | 'parent'
+    | 'doctor'
+    | 'government'
+    | 'daily'
+    | 'resources';
   urgency: 'immediate' | 'soon' | 'when-ready';
   learnMoreUrl?: string;
   resources?: ResourceLink[];
