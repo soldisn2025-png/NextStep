@@ -1,5 +1,6 @@
-import { IntakeAnswers, RecommendedAction } from './types';
+import { AppLocale, IntakeAnswers, RecommendedAction } from './types';
 import { ALL_ACTIONS } from './actions';
+import { getRecommendationsKr } from './rulesEngineKr';
 
 const URGENCY_ORDER = { immediate: 0, soon: 1, 'when-ready': 2 };
 
@@ -7,7 +8,14 @@ function pick(id: string): RecommendedAction {
   return ALL_ACTIONS[id];
 }
 
-export function getRecommendations(answers: IntakeAnswers): RecommendedAction[] {
+export function getRecommendations(
+  answers: IntakeAnswers,
+  locale: AppLocale = 'en-US'
+): RecommendedAction[] {
+  if (locale === 'ko-KR') {
+    return getRecommendationsKr(answers);
+  }
+
   const seen = new Set<string>();
   const results: RecommendedAction[] = [];
   const pinToTop = new Set<string>();

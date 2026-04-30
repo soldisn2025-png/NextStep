@@ -7,11 +7,12 @@ import {
   getProviderSearchConfig,
   getProviderSearchKindForAction,
 } from '@/lib/providerSearchConfig';
-import { ProviderSearchPayload, ProviderSearchResult } from '@/lib/types';
+import { AppLocale, ProviderSearchPayload, ProviderSearchResult } from '@/lib/types';
 
 interface NearbyProvidersProps {
   actionId: string;
   zip: string;
+  locale: AppLocale;
 }
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error';
@@ -46,7 +47,7 @@ function renderRating(provider: ProviderSearchResult) {
   );
 }
 
-export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps) {
+export default function NearbyProviders({ actionId, zip, locale }: NearbyProvidersProps) {
   const kind = getProviderSearchKindForAction(actionId);
   const [status, setStatus] = useState<LoadState>('idle');
   const [payload, setPayload] = useState<ProviderSearchPayload | null>(null);
@@ -54,7 +55,7 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    if (!kind || !zip) {
+    if (!kind || !zip || locale === 'ko-KR') {
       return;
     }
 
@@ -110,7 +111,7 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
     loadProviders();
 
     return () => controller.abort();
-  }, [kind, zip]);
+  }, [kind, locale, zip]);
 
   useEffect(() => {
     setShowAll(false);
@@ -121,7 +122,8 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
   }
 
   const config = getProviderSearchConfig(kind);
-  const fallbackUrl = buildFallbackProviderSearchUrl(kind, zip);
+  const fallbackUrl = buildFallbackProviderSearchUrl(kind, zip, locale);
+  const isKoreanSearchOnly = locale === 'ko-KR';
   const providers = payload?.providers ?? [];
   const visibleProviders = showAll ? providers : providers.slice(0, 5);
   const hasMore = providers.length > 5;
@@ -135,7 +137,9 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
           </p>
           <h4 className="font-heading text-base text-text-main">{config.heading}</h4>
           <p className="text-sm text-[#625e53] font-body leading-relaxed mt-1">
-            Public listings for {config.searchLabel} near ZIP {zip}.
+            {isKoreanSearchOnly
+              ? `${zip} 기준 네이버 지도 검색으로 연결합니다.`
+              : `Public listings for ${config.searchLabel} near ZIP ${zip}.`}
           </p>
         </div>
         <a
@@ -145,18 +149,26 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
           className="inline-flex items-center gap-1 text-xs text-primary hover:underline underline-offset-2 font-body flex-shrink-0"
         >
           <ExternalLink size={11} />
-          Search near me
+          {isKoreanSearchOnly ? 'Naver Map에서 검색' : 'Search near me'}
         </a>
       </div>
 
-      {status === 'loading' && (
+      {isKoreanSearchOnly && (
+        <div className="mt-4 rounded-[20px] border border-[#e5dccb] bg-white px-3 py-3">
+          <p className="text-sm text-[#625e53] font-body leading-relaxed">
+            한국 버전 v1은 실시간 병원 목록 대신 네이버 지도 검색 링크를 제공합니다. 예약 가능 여부와 비용은 기관에 직접 확인해 주세요.
+          </p>
+        </div>
+      )}
+
+      {!isKoreanSearchOnly && status === 'loading' && (
         <div className="mt-4 flex items-center gap-2 text-sm text-[#625e53] font-body">
           <LoaderCircle size={14} className="animate-spin" />
           Looking up nearby providers...
         </div>
       )}
 
-      {status === 'error' && (
+      {!isKoreanSearchOnly && status === 'error' && (
         <div className="mt-4 rounded-[20px] border border-amber-100 bg-white px-3 py-3">
           <p className="text-sm text-[#625e53] font-body leading-relaxed">
             {error?.code === 'missing_api_key'
@@ -166,7 +178,7 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
         </div>
       )}
 
-      {status === 'ready' && providers.length === 0 && (
+      {!isKoreanSearchOnly && status === 'ready' && providers.length === 0 && (
         <div className="mt-4 rounded-[20px] border border-[#e5dccb] bg-white px-3 py-3">
           <p className="text-sm text-[#625e53] font-body leading-relaxed">
             No strong matches were returned for this ZIP yet. Use the map search above to broaden the search.
@@ -174,7 +186,7 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
         </div>
       )}
 
-      {providers.length > 0 && (
+      {!isKoreanSearchOnly && providers.length > 0 && (
         <div className="mt-4 space-y-3">
           {visibleProviders.map((provider) => {
             const distanceLabel = formatDistance(provider.distanceMiles);
@@ -291,7 +303,13 @@ export default function NearbyProviders({ actionId, zip }: NearbyProvidersProps)
       )}
 
       <p className="mt-4 text-[11px] text-[#8a8377] font-body leading-relaxed">
-        <span translate="no">Google Maps</span> data. {payload?.rankingSummary ?? 'Public ratings can be incomplete, so verify fit and credentials directly.'}
+        {isKoreanSearchOnly
+          ? 'Naver Map search link only. Program details and availability can change, so verify directly with the provider.'
+          : (
+            <>
+              <span translate="no">Google Maps</span> data. {payload?.rankingSummary ?? 'Public ratings can be incomplete, so verify fit and credentials directly.'}
+            </>
+          )}
       </p>
     </div>
   );

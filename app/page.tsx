@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { ArrowRight, Heart, ClipboardList, Users, Smartphone } from 'lucide-react';
+import { Heart, ClipboardList, Users, Smartphone } from 'lucide-react';
+import LocaleStartCard from '@/components/shared/LocaleStartCard';
 
 export default function Home() {
   return (
@@ -18,21 +18,7 @@ export default function Home() {
         </p>
       </div>
 
-      {/* CTA */}
-      <Link
-        href="/intake"
-        aria-label="Start the intake questionnaire"
-        className="
-          inline-flex items-center gap-2
-          bg-accent text-white font-body font-medium
-          px-8 py-4 rounded-2xl text-base
-          hover:bg-amber-500 transition-colors duration-150
-          shadow-sm
-        "
-      >
-        Start Here
-        <ArrowRight size={18} />
-      </Link>
+      <LocaleStartCard />
 
       {/* Feature callouts */}
       <div className="mt-12 w-full grid grid-cols-1 gap-4">

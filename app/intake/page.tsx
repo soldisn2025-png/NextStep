@@ -7,6 +7,8 @@ import QuestionCard from '@/components/intake/QuestionCard';
 import TextInputStep from '@/components/intake/TextInputStep';
 import ResultsCard from '@/components/intake/ResultsCard';
 import { intakeSteps } from '@/lib/intakeSteps';
+import { intakeStepsKr } from '@/lib/intakeStepsKr';
+import { isAppLocale, writeStoredLocale } from '@/lib/locale';
 import {
   getEmptyPlanSnapshot,
   isPlanSnapshotEmpty,
@@ -38,6 +40,21 @@ export default function IntakePage() {
 
   useEffect(() => {
     const localPlan = readLocalPlanSnapshot();
+    const queryLocale =
+      typeof window === 'undefined'
+        ? null
+        : new URLSearchParams(window.location.search).get('locale');
+    if (isAppLocale(queryLocale) && queryLocale !== localPlan.locale) {
+      writeStoredLocale(queryLocale);
+      setPlan({
+        ...getEmptyPlanSnapshot(),
+        locale: queryLocale,
+        planUpdatedAt: new Date().toISOString(),
+      });
+      setIsHydrated(true);
+      return;
+    }
+
     setPlan(localPlan);
     setIsHydrated(true);
   }, []);
@@ -163,9 +180,10 @@ export default function IntakePage() {
     return () => window.clearTimeout(timeout);
   }, [isConfigured, isHydrated, plan, user]);
 
-  const totalSteps = intakeSteps.length;
+  const localizedIntakeSteps = plan.locale === 'ko-KR' ? intakeStepsKr : intakeSteps;
+  const totalSteps = localizedIntakeSteps.length;
   const currentStep = Math.min(Math.max(plan.currentStep, 1), totalSteps);
-  const step = intakeSteps[currentStep - 1];
+  const step = localizedIntakeSteps[currentStep - 1];
 
   const updatePlan = (updater: (current: PersistedPlanSnapshot) => PersistedPlanSnapshot) => {
     setPlan((current) => ({
@@ -193,7 +211,7 @@ export default function IntakePage() {
   const handleMultiSelect = (fieldName: string, value: string) => {
     updatePlan((current) => {
       const selectedValues = current.answers[fieldName as keyof typeof current.answers] as string[];
-      const intakeStep = intakeSteps.find((item) => item.fieldName === fieldName);
+      const intakeStep = localizedIntakeSteps.find((item) => item.fieldName === fieldName);
       const maxSelections = intakeStep?.maxSelections;
 
       if (selectedValues.includes(value)) {
@@ -257,14 +275,16 @@ export default function IntakePage() {
   };
 
   const recommendations = useMemo(
-    () => getRecommendations(plan.answers),
-    [plan.answers]
+    () => getRecommendations(plan.answers, plan.locale),
+    [plan.answers, plan.locale]
   );
 
   if (plan.completed) {
     return (
       <ResultsCard
         answers={plan.answers}
+        locale={plan.locale}
+        intakeSteps={localizedIntakeSteps}
         recommendations={recommendations}
         savedZip={plan.savedZip}
         progress={plan.progress}
@@ -310,7 +330,7 @@ export default function IntakePage() {
   }
 
   return (
-    <StepWrapper currentStep={currentStep} totalSteps={totalSteps} onBack={handleBack}>
+    <StepWrapper currentStep={currentStep} totalSteps={totalSteps} onBack={handleBack} locale={plan.locale}>
       {step.type === 'textarea' ? (
         <TextInputStep
           question={step.question}
@@ -328,6 +348,7 @@ export default function IntakePage() {
           }
           onSkip={handleSkip}
           onSubmit={handleSubmit}
+          locale={plan.locale}
         />
       ) : (
         <QuestionCard
@@ -336,6 +357,7 @@ export default function IntakePage() {
           onSingleSelect={handleSingleSelect}
           onMultiSelect={handleMultiSelect}
           onContinue={advanceStep}
+          locale={plan.locale}
         />
       )}
     </StepWrapper>

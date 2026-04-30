@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import type { AppLocale } from '@/lib/types';
 
 interface StepWrapperProps {
   currentStep: number;
   totalSteps: number;
   onBack: () => void;
   children: React.ReactNode;
+  locale?: AppLocale;
 }
 
 export default function StepWrapper({
@@ -15,6 +17,7 @@ export default function StepWrapper({
   totalSteps,
   onBack,
   children,
+  locale = 'en-US',
 }: StepWrapperProps) {
   const progress = (currentStep / totalSteps) * 100;
 
@@ -30,7 +33,7 @@ export default function StepWrapper({
           NextStep
         </Link>
         <span className="text-xs text-gray-400 font-body">
-          Step {currentStep} of {totalSteps}
+          {locale === 'ko-KR' ? `${totalSteps}단계 중 ${currentStep}단계` : `Step ${currentStep} of ${totalSteps}`}
         </span>
       </div>
 
@@ -44,7 +47,7 @@ export default function StepWrapper({
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors min-h-[44px] min-w-[44px] -ml-2 px-2 rounded-lg"
             >
               <ArrowLeft size={16} />
-              <span>Back</span>
+              <span>{locale === 'ko-KR' ? '이전' : 'Back'}</span>
             </button>
           ) : (
             <Link
@@ -53,11 +56,11 @@ export default function StepWrapper({
               className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors min-h-[44px] min-w-[44px] -ml-2 px-2 rounded-lg"
             >
               <ArrowLeft size={16} />
-              <span>Home</span>
+              <span>{locale === 'ko-KR' ? '처음' : 'Home'}</span>
             </Link>
           )}
           <span className="text-sm text-gray-500 font-body hidden lg:block">
-            Step {currentStep} of {totalSteps}
+            {locale === 'ko-KR' ? `${totalSteps}단계 중 ${currentStep}단계` : `Step ${currentStep} of ${totalSteps}`}
           </span>
         </div>
         {/* Progress track */}
@@ -67,7 +70,7 @@ export default function StepWrapper({
           aria-valuenow={currentStep}
           aria-valuemin={1}
           aria-valuemax={totalSteps}
-          aria-label={`Step ${currentStep} of ${totalSteps}`}
+          aria-label={locale === 'ko-KR' ? `${totalSteps}단계 중 ${currentStep}단계` : `Step ${currentStep} of ${totalSteps}`}
         >
           <div
             className="h-full bg-success rounded-full transition-all duration-300 ease-out"

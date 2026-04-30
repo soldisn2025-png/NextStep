@@ -1,5 +1,7 @@
 'use client';
 
+import type { AppLocale } from '@/lib/types';
+
 interface TextInputStepProps {
   question: string;
   subtitle?: string;
@@ -8,6 +10,7 @@ interface TextInputStepProps {
   onChange: (value: string) => void;
   onSkip: () => void;
   onSubmit: () => void;
+  locale?: AppLocale;
 }
 
 export default function TextInputStep({
@@ -18,6 +21,7 @@ export default function TextInputStep({
   onChange,
   onSkip,
   onSubmit,
+  locale = 'en-US',
 }: TextInputStepProps) {
   return (
     <div>
@@ -47,14 +51,14 @@ export default function TextInputStep({
           aria-label="See my next steps"
           className="w-full py-3.5 px-6 rounded-xl bg-accent text-white font-body font-medium text-sm hover:bg-amber-500 transition-colors duration-150"
         >
-          See my next steps →
+          {locale === 'ko-KR' ? '내 다음 단계 보기 →' : 'See my next steps →'}
         </button>
         <button
           onClick={onSkip}
           aria-label="Skip this step"
           className="w-full py-2 text-sm text-gray-500 font-body hover:text-primary transition-colors duration-150"
         >
-          Skip
+          {locale === 'ko-KR' ? '건너뛰기' : 'Skip'}
         </button>
       </div>
     </div>

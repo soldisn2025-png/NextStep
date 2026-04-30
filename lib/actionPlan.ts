@@ -1,3 +1,6 @@
+import { ALL_ACTIONS } from './actions';
+import { KR_ACTIONS } from './actionsKr';
+
 export interface ActionPlanGuidance {
   firstMove: string;
   whileWaiting?: string;
@@ -68,5 +71,13 @@ const DEFAULT_GUIDANCE: ActionPlanGuidance = {
 };
 
 export function getActionPlanGuidance(actionId: string): ActionPlanGuidance {
+  const action = ALL_ACTIONS[actionId] ?? KR_ACTIONS[actionId];
+  if (action) {
+    return {
+      firstMove: action.firstMove,
+      whileWaiting: action.whileWaiting,
+    };
+  }
+
   return ACTION_PLAN_GUIDANCE[actionId] ?? DEFAULT_GUIDANCE;
 }

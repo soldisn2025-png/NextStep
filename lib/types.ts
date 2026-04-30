@@ -26,6 +26,8 @@ export interface RecommendedAction {
   id: string;
   title: string;
   description: string;
+  firstMove: string;
+  whileWaiting?: string;
   category:
     | 'therapy'
     | 'school'
@@ -66,7 +68,7 @@ export interface LocationMatch {
   primaryRegionLabel: string | null;
 }
 
-export type ProviderSearchKind = 'speech' | 'ot' | 'aba';
+export type ProviderSearchKind = 'speech' | 'ot' | 'aba' | 'doctor';
 
 export interface ProviderSearchResult {
   id: string;

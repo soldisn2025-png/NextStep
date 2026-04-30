@@ -32,14 +32,15 @@ import {
   getFollowUpState,
   getWeeklyCheckInState,
 } from '@/lib/actionPlanState';
-import { intakeSteps } from '@/lib/intakeSteps';
 import { getLocationMatch, LOCAL_PILOT_SUMMARY } from '@/lib/localResources';
 import { buildReminderItems } from '@/lib/reminders';
 import {
   ActionPlanProgressEntry,
   ActionPlanProgressMap,
   ActionPlanStatus,
+  AppLocale,
   DocumentAnalysisEntry,
+  IntakeStep,
   IntakeAnswers,
   PlanSyncStatus,
   RecommendedAction,
@@ -53,6 +54,8 @@ import WeeklyCheckInPanel from './WeeklyCheckInPanel';
 
 interface ResultsCardProps {
   answers: IntakeAnswers;
+  locale: AppLocale;
+  intakeSteps: IntakeStep[];
   recommendations: RecommendedAction[];
   savedZip: string;
   progress: ActionPlanProgressMap;
@@ -74,6 +77,15 @@ const fieldLabels: Record<string, string> = {
   currentSupport: 'Current support',
   topConcerns: 'Top concerns',
   freeText: 'Additional context',
+};
+
+const fieldLabelsKr: Record<string, string> = {
+  childAge: '자녀 나이',
+  diagnosedBy: '진단/평가 상태',
+  diagnoses: '진단명 또는 어려움',
+  currentSupport: '현재 지원',
+  topConcerns: '가장 큰 걱정',
+  freeText: '추가 상황',
 };
 
 const urgencyOrder: Record<RecommendedAction['urgency'], number> = {
@@ -204,6 +216,8 @@ function FeedbackCard({ mobile = false }: { mobile?: boolean }) {
 
 export default function ResultsCard({
   answers,
+  locale,
+  intakeSteps,
   recommendations,
   savedZip,
   progress,
@@ -239,8 +253,9 @@ export default function ResultsCard({
     }
   }, [accountEmail]);
 
-  const locationMatch = useMemo(() => getLocationMatch(savedZip), [savedZip]);
+  const locationMatch = useMemo(() => getLocationMatch(savedZip, locale), [savedZip, locale]);
   const hasSupportedRegion = Boolean(locationMatch && locationMatch.regionIds.length > 0);
+  const localizedFieldLabels = locale === 'ko-KR' ? fieldLabelsKr : fieldLabels;
 
   const recommendationsWithState = useMemo(() => {
     return recommendations
@@ -496,6 +511,18 @@ export default function ResultsCard({
 
   const handleZipSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (locale === 'ko-KR') {
+      const normalizedRegion = zipInput.trim();
+      if (!normalizedRegion) {
+        setZipError('지역명을 입력해 주세요.');
+        return;
+      }
+
+      setZipError('');
+      onSavedZipChange(normalizedRegion);
+      return;
+    }
+
     const normalized = zipInput.replace(/\D/g, '').slice(0, 5);
 
     if (normalized.length !== 5) {
@@ -651,6 +678,7 @@ export default function ResultsCard({
                     action={selectedMobileRecommendation.action}
                     displayIndex={selectedMobilePlanIndex + 1}
                     savedZip={savedZip}
+                    locale={locale}
                     childAge={answers.childAge}
                     diagnoses={answers.diagnoses}
                     topConcerns={answers.topConcerns}
@@ -664,39 +692,47 @@ export default function ResultsCard({
                   {!savedZip && (
                     <div className="rounded-[24px] border border-[#ddd3bf] bg-white/90 px-4 py-4">
                       <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-1">
-                        Find nearby providers
+                        {locale === 'ko-KR' ? '지역 기반 검색' : 'Find nearby providers'}
                       </p>
                       <p className="mt-1 mb-3 text-sm text-[#625e53] font-body leading-relaxed">
-                        Enter your ZIP code to see local therapists and services for each step.
+                        {locale === 'ko-KR'
+                          ? '지역명을 입력하면 각 단계에 맞는 네이버 지도 검색 링크를 보여줍니다.'
+                          : 'Enter your ZIP code to see local therapists and services for each step.'}
                       </p>
-                      <button
-                        type="button"
-                        onClick={handleUseLocation}
-                        disabled={gpsLoading}
-                        className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2.5 text-sm text-[#5a5549] font-body disabled:opacity-60"
-                      >
-                        <MapPin size={15} />
-                        {gpsLoading ? 'Getting your location...' : 'Use my location'}
-                      </button>
+                      {locale === 'en-US' && (
+                        <button
+                          type="button"
+                          onClick={handleUseLocation}
+                          disabled={gpsLoading}
+                          className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2.5 text-sm text-[#5a5549] font-body disabled:opacity-60"
+                        >
+                          <MapPin size={15} />
+                          {gpsLoading ? 'Getting your location...' : 'Use my location'}
+                        </button>
+                      )}
                       <form onSubmit={handleZipSubmit} className="flex gap-2">
                         <input
-                          inputMode="numeric"
-                          autoComplete="postal-code"
-                          maxLength={5}
+                          inputMode={locale === 'ko-KR' ? 'text' : 'numeric'}
+                          autoComplete={locale === 'ko-KR' ? 'address-level2' : 'postal-code'}
+                          maxLength={locale === 'ko-KR' ? 40 : 5}
                           value={zipInput}
                           onChange={(event) => {
                             setZipError('');
-                            setZipInput(event.target.value.replace(/\D/g, '').slice(0, 5));
+                            setZipInput(
+                              locale === 'ko-KR'
+                                ? event.target.value.slice(0, 40)
+                                : event.target.value.replace(/\D/g, '').slice(0, 5)
+                            );
                           }}
-                          placeholder="ZIP code"
-                          aria-label="Enter ZIP code to find nearby providers"
+                          placeholder={locale === 'ko-KR' ? '예: 서울 강남' : 'ZIP code'}
+                          aria-label={locale === 'ko-KR' ? '지역명 입력' : 'Enter ZIP code to find nearby providers'}
                           className="flex-1 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2.5 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
                         />
                         <button
                           type="submit"
                           className="rounded-[18px] bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body"
                         >
-                          Search
+                          {locale === 'ko-KR' ? '검색' : 'Search'}
                         </button>
                       </form>
                       {(zipError || gpsError) && (
@@ -782,28 +818,34 @@ export default function ResultsCard({
 
               <div className="rounded-[28px] border border-[#ddd3bf] bg-white/90 px-4 py-4 shadow-[0_18px_42px_-34px_rgba(54,44,28,0.45)]">
                 <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                  Local help
+                  {locale === 'ko-KR' ? '지역 도움' : 'Local help'}
                 </p>
                 <form onSubmit={handleZipSubmit} className="mt-3 space-y-3">
-                  <button
-                    type="button"
-                    onClick={handleUseLocation}
-                    disabled={gpsLoading}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-3 text-sm text-[#5a5549] font-body disabled:opacity-60"
-                  >
-                    <MapPin size={15} />
-                    {gpsLoading ? 'Getting your location...' : 'Use my location'}
-                  </button>
+                  {locale === 'en-US' && (
+                    <button
+                      type="button"
+                      onClick={handleUseLocation}
+                      disabled={gpsLoading}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-3 text-sm text-[#5a5549] font-body disabled:opacity-60"
+                    >
+                      <MapPin size={15} />
+                      {gpsLoading ? 'Getting your location...' : 'Use my location'}
+                    </button>
+                  )}
                   <input
-                    inputMode="numeric"
-                    autoComplete="postal-code"
-                    maxLength={5}
+                    inputMode={locale === 'ko-KR' ? 'text' : 'numeric'}
+                    autoComplete={locale === 'ko-KR' ? 'address-level2' : 'postal-code'}
+                    maxLength={locale === 'ko-KR' ? 40 : 5}
                     value={zipInput}
                     onChange={(event) => {
                       setZipError('');
-                      setZipInput(event.target.value.replace(/\D/g, '').slice(0, 5));
+                      setZipInput(
+                        locale === 'ko-KR'
+                          ? event.target.value.slice(0, 40)
+                          : event.target.value.replace(/\D/g, '').slice(0, 5)
+                      );
                     }}
-                    placeholder="ZIP code"
+                    placeholder={locale === 'ko-KR' ? '예: 서울 강남' : 'ZIP code'}
                     className="w-full rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-3 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
                   />
                   <div className="flex gap-2">
@@ -811,7 +853,7 @@ export default function ResultsCard({
                       type="submit"
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-[18px] bg-[#6d6b47] px-4 py-3 text-sm text-white font-body"
                     >
-                      Show local help
+                      {locale === 'ko-KR' ? '지역 도움 보기' : 'Show local help'}
                     </button>
                     {savedZip && (
                       <button
@@ -819,7 +861,7 @@ export default function ResultsCard({
                         onClick={handleClearZip}
                         className="rounded-[18px] border border-[#ddd3bf] px-4 py-3 text-sm text-[#625e53] font-body"
                       >
-                        Clear
+                        {locale === 'ko-KR' ? '지우기' : 'Clear'}
                       </button>
                     )}
                   </div>
@@ -829,16 +871,20 @@ export default function ResultsCard({
                 )}
                 {!zipError && !gpsError && savedZip && hasSupportedRegion && locationMatch?.primaryRegionLabel && (
                   <p className="mt-3 text-sm text-success font-body">
-                    Showing curated local resources for {locationMatch.primaryRegionLabel}.
+                    {locale === 'ko-KR'
+                      ? `${locationMatch.primaryRegionLabel} 기준 검색 링크를 준비했습니다.`
+                      : `Showing curated local resources for ${locationMatch.primaryRegionLabel}.`}
                   </p>
                 )}
                 {!zipError && savedZip && !hasSupportedRegion && (
                   <p className="mt-3 text-sm text-amber-700 font-body">
-                    Curated programs are not available for ZIP {savedZip} yet, but provider search still works.
+                    {locale === 'ko-KR'
+                      ? `${savedZip}에 대한 직접 선별 자료는 아직 없지만, 네이버 지도 검색 링크는 사용할 수 있습니다.`
+                      : `Curated programs are not available for ZIP ${savedZip} yet, but provider search still works.`}
                   </p>
                 )}
                 <p className="mt-3 text-xs text-[#8a8377] font-body leading-relaxed">
-                  {LOCAL_PILOT_SUMMARY}
+                  {LOCAL_PILOT_SUMMARY[locale]}
                 </p>
               </div>
 
@@ -1026,7 +1072,7 @@ export default function ResultsCard({
                         className={`px-4 py-3 ${index === intakeSteps.length - 1 ? '' : 'border-b border-[#eee6d7]'}`}
                       >
                         <p className="text-xs text-[#8a8377] font-body mb-1">
-                          {fieldLabels[step.fieldName]}
+                          {localizedFieldLabels[step.fieldName]}
                         </p>
                         <p className="text-sm text-text-main font-body">
                           {Array.isArray(val) ? val.join(', ') : val || '-'}
@@ -1190,15 +1236,20 @@ export default function ResultsCard({
         emptyFocusTitle={emptyFocusTitle}
         emptyFocusMessage={emptyFocusMessage}
         focusContext={focusContext}
+        locale={locale}
         zipInput={zipInput}
         savedZip={savedZip}
         zipError={zipError}
-        localPilotSummary={LOCAL_PILOT_SUMMARY}
+        localPilotSummary={LOCAL_PILOT_SUMMARY[locale]}
         hasSupportedRegion={hasSupportedRegion}
         regionLabel={locationMatch?.primaryRegionLabel ?? null}
         onZipInputChange={(value) => {
           setZipError('');
-          setZipInput(value.replace(/\D/g, '').slice(0, 5));
+          setZipInput(
+            locale === 'ko-KR'
+              ? value.slice(0, 40)
+              : value.replace(/\D/g, '').slice(0, 5)
+          );
         }}
         onZipSubmit={handleZipSubmit}
         onClearZip={handleClearZip}
@@ -1303,6 +1354,7 @@ export default function ResultsCard({
             action={action}
             displayIndex={index + 1}
             savedZip={savedZip}
+            locale={locale}
             childAge={answers.childAge}
             diagnoses={answers.diagnoses}
             topConcerns={answers.topConcerns}
@@ -1575,7 +1627,7 @@ export default function ResultsCard({
                 key={step.fieldName}
                 className={`px-4 py-3 ${index === intakeSteps.length - 1 ? '' : 'border-b border-[#eee6d7]'}`}
               >
-                <p className="text-xs text-[#8a8377] font-body mb-1">{fieldLabels[step.fieldName]}</p>
+                <p className="text-xs text-[#8a8377] font-body mb-1">{localizedFieldLabels[step.fieldName]}</p>
                 <p className="text-sm text-text-main font-body">
                   {Array.isArray(val) ? val.join(', ') : val || '-'}
                 </p>

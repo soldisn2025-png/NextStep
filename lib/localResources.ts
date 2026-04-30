@@ -1,4 +1,4 @@
-import { LocalResource, LocationMatch } from './types';
+import { AppLocale, LocalResource, LocationMatch } from './types';
 
 const ZIP_REGION_RULES = [
   {
@@ -19,8 +19,10 @@ const KIND_ORDER: Record<LocalResource['kind'], number> = {
   provider: 2,
 };
 
-export const LOCAL_PILOT_SUMMARY =
-  'Curated local resources are currently available for Fairfax County and Northern Virginia.';
+export const LOCAL_PILOT_SUMMARY: Record<AppLocale, string> = {
+  'en-US': 'Curated local resources are currently available for Fairfax County and Northern Virginia.',
+  'ko-KR': '한국 버전은 v1에서 네이버 지도 검색 링크와 공식 자료 중심으로 제공합니다.',
+};
 
 export const LOCAL_RESOURCES: LocalResource[] = [
   {
@@ -109,7 +111,21 @@ function normalizeZip(zip: string) {
   return zip.replace(/\D/g, '').slice(0, 5);
 }
 
-export function getLocationMatch(zip: string): LocationMatch | null {
+export function getLocationMatch(zip: string, locale: AppLocale = 'en-US'): LocationMatch | null {
+  if (locale === 'ko-KR') {
+    const region = zip.trim();
+
+    if (!region) {
+      return null;
+    }
+
+    return {
+      zip: region,
+      regionIds: ['korea'],
+      primaryRegionLabel: region,
+    };
+  }
+
   const normalized = normalizeZip(zip);
 
   if (normalized.length !== 5) {
@@ -135,8 +151,16 @@ export function getLocationMatch(zip: string): LocationMatch | null {
   };
 }
 
-export function getLocalResourcesForAction(actionId: string, zip: string): LocalResource[] {
-  const match = getLocationMatch(zip);
+export function getLocalResourcesForAction(
+  actionId: string,
+  zip: string,
+  locale: AppLocale = 'en-US'
+): LocalResource[] {
+  const match = getLocationMatch(zip, locale);
+
+  if (locale === 'ko-KR') {
+    return [];
+  }
 
   if (!match || match.regionIds.length === 0) {
     return [];

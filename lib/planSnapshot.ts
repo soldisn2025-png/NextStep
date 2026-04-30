@@ -1,11 +1,13 @@
 import { parseStoredProgressEntry } from './actionPlanState';
 import {
+  AppLocale,
   ActionPlanProgressMap,
   DocumentAnalysisEntry,
   DocumentAnalysisType,
   IntakeAnswers,
   WeeklyCheckInEntry,
 } from './types';
+import { DEFAULT_LOCALE, isAppLocale, LOCALE_STORAGE_KEY } from './locale';
 
 export const INTAKE_ANSWERS_STORAGE_KEY = 'nextstep_intake_answers';
 export const INTAKE_STATE_STORAGE_KEY = 'nextstep_intake_state';
@@ -32,6 +34,7 @@ export interface PersistedPlanSnapshot {
   weeklyCheckIn: WeeklyCheckInEntry | null;
   documentAnalyses: DocumentAnalysisEntry[];
   planUpdatedAt: string;
+  locale: AppLocale;
 }
 
 interface StoredIntakeState {
@@ -181,6 +184,7 @@ export function getEmptyPlanSnapshot(): PersistedPlanSnapshot {
     weeklyCheckIn: null,
     documentAnalyses: [],
     planUpdatedAt: '',
+    locale: DEFAULT_LOCALE,
   };
 }
 
@@ -205,6 +209,7 @@ export function parsePersistedPlanSnapshot(value: unknown): PersistedPlanSnapsho
     documentAnalyses: parseDocumentAnalyses(record.documentAnalyses),
     planUpdatedAt:
       typeof record.planUpdatedAt === 'string' ? record.planUpdatedAt : '',
+    locale: isAppLocale(record.locale) ? record.locale : DEFAULT_LOCALE,
   };
 }
 
@@ -238,6 +243,9 @@ export function readLocalPlanSnapshot(): PersistedPlanSnapshot {
         JSON.parse(localStorage.getItem('nextstep_document_analyses') ?? 'null')
       ),
       planUpdatedAt: localStorage.getItem(PLAN_UPDATED_AT_STORAGE_KEY) ?? '',
+      locale: isAppLocale(localStorage.getItem(LOCALE_STORAGE_KEY))
+        ? (localStorage.getItem(LOCALE_STORAGE_KEY) as AppLocale)
+        : DEFAULT_LOCALE,
     };
   } catch {
     return getEmptyPlanSnapshot();
@@ -264,6 +272,7 @@ export function writeLocalPlanSnapshot(snapshot: PersistedPlanSnapshot) {
       'nextstep_document_analyses',
       JSON.stringify(snapshot.documentAnalyses)
     );
+    localStorage.setItem(LOCALE_STORAGE_KEY, snapshot.locale);
 
     if (snapshot.weeklyCheckIn) {
       localStorage.setItem(
@@ -297,6 +306,7 @@ export function clearLocalPlanSnapshot() {
     localStorage.removeItem(WEEKLY_CHECK_IN_STORAGE_KEY);
     localStorage.removeItem('nextstep_document_analyses');
     localStorage.removeItem(PLAN_UPDATED_AT_STORAGE_KEY);
+    localStorage.removeItem(LOCALE_STORAGE_KEY);
   } catch {
     // ignore storage errors
   }

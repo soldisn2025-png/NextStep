@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { intakeSteps } from '@/lib/intakeSteps';
+import { intakeStepsKr } from '@/lib/intakeStepsKr';
 import { getRecommendations } from '@/lib/rulesEngine';
 import type { IntakeAnswers } from '@/lib/types';
 
@@ -229,5 +230,62 @@ describe('getRecommendations', () => {
       expect(ids[0]).toBe('official-diagnosis');
       expect(ids[1]).toBe('find-slp');
     });
+  });
+});
+
+describe('getRecommendations for ko-KR', () => {
+  const krAgeStep = intakeStepsKr.find((step) => step.fieldName === 'childAge');
+
+  if (!krAgeStep?.options) {
+    throw new Error('Korean child age intake options are missing.');
+  }
+
+  function buildKrAnswers(overrides: Partial<IntakeAnswers> = {}): IntakeAnswers {
+    return {
+      childAge: '만 4-5세',
+      diagnosedBy: '아직 공식 진단은 없어요',
+      diagnoses: ['자폐스펙트럼장애'],
+      currentSupport: ['아직 아무 지원도 없어요'],
+      topConcerns: [],
+      freeText: '',
+      ...overrides,
+    };
+  }
+
+  function getKrRecommendationIds(overrides: Partial<IntakeAnswers> = {}): string[] {
+    return getRecommendations(buildKrAnswers(overrides), 'ko-KR').map((action) => action.id);
+  }
+
+  it('adds Korean doctor access recommendations when diagnosis is not official', () => {
+    const ids = getKrRecommendationIds({
+      diagnosedBy: '아직 공식 진단은 없어요',
+    });
+
+    expect(ids).toContain('find-developmental-ped-kr');
+    expect(ids).toContain('shorter-queue-strategy-kr');
+    expect(ids).toContain('prepare-first-appointment-kr');
+  });
+
+  it('adds Korean special education recommendations for school concerns', () => {
+    const ids = getKrRecommendationIds({
+      childAge: '초등 저학년',
+      diagnosedBy: '발달소아과 또는 소아정신과에서 진단받았어요',
+      currentSupport: ['언어치료'],
+      topConcerns: ['어린이집/유치원/학교가 걱정돼요'],
+    });
+
+    expect(ids[0]).toBe('request-special-ed-kr');
+    expect(ids).toContain('understand-iep-kr');
+  });
+
+  it('adds Korean voucher and parent wellbeing recommendations for no support', () => {
+    const ids = getKrRecommendationIds({
+      currentSupport: ['아직 아무 지원도 없어요'],
+      topConcerns: ['부모인 제가 너무 지쳤어요'],
+    });
+
+    expect(ids).toContain('darei-services');
+    expect(ids).toContain('parent-counseling-support-kr');
+    expect(ids).toContain('parent-wellbeing-kr');
   });
 });

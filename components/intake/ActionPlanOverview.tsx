@@ -3,6 +3,7 @@
 import type { FormEvent } from 'react';
 import { Compass, MapPin, Sparkles } from 'lucide-react';
 import { RecommendedAction } from '@/lib/types';
+import type { AppLocale } from '@/lib/types';
 
 interface ActionPlanOverviewProps {
   completionPercent: number;
@@ -15,6 +16,7 @@ interface ActionPlanOverviewProps {
   emptyFocusTitle: string;
   emptyFocusMessage: string;
   focusContext?: string | null;
+  locale: AppLocale;
   zipInput: string;
   savedZip: string;
   zipError: string;
@@ -37,6 +39,7 @@ export default function ActionPlanOverview({
   emptyFocusTitle,
   emptyFocusMessage,
   focusContext,
+  locale,
   zipInput,
   savedZip,
   zipError,
@@ -47,6 +50,16 @@ export default function ActionPlanOverview({
   onZipSubmit,
   onClearZip,
 }: ActionPlanOverviewProps) {
+  const locationLabel = locale === 'ko-KR' ? '지역 정보 추가' : 'Layer in local help';
+  const locationTitle = locale === 'ko-KR' ? '지역 또는 시/군/구 입력' : 'Add your ZIP code';
+  const locationHelp =
+    locale === 'ko-KR'
+      ? '지역 기반 검색어로 병원, 치료실, 공공 지원 정보를 더 쉽게 찾을 수 있습니다.'
+      : 'Bring in local programs, parent groups, and nearby therapy options without changing the plan itself.';
+  const locationPlaceholder = locale === 'ko-KR' ? '예: 서울 강남, 부산 해운대' : 'ZIP code';
+  const submitLabel = locale === 'ko-KR' ? '지역 도움 보기' : 'Show local help';
+  const clearLabel = locale === 'ko-KR' ? '지우기' : 'Clear ZIP';
+
   return (
     <div className="relative overflow-hidden rounded-[32px] border border-[#e6dccb] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.92),_rgba(246,241,232,0.98)_55%,_rgba(239,233,221,0.96))] px-5 py-6 shadow-[0_24px_70px_-42px_rgba(61,47,28,0.45)] sm:px-7">
       <div className="absolute -right-14 -top-10 h-36 w-36 rounded-full bg-[#e7edd7]/60 blur-3xl" />
@@ -135,27 +148,27 @@ export default function ActionPlanOverview({
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-[#817b6e] font-body">
-                Layer in local help
+                {locationLabel}
               </p>
-              <h3 className="mt-1 font-heading text-xl text-text-main">Add your ZIP code</h3>
+              <h3 className="mt-1 font-heading text-xl text-text-main">{locationTitle}</h3>
               <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                Bring in local programs, parent groups, and nearby therapy options without changing the plan itself.
+                {locationHelp}
               </p>
             </div>
           </div>
 
           <form onSubmit={onZipSubmit} className="mt-5 flex flex-col gap-2">
             <label htmlFor="localZip" className="sr-only">
-              ZIP code for local resources
+              {locale === 'ko-KR' ? '지역명' : 'ZIP code for local resources'}
             </label>
             <input
               id="localZip"
-              inputMode="numeric"
-              autoComplete="postal-code"
-              maxLength={5}
+              inputMode={locale === 'ko-KR' ? 'text' : 'numeric'}
+              autoComplete={locale === 'ko-KR' ? 'address-level2' : 'postal-code'}
+              maxLength={locale === 'ko-KR' ? 40 : 5}
               value={zipInput}
               onChange={(event) => onZipInputChange(event.target.value)}
-              placeholder="ZIP code"
+              placeholder={locationPlaceholder}
               className="w-full rounded-2xl border border-[#ddd3bf] bg-[#fffdf8] px-4 py-3 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
             />
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -164,7 +177,7 @@ export default function ActionPlanOverview({
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#6d6b47] px-4 py-3 text-sm text-white font-body transition-colors hover:bg-[#5b593a]"
               >
                 <Compass size={15} />
-                Show local help
+                {submitLabel}
               </button>
               {savedZip && (
                 <button
@@ -172,7 +185,7 @@ export default function ActionPlanOverview({
                   onClick={onClearZip}
                   className="rounded-2xl border border-[#ddd3bf] px-4 py-3 text-sm text-[#625e53] font-body transition-colors hover:border-[#7f7a57] hover:text-[#514c41]"
                 >
-                  Clear ZIP
+                  {clearLabel}
                 </button>
               )}
             </div>
@@ -184,12 +197,14 @@ export default function ActionPlanOverview({
           {zipError && <p className="mt-2 text-sm text-red-500 font-body">{zipError}</p>}
           {!zipError && savedZip && hasSupportedRegion && regionLabel && (
             <p className="mt-2 text-sm text-success font-body">
-              Showing curated local resources for {regionLabel}.
+              {locale === 'ko-KR' ? `${regionLabel} 기준 검색 링크를 준비했습니다.` : `Showing curated local resources for ${regionLabel}.`}
             </p>
           )}
           {!zipError && savedZip && !hasSupportedRegion && (
             <p className="mt-2 text-sm text-amber-700 font-body">
-              We do not have curated local programs for ZIP {savedZip} yet, but nearby provider search still works.
+              {locale === 'ko-KR'
+                ? `${savedZip}에 대한 직접 선별 자료는 아직 없지만, 네이버 지도 검색 링크는 사용할 수 있습니다.`
+                : `We do not have curated local programs for ZIP ${savedZip} yet, but nearby provider search still works.`}
             </p>
           )}
         </div>

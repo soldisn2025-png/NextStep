@@ -2,6 +2,7 @@
 
 import OptionButton from './OptionButton';
 import { IntakeStep, IntakeAnswers } from '@/lib/types';
+import type { AppLocale } from '@/lib/types';
 
 interface QuestionCardProps {
   step: IntakeStep;
@@ -9,6 +10,7 @@ interface QuestionCardProps {
   onSingleSelect: (fieldName: string, value: string) => void;
   onMultiSelect: (fieldName: string, value: string) => void;
   onContinue: () => void;
+  locale?: AppLocale;
 }
 
 export default function QuestionCard({
@@ -17,6 +19,7 @@ export default function QuestionCard({
   onSingleSelect,
   onMultiSelect,
   onContinue,
+  locale = 'en-US',
 }: QuestionCardProps) {
   const { fieldName, question, subtitle, type, options, maxSelections } = step;
 
@@ -41,7 +44,9 @@ export default function QuestionCard({
 
       {/* Single-select hint — shown until user taps */}
       {type === 'single-select' && !answers[fieldName as keyof IntakeAnswers] && (
-        <p className="text-xs text-gray-400 font-body mb-4">Tap an option to continue &rarr;</p>
+        <p className="text-xs text-gray-400 font-body mb-4">
+          {locale === 'ko-KR' ? '선택하면 다음 질문으로 이동합니다 →' : 'Tap an option to continue →'}
+        </p>
       )}
 
       {/* Options */}
@@ -88,7 +93,7 @@ export default function QuestionCard({
               }
             `}
           >
-            Continue
+            {locale === 'ko-KR' ? '계속' : 'Continue'}
           </button>
         </div>
       )}

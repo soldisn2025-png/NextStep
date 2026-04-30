@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     }
 
     const snapshot = parsePersistedPlanSnapshot(snapshotValue);
-    const recommendations = getRecommendations(snapshot.answers);
+    const recommendations = getRecommendations(snapshot.answers, snapshot.locale);
     const recommendationMap = new Map(recommendations.map((item) => [item.id, item]));
 
     for (const [actionId, entry] of Object.entries(snapshot.progress)) {

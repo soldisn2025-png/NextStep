@@ -23,6 +23,7 @@ import { getProviderSearchKindForAction } from '@/lib/providerSearchConfig';
 import {
   ActionPlanProgressEntry,
   ActionPlanStatus,
+  AppLocale,
   LocalResource,
   RecommendedAction,
 } from '@/lib/types';
@@ -36,6 +37,7 @@ interface ActionPlanCardProps {
   action: RecommendedAction;
   displayIndex: number;
   savedZip: string;
+  locale: AppLocale;
   childAge: string;
   diagnoses: string[];
   topConcerns: string[];
@@ -111,6 +113,31 @@ const urgencyConfig: Record<
   },
 };
 
+const categoryLabelsKr: Record<RecommendedAction['category'], string> = {
+  therapy: '치료',
+  school: '교육',
+  insurance: '보험',
+  community: '커뮤니티',
+  parent: '부모 지원',
+  doctor: '진료 예약',
+  government: '공공지원',
+  daily: '오늘 할 일',
+  resources: '자료',
+};
+
+const statusLabelsKr: Record<ActionPlanStatus, string> = {
+  'not-started': '시작 전',
+  'in-progress': '진행 중',
+  done: '완료',
+  skipped: '건너뜀',
+};
+
+const urgencyLabelsKr: Record<RecommendedAction['urgency'], string> = {
+  immediate: '바로 하기',
+  soon: '곧 하기',
+  'when-ready': '준비되면',
+};
+
 const localSectionMeta: Record<
   LocalResource['kind'],
   { heading: string; containerClass: string; labelClass: string }
@@ -156,6 +183,7 @@ export default function ActionPlanCard({
   action,
   displayIndex,
   savedZip,
+  locale,
   childAge,
   diagnoses,
   topConcerns,
@@ -171,8 +199,12 @@ export default function ActionPlanCard({
   const followUpState = getFollowUpState(normalizedEntry.nextFollowUpDate, status);
   const guidance = getActionPlanGuidance(action.id);
   const urgency = urgencyConfig[action.urgency];
+  const categoryLabel =
+    locale === 'ko-KR' ? categoryLabelsKr[action.category] : categoryMeta[action.category].label;
+  const statusLabel = locale === 'ko-KR' ? statusLabelsKr[status] : statusMeta[status].label;
+  const urgencyLabel = locale === 'ko-KR' ? urgencyLabelsKr[action.urgency] : urgency.label;
   const UrgencyIcon = urgency.icon;
-  const localResources = savedZip ? getLocalResourcesForAction(action.id, savedZip) : [];
+  const localResources = savedZip ? getLocalResourcesForAction(action.id, savedZip, locale) : [];
   const potentialProviderSearchKind = getProviderSearchKindForAction(action.id);
   const providerSearchKind = savedZip ? potentialProviderSearchKind : null;
   const visibleTrustedResources = !potentialProviderSearchKind ? action.resources ?? [] : [];
@@ -266,7 +298,7 @@ export default function ActionPlanCard({
         </div>
       )}
 
-      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} locale={locale} />}
 
       {localKinds.length > 0 && (
         <div className="mt-5 space-y-3">
@@ -455,7 +487,7 @@ export default function ActionPlanCard({
               topConcerns={topConcerns}
             />
           )}
-          {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} />}
+          {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} locale={locale} />}
           {visibleTrustedResourcesSection}
         </div>
       ) : (
@@ -466,17 +498,17 @@ export default function ActionPlanCard({
               className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${urgency.className}`}
             >
               <UrgencyIcon size={12} className="mr-1.5" />
-              {urgency.label}
+              {urgencyLabel}
             </span>
             <span
               className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${categoryMeta[action.category].className}`}
             >
-              {categoryMeta[action.category].label}
+              {categoryLabel}
             </span>
             <span
               className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${statusMeta[status].className}`}
             >
-              {statusMeta[status].label}
+              {statusLabel}
             </span>
           </div>
           <div className="text-left md:text-right">
