@@ -5,14 +5,15 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
     id: 'request-special-ed-kr',
     title: '교육청에 특수교육대상자 선정 신청하기',
     description:
-      '특수교육 지원은 학교가 허락해 주는 제도가 아니라 법에 근거한 신청 절차입니다. 학교와 먼저 상의할 수는 있지만, 실제 선정과 배치는 교육청 절차를 통해 진행됩니다.',
-    firstMove: '거주 지역 교육청 특수교육지원센터에 전화해 특수교육대상자 선정 신청 절차와 필요 서류를 물어보세요.',
-    whileWaiting: '어린이집, 유치원, 학교의 관찰 메모와 기존 검사 결과를 한 폴더에 모아 두세요.',
+      '특수교육 지원은 학교가 허락해 주는 제도가 아니라 법에 근거한 신청 절차입니다. 어린이집·유치원에 다니는 미취학 아동도 신청할 수 있으며, 이 경우 순회치료지원(치료사가 기관에 직접 방문) 서비스를 받을 수 있습니다. 초등학교 입학 전에 선정을 받아 두면 입학 후 지원 배치가 훨씬 수월합니다.',
+    firstMove: '거주 지역 교육청 특수교육지원센터에 전화해 특수교육대상자 선정 신청 절차와 필요 서류를 물어보세요. 미취학 아동이라면 "유치원·어린이집 재원 중 신청 가능 여부"를 명시해서 문의하세요.',
+    whileWaiting: '어린이집, 유치원, 학교의 관찰 메모와 기존 검사 결과를 한 폴더에 모아 두세요. 선정 신청 후 교육청 특수교육지원센터에서 진단·평가를 진행하며, 결과에 따라 배치가 결정됩니다.',
     category: 'school',
     urgency: 'immediate',
     resources: [
       { label: '국립특수교육원', url: 'https://www.nise.go.kr/' },
-      { label: '교육부', url: 'https://www.moe.go.kr/' },
+      { label: '교육부 특수교육', url: 'https://www.moe.go.kr/' },
+      { label: '에듀에이블 특수교육 포털', url: 'https://www.eduable.net/' },
     ],
   },
   'understand-iep-kr': {
@@ -33,9 +34,9 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
     id: 'find-developmental-ped-kr',
     title: '발달소아과 또는 소아정신과 진료 예약하기',
     description:
-      '유명한 발달 전문의는 예약이 오래 걸릴 수 있습니다. 서울의 유명 병원만 기다리지 말고, 지역 대학병원, 재활의학과, 소아정신건강의학과, 민간 발달클리닉까지 넓게 확인하면 더 빨리 첫 평가를 받을 수 있습니다.',
-    firstMove: '전화할 병원 목록을 5곳 이상 만드세요. 상급종합병원부터 지역 재활의학과, 소아정신건강의학과, 민간 발달클리닉까지 넓게 잡고, 초진 대기 기간과 취소 자리 알림 가능 여부를 같은 날 확인하세요.',
-    whileWaiting: '기다리는 동안 언어치료나 작업치료는 발달지연을 근거로 먼저 시작할 수 있는지 확인하세요. 다른 병원에서 받은 평가 결과도 이후 진료에 도움이 됩니다.',
+      '유명 병원 대기는 평균 수개월~1년 이상입니다. 대기를 줄이는 핵심은 병원 선택지를 넓히는 것입니다. 소아정신과보다 재활의학과가 대기가 짧은 경우가 많고, 만 9세 미만이라면 공식 진단 없이도 소아청소년과 의뢰서만으로 발달재활서비스 바우처를 신청할 수 있습니다. 대형병원 취소 자리 알림 서비스(앱·카카오톡 채널)도 적극 활용하세요.',
+    firstMove: '전화할 병원 목록을 5곳 이상 만드세요. 상급종합병원 재활의학과·소아정신건강의학과, 지역 대학병원, 민간 발달클리닉까지 넓게 잡고, 초진 대기 기간과 취소 자리 알림 가능 여부를 같은 날 확인하세요.',
+    whileWaiting: '만 9세 미만이라면 동네 소아청소년과에서 "발달재활서비스 의뢰서"를 받아 바우처 신청을 먼저 진행할 수 있습니다. 진단을 기다리는 동안 치료를 시작하는 것이 가능합니다.',
     category: 'doctor',
     urgency: 'immediate',
     resources: [
@@ -62,12 +63,13 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
     id: 'darei-services',
     title: '발달재활서비스(바우처) 신청하기',
     description:
-      '발달재활서비스는 발달센터 치료 비용을 정부가 지원하는 바우처 제도입니다. 이 바우처는 보건복지부에 등록된 발달센터에서만 사용할 수 있습니다. 소득에 따라 월 17만~25만원이 지원되며, 2025년부터 만 9세 미만은 장애등록 없이도 신청할 수 있습니다.',
-    firstMove: '주민센터 또는 복지로에서 발달재활서비스 신청 자격과 필요 서류를 확인하세요. 기준중위소득 180% 이하 여부를 먼저 확인하세요.',
-    whileWaiting: '국민행복카드를 아직 발급받지 않았다면 미리 신청하세요. 지역 내 등록 제공기관(발달센터) 목록은 사회서비스 전자바우처 사이트에서 확인할 수 있습니다.',
+      '발달재활서비스는 발달센터 치료 비용을 정부가 지원하는 바우처 제도입니다. 이 바우처는 보건복지부에 등록된 발달센터에서만 사용할 수 있습니다. 소득에 따라 월 17만~25만원이 지원되며, 2025년부터 만 9세 미만은 장애등록 없이도 신청할 수 있습니다. 바우처를 받은 후에는 국민행복카드를 발급해야 실제로 사용할 수 있습니다.',
+    firstMove: '복지로 모의계산기로 소득 기준(기준중위소득 180% 이하) 해당 여부를 먼저 확인한 뒤, 주민센터 또는 복지로에서 신청하세요.',
+    whileWaiting: '국민행복카드를 아직 발급받지 않았다면 신청과 동시에 진행하세요. 지역 내 등록 제공기관(발달센터) 목록은 사회서비스 전자바우처 사이트에서 확인할 수 있습니다.',
     category: 'government',
     urgency: 'immediate',
     resources: [
+      { label: '복지로 모의계산기 (소득 기준 확인)', url: 'https://www.bokjiro.go.kr/ssis-tbu/twatsa/wlfareAnonymSimulat/retrieveWlfareAnonymSimulat.do' },
       { label: '사회서비스 전자바우처', url: 'https://www.socialservice.or.kr/' },
       { label: '복지로 바우처 신청', url: 'https://www.bokjiro.go.kr/' },
       { label: '보건복지부 발달재활서비스', url: 'https://www.mohw.go.kr/' },
@@ -83,7 +85,7 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
     category: 'therapy',
     urgency: 'immediate',
     resources: [
-      { label: '발달재활서비스 제공기관 찾기', url: 'https://www.socialservice.or.kr/' },
+      { label: '발달재활서비스 제공기관 찾기', url: 'https://www.socialservice.or.kr:444/user/svcsrch/supply/supplyList.do' },
       { label: '복지로 제공기관 검색', url: 'https://www.bokjiro.go.kr/' },
     ],
   },
@@ -118,12 +120,13 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
     id: 'regional-disability-center',
     title: '지역 발달장애인지원센터 연락하기',
     description:
-      '발달장애인지원센터는 상담, 서비스 연결, 부모 지원 정보를 제공하는 공공 지원 창구입니다. 무료로 이용 가능한 정보가 많지만 부모들이 모르는 경우가 많습니다.',
-    firstMove: '거주 지역 발달장애인지원센터에 전화해 받을 수 있는 상담과 서비스 안내를 요청하세요.',
+      '발달장애인지원센터는 상담, 서비스 연결, 부모 지원 정보를 제공하는 공공 지원 창구입니다. 무료로 이용 가능한 정보가 많지만 부모들이 모르는 경우가 많습니다. 전국 17개 광역시도에 각 1개씩 지역 센터가 있으며, 중앙센터 사이트에서 거주 지역 센터를 바로 찾을 수 있습니다.',
+    firstMove: '중앙장애아동·발달장애인지원센터 사이트에서 거주 지역 센터를 찾아 전화하세요. 받을 수 있는 상담과 서비스 안내를 요청하면 됩니다.',
     whileWaiting: '현재 진단 여부, 치료 여부, 학교 상황을 간단히 정리해 두면 상담이 더 구체적입니다.',
     category: 'government',
     urgency: 'soon',
     resources: [
+      { label: '지역 센터 찾기 (전국 목록)', url: 'https://www.broso.or.kr/seoul/service/M0000401/list.do' },
       { label: '중앙장애아동·발달장애인지원센터', url: 'https://www.broso.or.kr/' },
       { label: '한국장애인개발원', url: 'https://www.koddi.or.kr/' },
     ],

@@ -27,6 +27,7 @@ export function getRecommendationsKr(answers: IntakeAnswers): RecommendedAction[
   const { childAge, diagnosedBy, diagnoses, currentSupport, topConcerns } = answers;
 
   const isUnder9 = ['만 2세 미만', '만 2-3세', '만 4-5세', '초등 저학년'].includes(childAge);
+  const isPreschool = ['만 2세 미만', '만 2-3세', '만 4-5세'].includes(childAge);
   const isSchoolAge = ['만 4-5세', '초등 저학년', '초등 고학년', '중학생 이상'].includes(childAge);
   const notDiagnosed = diagnosedBy === '아직 공식 진단은 없어요';
   const clinicOnly = diagnosedBy === '심리검사센터 또는 발달클리닉에서 평가받았어요';
@@ -56,8 +57,9 @@ export function getRecommendationsKr(answers: IntakeAnswers): RecommendedAction[
     add('prepare-first-appointment-kr');
   }
 
-  if (schoolSuggested || (isSchoolAge && noSpecialEd) || concernsSchool) {
-    if (concernsSchool || schoolSuggested) pin('request-special-ed-kr');
+  const earlySpecialEdNeeded = isPreschool && noSpecialEd && (hasASD || hasDevelopmentalDelay);
+  if (schoolSuggested || (isSchoolAge && noSpecialEd) || concernsSchool || earlySpecialEdNeeded) {
+    if (concernsSchool || schoolSuggested || earlySpecialEdNeeded) pin('request-special-ed-kr');
     else add('request-special-ed-kr');
     add('understand-iep-kr');
   }
