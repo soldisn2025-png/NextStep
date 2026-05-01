@@ -26,7 +26,7 @@ export function getRecommendationsKr(answers: IntakeAnswers): RecommendedAction[
 
   const { childAge, diagnosedBy, diagnoses, currentSupport, topConcerns } = answers;
 
-  const isUnder6 = ['만 2세 미만', '만 2-3세', '만 4-5세'].includes(childAge);
+  const isUnder9 = ['만 2세 미만', '만 2-3세', '만 4-5세', '초등 저학년'].includes(childAge);
   const isSchoolAge = ['만 4-5세', '초등 저학년', '초등 고학년', '중학생 이상'].includes(childAge);
   const notDiagnosed = diagnosedBy === '아직 공식 진단은 없어요';
   const clinicOnly = diagnosedBy === '심리검사센터 또는 발달클리닉에서 평가받았어요';
@@ -39,8 +39,8 @@ export function getRecommendationsKr(answers: IntakeAnswers): RecommendedAction[
   const noSpecialEd = !currentSupport.includes('특수교육 또는 개별화교육계획');
   const noVoucher = !currentSupport.includes('발달재활서비스 바우처');
   const noSLP = !currentSupport.includes('언어치료');
-  const noOT = !currentSupport.includes('작업치료');
-  const noBehaviorTherapy = !currentSupport.includes('행동치료 또는 ABA');
+  const noCenter = !currentSupport.includes('발달센터');
+  const noBehaviorTherapy = !currentSupport.includes('행동발달치료 또는 ABA');
 
   const concernsStart = topConcerns.includes('무엇부터 해야 할지 모르겠어요');
   const concernsDoctor = topConcerns.includes('병원 예약이 너무 어려워요');
@@ -62,21 +62,29 @@ export function getRecommendationsKr(answers: IntakeAnswers): RecommendedAction[
     add('understand-iep-kr');
   }
 
+  // 발달센터: primary therapy recommendation for multi-domain needs
+  if ((hasASD || hasDevelopmentalDelay || hasSensory || (noSupport && concernsTherapy)) && noCenter) {
+    if (concernsTherapy || noSupport) pin('find-developmental-center-kr');
+    else add('find-developmental-center-kr');
+  }
+
+  // SLP: recommend standalone when language is the sole concern; secondary when part of multi-domain
   if ((hasSpeech || concernsCommunication) && noSLP) {
-    if (concernsCommunication || concernsTherapy) pin('find-slp-kr');
-    else add('find-slp-kr');
+    const isLanguageOnly = !hasASD && !hasDevelopmentalDelay && !hasSensory;
+    if (isLanguageOnly) {
+      if (concernsCommunication || concernsTherapy) pin('find-slp-kr');
+      else add('find-slp-kr');
+    } else {
+      add('find-slp-kr');
+    }
   }
 
-  if ((hasSensory || hasASD || hasDevelopmentalDelay) && noOT) {
-    add('find-ot-kr');
+  // Behavior: only surface when behavior is the explicit primary concern
+  if ((hasASD || concernsBehavior) && noBehaviorTherapy && concernsBehavior) {
+    add('behavior-therapy-kr');
   }
 
-  if ((hasASD || concernsBehavior) && noBehaviorTherapy) {
-    if (concernsBehavior) pin('behavior-therapy-kr');
-    else add('behavior-therapy-kr');
-  }
-
-  if ((noSupport || concernsBenefits || isUnder6 || hasDevelopmentalDelay || hasASD) && noVoucher) {
+  if ((noSupport || concernsBenefits || isUnder9 || hasDevelopmentalDelay || hasASD) && noVoucher) {
     if (concernsBenefits || noSupport) pin('darei-services');
     else add('darei-services');
   }

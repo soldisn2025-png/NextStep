@@ -60,56 +60,58 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
   },
   'darei-services': {
     id: 'darei-services',
-    title: '발달재활서비스 신청하기',
+    title: '발달재활서비스(바우처) 신청하기',
     description:
-      '발달재활서비스는 언어, 감각, 운동, 심리행동 등 재활치료 비용을 지원하는 바우처 제도입니다. 세부 기준과 지원 금액은 바뀔 수 있으므로 공식 안내를 확인해야 합니다.',
-    firstMove: '주민센터 또는 복지로에서 발달재활서비스 신청 자격과 필요 서류를 확인하세요.',
-    whileWaiting: '국민행복카드 발급 여부와 지역 내 제공기관 목록을 함께 확인해 두면 시작이 빨라집니다.',
+      '발달재활서비스는 발달센터 치료 비용을 정부가 지원하는 바우처 제도입니다. 이 바우처는 보건복지부에 등록된 발달센터에서만 사용할 수 있습니다. 소득에 따라 월 17만~25만원이 지원되며, 2025년부터 만 9세 미만은 장애등록 없이도 신청할 수 있습니다.',
+    firstMove: '주민센터 또는 복지로에서 발달재활서비스 신청 자격과 필요 서류를 확인하세요. 기준중위소득 180% 이하 여부를 먼저 확인하세요.',
+    whileWaiting: '국민행복카드를 아직 발급받지 않았다면 미리 신청하세요. 지역 내 등록 제공기관(발달센터) 목록은 사회서비스 전자바우처 사이트에서 확인할 수 있습니다.',
     category: 'government',
     urgency: 'immediate',
     resources: [
       { label: '사회서비스 전자바우처', url: 'https://www.socialservice.or.kr/' },
-      { label: '복지로', url: 'https://www.bokjiro.go.kr/' },
-      { label: '보건복지부', url: 'https://www.mohw.go.kr/' },
+      { label: '복지로 바우처 신청', url: 'https://www.bokjiro.go.kr/' },
+      { label: '보건복지부 발달재활서비스', url: 'https://www.mohw.go.kr/' },
+    ],
+  },
+  'find-developmental-center-kr': {
+    id: 'find-developmental-center-kr',
+    title: '발달센터 찾기',
+    description:
+      '한국의 발달치료는 언어치료, 작업치료, 감각통합치료, 인지치료, 행동발달치료를 한 곳에서 제공하는 발달센터를 중심으로 이루어집니다. 미국처럼 각 치료사를 따로 찾을 필요 없이 발달센터 한 곳에서 여러 치료를 받을 수 있습니다. 발달재활서비스 바우처를 사용하려면 보건복지부에 등록된 제공기관이어야 합니다.',
+    firstMove: '사회서비스 전자바우처 사이트에서 집 근처 발달재활서비스 제공기관을 검색하고, 3곳 이상에 초기 평가 대기 기간과 치료 가능 항목을 문의하세요.',
+    whileWaiting: '센터마다 강점이 다릅니다. 언어치료 전문 여부, 감각통합 장비 보유 여부, 부모 상담 포함 여부를 물어보면 비교에 도움이 됩니다.',
+    category: 'therapy',
+    urgency: 'immediate',
+    resources: [
+      { label: '발달재활서비스 제공기관 찾기', url: 'https://www.socialservice.or.kr/' },
+      { label: '복지로 제공기관 검색', url: 'https://www.bokjiro.go.kr/' },
     ],
   },
   'find-slp-kr': {
     id: 'find-slp-kr',
-    title: '언어치료사 찾기',
+    title: '언어치료 전문 센터 알아보기',
     description:
-      '말이 늦거나 의사소통이 어렵다면 진단명이 확정되기 전에도 언어평가와 언어치료를 알아볼 수 있습니다. 지역에 따라 대기가 길 수 있으니 여러 곳을 동시에 확인하세요.',
-    firstMove: '집이나 어린이집/학교 근처의 언어치료실 3곳 이상에 초기 평가 가능일과 대기 기간을 물어보세요.',
+      '말이 주된 어려움이라면 언어치료에 특화된 센터나 언어재활사를 따로 찾는 것이 도움이 될 수 있습니다. 발달센터에 언어치료가 포함되어 있더라도, 언어 전문 센터에서 주 2-3회 집중적으로 받는 것과는 차이가 있습니다. 진단명이 확정되기 전에도 언어평가부터 시작할 수 있습니다.',
+    firstMove: '집이나 어린이집/학교 근처 언어치료 전문 센터 3곳 이상에 초기 평가 가능일과 대기 기간을 문의하세요.',
     whileWaiting: '서울 외 지역은 선택지가 적을 수 있습니다. 이동 거리와 온라인 언어치료 가능 여부도 함께 확인하세요.',
     category: 'therapy',
-    urgency: 'immediate',
+    urgency: 'soon',
     resources: [
       { label: '한국언어재활사협회', url: 'https://www.ksha1990.or.kr/' },
     ],
   },
-  'find-ot-kr': {
-    id: 'find-ot-kr',
-    title: '작업치료사 찾기',
-    description:
-      '작업치료는 감각, 소근육, 일상생활, 놀이 참여를 돕습니다. 감각 예민함이나 생활 루틴이 힘든 경우 먼저 평가를 받아볼 수 있습니다.',
-    firstMove: '아동 작업치료 경험이 있는 치료실이나 병원에 평가 예약 가능일을 문의하세요.',
-    whileWaiting: '목욕, 식사, 옷 입기, 등원 준비처럼 매일 반복되는 어려움을 적어 두면 평가에 도움이 됩니다.',
-    category: 'therapy',
-    urgency: 'soon',
-    resources: [
-      { label: '대한작업치료사협회', url: 'https://www.kaot.org/' },
-    ],
-  },
   'behavior-therapy-kr': {
     id: 'behavior-therapy-kr',
-    title: '행동치료 또는 ABA 프로그램 알아보기',
+    title: '행동발달치료 전문기관 알아보기',
     description:
-      '행동치료와 ABA 프로그램은 기관마다 방식과 강도가 다릅니다. 이름보다 목표 설정, 부모 참여, 기록 방식, 자녀와의 맞춤 정도를 확인하는 것이 중요합니다.',
+      '반복 행동, 자해, 공격행동처럼 일상을 방해하는 행동이 주된 어려움이라면 행동발달치료에 특화된 기관을 찾아볼 수 있습니다. 한국의 ABA 전문기관은 많지 않으므로 발달센터 내 행동발달치료사 유무도 함께 확인하세요.',
     firstMove: '상담 때 목표를 어떻게 정하는지, 부모 교육이 포함되는지, 치료 기록을 공유하는지 물어보세요.',
     whileWaiting: '가정에서 가장 힘든 행동 하나를 정해 언제, 어디서, 무엇 뒤에 생기는지 짧게 기록해 두세요.',
     category: 'therapy',
     urgency: 'soon',
     resources: [
       { label: '한국자폐인사랑협회', url: 'https://www.autismkorea.kr/' },
+      { label: '한국응용행동분석전문가협회', url: 'https://kacba.com/' },
     ],
   },
   'regional-disability-center': {

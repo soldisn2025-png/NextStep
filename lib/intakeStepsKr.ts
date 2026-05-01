@@ -49,9 +49,10 @@ export const intakeStepsKr: IntakeStep[] = [
     type: 'multi-select',
     options: [
       '아직 아무 지원도 없어요',
+      '발달센터',
       '언어치료',
       '작업치료',
-      '행동치료 또는 ABA',
+      '행동발달치료 또는 ABA',
       '발달재활서비스 바우처',
       '특수교육 또는 개별화교육계획',
     ],
