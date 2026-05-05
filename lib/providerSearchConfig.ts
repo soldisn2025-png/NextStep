@@ -75,7 +75,7 @@ export function buildFallbackProviderSearchUrl(
       speech: '자폐 언어치료',
       ot: '아동 작업치료',
       aba: '자폐 행동치료 ABA 발달클리닉',
-      doctor: '발달소아과 소아정신과 재활의학과',
+      doctor: '소아발달클리닉 소아정신과 재활의학과',
     };
     const encoded = encodeURIComponent(`${koreanQuery[kind]} ${zip}`.trim());
     return `https://map.naver.com/p/search/${encoded}`;

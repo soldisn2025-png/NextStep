@@ -269,7 +269,7 @@ describe('getRecommendations for ko-KR', () => {
   it('adds Korean special education recommendations for school concerns', () => {
     const ids = getKrRecommendationIds({
       childAge: '초등 저학년',
-      diagnosedBy: '발달소아과 또는 소아정신과에서 진단받았어요',
+      diagnosedBy: '소아발달클리닉 또는 소아정신과에서 진단받았어요',
       currentSupport: ['언어치료'],
       topConcerns: ['어린이집/유치원/학교가 걱정돼요'],
     });

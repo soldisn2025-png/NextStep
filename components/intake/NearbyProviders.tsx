@@ -26,7 +26,7 @@ const KOREAN_HEADINGS: Record<ProviderSearchKind, { heading: string; searchLabel
   speech: { heading: '근처 언어치료 기관', searchLabel: '언어치료' },
   ot: { heading: '근처 작업치료 기관', searchLabel: '작업치료' },
   aba: { heading: '근처 행동치료 기관', searchLabel: '행동치료·발달클리닉' },
-  doctor: { heading: '근처 발달전문의 기관', searchLabel: '발달소아과·소아정신건강의학과' },
+  doctor: { heading: '근처 발달전문의 기관', searchLabel: '소아발달클리닉·소아정신건강의학과' },
 };
 
 function formatDistance(distanceMiles: number | null) {

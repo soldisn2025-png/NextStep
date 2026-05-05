@@ -11,7 +11,7 @@ const KOREAN_QUERIES: Record<ProviderSearchKind, string> = {
   speech: '언어치료',
   ot: '작업치료',
   aba: '행동치료 발달클리닉',
-  doctor: '발달소아과',
+  doctor: '소아발달클리닉',
 };
 
 interface NaverLocalItem {
