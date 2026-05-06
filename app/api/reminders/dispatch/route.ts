@@ -3,12 +3,12 @@ import { parsePersistedPlanSnapshot } from '@/lib/planSnapshot';
 import { getRecommendations } from '@/lib/rulesEngine';
 import {
   buildSmsReminderMessage,
-  getAppBaseUrl,
   getDaysUntilInTimeZone,
   isSmsDeliveryConfigured,
   sendTwilioSms,
   shouldSendReminderThisHour,
 } from '@/lib/smsReminders';
+import { buildAppUrl } from '@/lib/appUrl';
 import { getSupabaseAdminClient, isSupabaseAdminConfigured } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -98,7 +98,8 @@ export async function GET(request: NextRequest) {
   const snapshotMap = new Map(
     typedSnapshotRows.map((row) => [row.user_id, row.plan_state])
   );
-  const appUrl = getAppBaseUrl();
+  const vercelFallback = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://nextstep-autism-pilot.vercel.app';
+  const planUrl = buildAppUrl('/intake', vercelFallback);
   let queuedCount = 0;
   let sentCount = 0;
   let failedCount = 0;
@@ -177,7 +178,7 @@ export async function GET(request: NextRequest) {
         const smsBody = buildSmsReminderMessage(
           action.title,
           entry.nextFollowUpDate,
-          appUrl
+          planUrl
         );
         const delivery = await sendTwilioSms(preference.sms_phone, smsBody);
 

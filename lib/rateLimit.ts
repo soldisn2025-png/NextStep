@@ -48,3 +48,21 @@ function buildProviderRateLimit(): RateLimiter {
 }
 
 export const providerRateLimit = buildProviderRateLimit();
+
+function buildSmsRateLimit(): RateLimiter {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return {
+      limit: async (_id: string) => ({
+        success: true,
+      }),
+    };
+  }
+
+  return new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(10, '60 s'),
+    prefix: 'nextstep:sms',
+  });
+}
+
+export const smsRateLimit = buildSmsRateLimit();

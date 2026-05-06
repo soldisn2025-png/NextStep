@@ -95,10 +95,13 @@ function escapeIcsText(value: string) {
     .replace(/;/g, '\\;');
 }
 
-function formatFloatingDate(dateValue: string, hour: number, minute = 0) {
+function formatFloatingDate(dateValue: string, hour: number, minute = 0): string | null {
   const [year, month, day] = dateValue.split('-').map(Number);
-  const date = new Date(year, (month ?? 1) - 1, day ?? 1, hour, minute, 0, 0);
+  if (!year || !month || !day) {
+    return null;
+  }
 
+  const date = new Date(year, month - 1, day, hour, minute, 0, 0);
   const pad = (value: number) => value.toString().padStart(2, '0');
 
   return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
@@ -132,6 +135,11 @@ export function buildReminderIcs(
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
   const start = formatFloatingDate(entry.nextFollowUpDate, 9);
   const end = formatFloatingDate(entry.nextFollowUpDate, 9, 30);
+
+  if (!start || !end) {
+    return null;
+  }
+
   const reminderLabel = getReminderLeadDaysLabel(entry.reminderLeadDays ?? null);
   const notes = entry.notes?.trim()
     ? `Notes: ${entry.notes.trim()}`

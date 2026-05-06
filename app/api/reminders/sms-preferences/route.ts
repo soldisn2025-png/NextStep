@@ -5,6 +5,7 @@ import {
   isSmsDeliveryConfigured,
   normalizeUsPhoneNumber,
 } from '@/lib/smsReminders';
+import { smsRateLimit } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -97,6 +98,11 @@ export async function POST(request: NextRequest) {
 
   if (userError || !user) {
     return NextResponse.json({ error: 'Sign in to manage SMS reminders.' }, { status: 401 });
+  }
+
+  const { success } = await smsRateLimit.limit(user.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
   }
 
   let body: SmsPreferencePayload;

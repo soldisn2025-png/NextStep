@@ -16,5 +16,8 @@ public/workbox-*.js.map
 .DS_Store
 *.pem
 .env*
+env.local
 !.env.example
 .vercel
+*.log
+tsconfig.tsbuildinfo

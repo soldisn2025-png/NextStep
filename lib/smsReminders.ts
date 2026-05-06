@@ -99,20 +99,8 @@ export function isSmsDeliveryConfigured() {
   );
 }
 
-export function getAppBaseUrl() {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL;
-  }
-
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  return 'https://nextstep-autism-pilot.vercel.app';
-}
-
-export function buildSmsReminderMessage(actionTitle: string, followUpDate: string, appUrl: string) {
-  return `NextStep reminder: follow up on "${actionTitle}" by ${formatFollowUpDate(followUpDate)}. Review your notes and next action: ${appUrl}/intake`;
+export function buildSmsReminderMessage(actionTitle: string, followUpDate: string, planUrl: string) {
+  return `NextStep reminder: follow up on "${actionTitle}" by ${formatFollowUpDate(followUpDate)}. Review your notes and next action: ${planUrl}`;
 }
 
 interface TwilioSendResult {

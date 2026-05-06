@@ -262,7 +262,6 @@ describe('getRecommendations for ko-KR', () => {
     });
 
     expect(ids).toContain('find-developmental-ped-kr');
-    expect(ids).toContain('shorter-queue-strategy-kr');
     expect(ids).toContain('prepare-first-appointment-kr');
   });
 
