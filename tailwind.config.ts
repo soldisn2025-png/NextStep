@@ -9,14 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: '#2D6A9F',
+        primary: '#1B6B87',
         accent: '#F4A261',
-        background: '#F9FAFB',
-        'text-main': '#1A1A2E',
-        success: '#52B788',
+        background: '#F4F7F9',
+        'text-main': '#0D1B2A',
+        success: '#2D9259',
       },
       fontFamily: {
-        heading: ['Fraunces', 'Georgia', 'serif'],
+        heading: ['Inter', 'system-ui', 'sans-serif'],
         body: ['DM Sans', 'system-ui', 'sans-serif'],
       },
     },

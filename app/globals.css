@@ -2,25 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 
 :root {
-  --color-primary: #2D6A9F;
+  --color-primary: #1B6B87;
   --color-accent: #F4A261;
-  --color-background: #F9FAFB;
-  --color-text: #1A1A2E;
-  --color-success: #52B788;
+  --color-background: #F4F7F9;
+  --color-text: #0D1B2A;
+  --color-success: #2D9259;
 }
 
 body {
-  background-color: #F9FAFB;
-  color: #1A1A2E;
+  background-color: #F4F7F9;
+  color: #0D1B2A;
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 .font-heading {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .font-body {

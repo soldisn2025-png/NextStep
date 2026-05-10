@@ -36,15 +36,15 @@ export default function QuestionCard({
   return (
     <div className={type === 'multi-select' ? 'pb-24 lg:pb-0' : ''}>
       {/* Question heading */}
-      <h2 className="font-heading text-2xl text-text-main mb-1 leading-snug">{question}</h2>
+      <h2 className="font-heading text-2xl font-bold text-text-main mb-1 leading-snug">{question}</h2>
       {subtitle && (
-        <p className="text-sm text-gray-500 font-body mb-5">{subtitle}</p>
+        <p className="text-sm text-gray-600 font-body mb-5 leading-relaxed">{subtitle}</p>
       )}
       {!subtitle && <div className="mb-5" />}
 
       {/* Single-select hint — shown until user taps */}
       {type === 'single-select' && !answers[fieldName as keyof IntakeAnswers] && (
-        <p className="text-xs text-gray-400 font-body mb-4">
+        <p className="text-sm text-gray-500 font-body mb-4">
           {locale === 'ko-KR' ? '선택하면 다음 질문으로 이동합니다 →' : 'Tap an option to continue →'}
         </p>
       )}

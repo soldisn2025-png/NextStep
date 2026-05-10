@@ -5,6 +5,7 @@ export const intakeStepsKr: IntakeStep[] = [
     id: 1,
     fieldName: 'childAge',
     question: '자녀의 나이는 어떻게 되나요?',
+    subtitle: '연령에 따라 이용 가능한 서비스와 지원 체계가 달라집니다.',
     type: 'single-select',
     options: [
       '만 2세 미만',
@@ -19,6 +20,7 @@ export const intakeStepsKr: IntakeStep[] = [
     id: 2,
     fieldName: 'diagnosedBy',
     question: '진단 또는 평가는 어디까지 진행되었나요?',
+    subtitle: '진단 경로에 따라 다음 단계 우선순위가 달라집니다.',
     type: 'single-select',
     options: [
       '소아발달클리닉 또는 소아정신과에서 진단받았어요',
@@ -46,6 +48,7 @@ export const intakeStepsKr: IntakeStep[] = [
     id: 4,
     fieldName: 'currentSupport',
     question: '현재 받고 있는 치료나 지원이 있나요?',
+    subtitle: '지금 받고 있는 지원을 바탕으로 부족한 부분을 먼저 안내해 드립니다.',
     type: 'multi-select',
     options: [
       '아직 아무 지원도 없어요',

@@ -6,7 +6,7 @@ import { providerRateLimit } from '@/lib/rateLimit';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const VALID_PROVIDER_KINDS: ProviderSearchKind[] = ['speech', 'ot', 'aba'];
+const VALID_PROVIDER_KINDS: ProviderSearchKind[] = ['speech', 'ot', 'aba', 'doctor'];
 
 function isProviderKind(value: string | null): value is ProviderSearchKind {
   return Boolean(value && VALID_PROVIDER_KINDS.includes(value as ProviderSearchKind));

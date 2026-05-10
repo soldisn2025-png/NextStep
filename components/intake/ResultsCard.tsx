@@ -124,7 +124,7 @@ const planMapStatusMeta: Record<
 };
 
 type WorkspacePanel = 'reminders' | 'check-in' | 'documents';
-type MobileTab = 'focus' | 'plan' | 'tools' | 'history';
+type MobileTab = 'plan' | 'tools';
 
 const FEEDBACK_EMAIL = 'soldisn2025@gmail.com';
 const FEEDBACK_MAILTO = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('NextStep feedback')}`;
@@ -322,7 +322,7 @@ export default function ResultsCard({
       weeklyCheckInState.needsAttention
     )
   );
-  const [mobileTab, setMobileTab] = useState<MobileTab>('focus');
+  const [mobileTab, setMobileTab] = useState<MobileTab>('plan');
   const [selectedMobileActionId, setSelectedMobileActionId] = useState<string | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
@@ -424,10 +424,8 @@ export default function ResultsCard({
     label: string;
     icon: typeof Target;
   }> = [
-    { id: 'focus', label: isKorean ? '집중' : 'Focus', icon: Target },
-    { id: 'plan', label: isKorean ? '계획' : 'Plan', icon: Map },
-    { id: 'tools', label: isKorean ? '도구' : 'Tools', icon: BellRing },
-    { id: 'history', label: isKorean ? '기록' : 'History', icon: Archive },
+    { id: 'plan', label: isKorean ? '내 계획' : 'My Plan', icon: Map },
+    { id: 'tools', label: isKorean ? '도구 모음' : 'Tools', icon: BellRing },
   ];
   const mobileTabs = allMobileTabs.filter(
     (tab) => tab.id !== 'tools' || hasUsableToolsPanels
@@ -494,14 +492,6 @@ export default function ResultsCard({
         ({ action }) => action.id === selectedMobileRecommendation.action.id
       )
     : -1;
-  const activeMobileTabLabel =
-    mobileTabs.find((tab) => tab.id === mobileTab)?.label ?? 'Plan';
-  const mobileHeaderEyebrow =
-    mobileTab === 'focus' ? 'Focus' : activeMobileTabLabel;
-  const mobileHeaderTitle =
-    mobileTab === 'focus'
-      ? ''
-      : nextFocus?.title ?? 'NextStep plan';
   const showMobileSyncCta = isConfigured && !isLoading && !user;
 
   useEffect(() => {
@@ -526,11 +516,11 @@ export default function ResultsCard({
     return () => window.clearTimeout(timeout);
   }, []);
 
-  // If the active tab is no longer visible (e.g. Tools tab hidden), fall back to Focus
+  // If the active tab is no longer visible, fall back to plan
   useEffect(() => {
     const visibleTabIds = mobileTabs.map((t) => t.id);
     if (!visibleTabIds.includes(mobileTab)) {
-      setMobileTab('focus');
+      setMobileTab('plan');
     }
   }, [mobileTabs, mobileTab]);
 
@@ -624,7 +614,6 @@ export default function ResultsCard({
 
   const openMobileAction = (actionId: string) => {
     setSelectedMobileActionId(actionId);
-    setMobileTab('focus');
 
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -633,37 +622,28 @@ export default function ResultsCard({
 
   return (
     <div className="relative lg:max-w-5xl lg:mx-auto lg:px-4 lg:py-8 lg:pb-28">
-      <div className="fixed inset-0 z-40 bg-[#fbf7ef] lg:hidden">
+      <div className="fixed inset-0 z-40 bg-background lg:hidden">
         <div className="flex h-[100dvh] flex-col pt-[env(safe-area-inset-top)]">
-          <div className="border-b border-[#e5dccb] bg-[#fbf7ef]/95 px-3 py-2 backdrop-blur">
-            <div className="flex items-center gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                  {mobileHeaderEyebrow}
-                </p>
-                {mobileTab !== 'focus' && (
-                  <h2 className="mt-1 truncate font-heading text-lg leading-tight text-text-main">
-                    {mobileHeaderTitle}
-                  </h2>
-                )}
-              </div>
+          <div className="border-b border-gray-100 bg-white px-4 py-3 backdrop-blur">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-heading text-lg font-bold text-primary">NextStep</span>
               <div className="flex shrink-0 items-center gap-2">
                 {isLoading ? (
-                  <div className="inline-flex items-center rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-[11px] text-[#5a5549] font-body">
+                  <div className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] text-gray-500 font-body">
                     <RefreshCcw size={12} className="animate-spin" />
                   </div>
                 ) : user ? (
                   <button
                     type="button"
                     onClick={() => setShowMobileAuthSheet(true)}
-                    className="inline-flex items-center gap-1 rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-[11px] text-[#5a5549] font-body"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-primary font-body"
                   >
                     <UserRound size={12} />
-                    Account
+                    {isKorean ? '계정' : 'Account'}
                   </button>
                 ) : null}
                 {user && (
-                  <div className="rounded-full border border-[#ddd3bf] bg-white/80 px-2.5 py-1 text-xs text-[#5a5549] font-body">
+                  <div className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary font-body">
                     {completionPercent}%
                   </div>
                 )}
@@ -673,32 +653,16 @@ export default function ResultsCard({
 
           <div className="flex-1 overflow-y-auto px-3 pb-[calc(env(safe-area-inset-bottom)+64px)] pt-3">
             <div className="space-y-4">
-          {mobileTab === 'focus' && (
+          {mobileTab === 'plan' && (
             <>
-              {showFocusReadyBanner &&
-                inProgressCount === 0 &&
-                completedCount === 0 &&
-                activeRecommendations.length > 0 && (
-                <div className="rounded-[20px] border border-[#f0dcc0] bg-[#fff7e8] px-4 py-3">
-                  <p className="text-sm text-[#95611f] font-body leading-relaxed">
-                    <strong className="font-medium">Your plan is ready.</strong> Review your top step below — tap a status button to get started.
-                  </p>
-                </div>
-              )}
-              {syncMessage && !showMobileSyncCta && (
-                <div
-                  className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-body ${syncMessage.className}`}
-                >
-                  {syncMessage.text}
-                </div>
-              )}
-
+              {/* ── Hero: top priority action ── */}
               {selectedMobileRecommendation ? (
-                <>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                    Step {selectedMobilePlanIndex + 1} of {recommendationsWithState.length}
-                  </p>
-
+                <div className="rounded-2xl border-2 border-accent bg-white overflow-hidden">
+                  <div className="px-4 pt-3 pb-2 bg-accent/5 border-b border-accent/20">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent font-body">
+                      {isKorean ? '지금 이것부터 시작하세요' : 'Start here — top priority'}
+                    </p>
+                  </div>
                   <ActionPlanCard
                     action={selectedMobileRecommendation.action}
                     displayIndex={selectedMobilePlanIndex + 1}
@@ -710,133 +674,114 @@ export default function ResultsCard({
                     entry={selectedMobileRecommendation.entry}
                     mobileMode
                     focusMode
+                    loadProviderSearch
                     onUpdateStatus={updateActionStatus}
                     onUpdateEntry={onUpdateActionEntry}
                   />
-
-                  {!savedZip && (
-                    <div className="rounded-[24px] border border-[#ddd3bf] bg-white/90 px-4 py-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body mb-1">
-                        {locale === 'ko-KR' ? '지역 기반 검색' : 'Find nearby providers'}
-                      </p>
-                      <p className="mt-1 mb-3 text-sm text-[#625e53] font-body leading-relaxed">
-                        {locale === 'ko-KR'
-                          ? '지역명을 입력하면 각 단계에 맞는 네이버 지도 검색 링크를 보여줍니다.'
-                          : 'Enter your ZIP code to see local therapists and services for each step.'}
-                      </p>
-                      {locale === 'en-US' && (
-                        <button
-                          type="button"
-                          onClick={handleUseLocation}
-                          disabled={gpsLoading}
-                          className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2.5 text-sm text-[#5a5549] font-body disabled:opacity-60"
-                        >
-                          <MapPin size={15} />
-                          {gpsLoading ? 'Getting your location...' : 'Use my location'}
-                        </button>
-                      )}
-                      <form onSubmit={handleZipSubmit} className="flex gap-2">
-                        <input
-                          inputMode={locale === 'ko-KR' ? 'text' : 'numeric'}
-                          autoComplete={locale === 'ko-KR' ? 'address-level2' : 'postal-code'}
-                          maxLength={locale === 'ko-KR' ? 40 : 5}
-                          value={zipInput}
-                          onChange={(event) => {
-                            setZipError('');
-                            setZipInput(
-                              locale === 'ko-KR'
-                                ? event.target.value.slice(0, 40)
-                                : event.target.value.replace(/\D/g, '').slice(0, 5)
-                            );
-                          }}
-                          placeholder={locale === 'ko-KR' ? '예: 서울 강남' : 'ZIP code'}
-                          aria-label={locale === 'ko-KR' ? '지역명 입력' : 'Enter ZIP code to find nearby providers'}
-                          className="flex-1 rounded-[18px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-2.5 text-sm text-text-main font-body outline-none transition-all focus:border-[#7f7a57] focus:ring-2 focus:ring-[#7f7a57]/15"
-                        />
-                        <button
-                          type="submit"
-                          className="rounded-[18px] bg-[#6d6b47] px-4 py-2.5 text-sm text-white font-body"
-                        >
-                          {locale === 'ko-KR' ? '검색' : 'Search'}
-                        </button>
-                      </form>
-                      {(zipError || gpsError) && (
-                        <p className="mt-2 text-sm text-red-500 font-body">{zipError || gpsError}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {recommendationsWithState.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setMobileTab('plan')}
-                      className="pt-1 text-sm text-primary font-body underline-offset-2 hover:underline"
-                    >
-                      View all steps →
-                    </button>
-                  )}
-                </>
+                </div>
               ) : (
-                <div className="rounded-[24px] border border-[#d7e1c7] bg-[#f7fbf2] px-4 py-4">
-                  <p className="text-sm text-[#5d6e55] font-body leading-relaxed">
-                    There is no active step right now. Switch to History if you want to review completed or skipped items.
-                  </p>
+                <div className="rounded-2xl border border-success/30 bg-success/10 px-4 py-4">
+                  <p className="text-sm font-semibold text-success font-body">{emptyFocusTitle}</p>
+                  <p className="mt-1 text-sm text-gray-600 font-body leading-relaxed">{emptyFocusMessage}</p>
                 </div>
               )}
 
+              {/* ── Save plan CTA (not signed in) ── */}
               {showMobileSyncCta && (
-                <div className="flex justify-center pt-2 pb-1">
+                <div className="flex justify-center">
                   <button
                     type="button"
                     onClick={() => setShowMobileAuthSheet(true)}
-                    className="text-sm text-[#7e786c] hover:text-primary transition-colors font-body"
+                    className="text-sm font-semibold text-primary hover:underline underline-offset-2 transition-colors font-body"
                   >
-                    Save your plan → Sign in
+                    {isKorean ? '이 계획 저장하기 → 로그인' : 'Save your plan → Sign in'}
                   </button>
                 </div>
               )}
-            </>
-          )}
 
-          {mobileTab === 'plan' && (
-            <>
-              <div className="rounded-[28px] border border-[#ddd3bf] bg-white/90 px-4 py-4 shadow-[0_18px_42px_-34px_rgba(54,44,28,0.45)]">
-                <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-                  Dashboard
-                </p>
-                <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                  {nextFocusGuidance?.firstMove ?? emptyFocusMessage}
-                </p>
-                <div className="mt-4 h-2 rounded-full bg-[#ece4d6]">
+              {/* ── Location search ── */}
+              {!savedZip && (
+                <div className="rounded-2xl border border-gray-200 bg-white px-4 py-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-400 font-body mb-2">
+                    {locale === 'ko-KR' ? '지역 기반 검색' : 'Find nearby providers'}
+                  </p>
+                  <p className="mb-3 text-sm text-gray-500 font-body leading-relaxed">
+                    {locale === 'ko-KR'
+                      ? '지역명을 입력하면 각 단계에 맞는 네이버 지도 검색 링크를 보여줍니다.'
+                      : 'Enter your ZIP code to see local therapists and services for each step.'}
+                  </p>
+                  {locale === 'en-US' && (
+                    <button
+                      type="button"
+                      onClick={handleUseLocation}
+                      disabled={gpsLoading}
+                      className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-600 font-body disabled:opacity-60"
+                    >
+                      <MapPin size={15} />
+                      {gpsLoading ? (isKorean ? '위치 가져오는 중...' : 'Getting your location...') : (isKorean ? '현재 위치 사용' : 'Use my location')}
+                    </button>
+                  )}
+                  <form onSubmit={handleZipSubmit} className="flex gap-2">
+                    <input
+                      inputMode={locale === 'ko-KR' ? 'text' : 'numeric'}
+                      autoComplete={locale === 'ko-KR' ? 'address-level2' : 'postal-code'}
+                      maxLength={locale === 'ko-KR' ? 40 : 5}
+                      value={zipInput}
+                      onChange={(event) => {
+                        setZipError('');
+                        setZipInput(
+                          locale === 'ko-KR'
+                            ? event.target.value.slice(0, 40)
+                            : event.target.value.replace(/\D/g, '').slice(0, 5)
+                        );
+                      }}
+                      placeholder={locale === 'ko-KR' ? '예: 서울 강남' : 'ZIP code'}
+                      aria-label={locale === 'ko-KR' ? '지역명 입력' : 'Enter ZIP code to find nearby providers'}
+                      className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-text-main font-body outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white font-body"
+                    >
+                      {locale === 'ko-KR' ? '검색' : 'Search'}
+                    </button>
+                  </form>
+                  {(zipError || gpsError) && (
+                    <p className="mt-2 text-sm text-red-500 font-body">{zipError || gpsError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* ── Progress bar ── */}
+              <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-gray-400 font-body uppercase tracking-[0.12em]">
+                    {isKorean ? '전체 진행도' : 'Progress'}
+                  </span>
+                  <span className="text-xs font-bold text-primary font-body">{completionPercent}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-[linear-gradient(90deg,#6d6b47,#9bb07b)]"
+                    className="h-full rounded-full bg-success transition-all duration-500"
                     style={{ width: `${completionPercent}%` }}
                   />
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="rounded-[18px] border border-[#e7decd] bg-[#fffdf8] px-3 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                      Not started
-                    </p>
-                    <p className="mt-1 font-heading text-xl text-text-main">{notStartedCount}</p>
+                <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+                  <div>
+                    <p className="font-heading text-lg font-bold text-text-main">{notStartedCount}</p>
+                    <p className="text-[10px] text-gray-400 font-body">{isKorean ? '미시작' : 'To do'}</p>
                   </div>
-                  <div className="rounded-[18px] border border-[#f2dfb9] bg-[#fff7e9] px-3 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                      Working on
-                    </p>
-                    <p className="mt-1 font-heading text-xl text-text-main">{inProgressCount}</p>
+                  <div>
+                    <p className="font-heading text-lg font-bold text-amber-600">{inProgressCount}</p>
+                    <p className="text-[10px] text-gray-400 font-body">{isKorean ? '진행 중' : 'In progress'}</p>
                   </div>
-                  <div className="rounded-[18px] border border-[#d4e4c8] bg-[#edf6e7] px-3 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                      Done
-                    </p>
-                    <p className="mt-1 font-heading text-xl text-text-main">{completedCount}</p>
+                  <div>
+                    <p className="font-heading text-lg font-bold text-success">{completedCount}</p>
+                    <p className="text-[10px] text-gray-400 font-body">{isKorean ? '완료' : 'Done'}</p>
                   </div>
-                  <div className="rounded-[18px] border border-[#e2dbcf] bg-[#f5f2ec] px-3 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                      Skipped
-                    </p>
-                    <p className="mt-1 font-heading text-xl text-text-main">{skippedCount}</p>
+                  <div>
+                    <p className="font-heading text-lg font-bold text-gray-400">{skippedCount}</p>
+                    <p className="text-[10px] text-gray-400 font-body">{isKorean ? '건너뜀' : 'Skipped'}</p>
                   </div>
                 </div>
               </div>
@@ -913,46 +858,134 @@ export default function ResultsCard({
                 </p>
               </div>
 
-              <div className="space-y-3">
-                {activeRecommendations.length > 0 ? (
-                  activeRecommendations.map(({ action, entry, status }, index) => {
-                    const followUpState = getFollowUpState(entry.nextFollowUpDate, status);
+              {/* ── Other active steps ── */}
+              {activeRecommendations.length > 1 && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400 font-body mb-2 px-1">
+                    {isKorean ? '나머지 단계' : 'Other steps'}
+                  </p>
+                  <div className="space-y-2">
+                    {activeRecommendations.slice(1).map(({ action, entry, status }, index) => {
+                      const followUpState = getFollowUpState(entry.nextFollowUpDate, status);
+                      const isSelected = action.id === selectedMobileActionId;
 
-                    return (
-                      <button
-                        key={action.id}
-                        type="button"
-                        onClick={() => openMobileAction(action.id)}
-                        className="w-full rounded-[24px] border border-[#e6dccb] bg-white/90 px-4 py-4 text-left shadow-[0_18px_42px_-34px_rgba(54,44,28,0.4)]"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.16em] text-[#8a8377] font-body">
-                              Step {index + 1}
-                            </p>
-                            <h3 className="mt-2 font-heading text-xl text-text-main">
-                              {action.title}
-                            </h3>
-                            <p className="mt-2 text-sm text-[#625e53] font-body leading-relaxed">
-                              {followUpState.label}
-                            </p>
+                      return (
+                        <button
+                          key={action.id}
+                          type="button"
+                          onClick={() => openMobileAction(action.id)}
+                          className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${
+                            isSelected
+                              ? 'border-primary/30 bg-primary/5'
+                              : 'border-gray-200 bg-white hover:border-primary/20'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="font-body text-sm font-semibold text-text-main truncate">
+                                {action.title}
+                              </h3>
+                              <p className="mt-0.5 text-xs text-gray-400 font-body">{followUpState.label}</p>
+                            </div>
+                            <span
+                              className={`inline-flex flex-shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold font-body ${planMapStatusMeta[status].className}`}
+                            >
+                              {planMapStatusMeta[status].label}
+                            </span>
                           </div>
-                          <span
-                            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-body ${planMapStatusMeta[status].className}`}
-                          >
-                            {planMapStatusMeta[status].label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ── History (collapsed) ── */}
+              {(completedRecommendations.length > 0 || skippedRecommendations.length > 0) && (
+                <details className="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+                  <summary className="cursor-pointer list-none text-sm font-semibold text-gray-500 font-body flex items-center justify-between">
+                    <span>
+                      {isKorean
+                        ? `완료 및 건너뜀 (${completedCount + skippedCount})`
+                        : `Completed & skipped (${completedCount + skippedCount})`}
+                    </span>
+                    <ChevronDown size={14} className="text-gray-400" />
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    {completedRecommendations.map(({ action, entry }) => (
+                      <div key={action.id} className="rounded-xl border border-success/20 bg-success/5 px-3 py-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="font-body text-sm font-semibold text-text-main">{action.title}</h4>
+                          <span className="text-[10px] font-bold text-success font-body flex-shrink-0">
+                            {isKorean ? '완료' : 'Done'}
                           </span>
                         </div>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="rounded-[24px] border border-[#d7e1c7] bg-[#f7fbf2] px-4 py-4">
-                    <p className="text-sm text-[#5d6e55] font-body leading-relaxed">
-                      No active steps are left in the plan right now.
-                    </p>
+                        <p className="mt-1 text-xs text-gray-400 font-body">
+                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : (isKorean ? '완료됨' : 'Completed')}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => updateActionStatus(action.id, 'not-started')}
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs text-gray-400 font-body hover:text-primary transition-colors"
+                        >
+                          <RotateCcw size={11} />
+                          {isKorean ? '다시 시작' : 'Reopen'}
+                        </button>
+                      </div>
+                    ))}
+                    {skippedRecommendations.map(({ action, entry }) => (
+                      <div key={action.id} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="font-body text-sm font-semibold text-gray-500">{action.title}</h4>
+                          <span className="text-[10px] font-bold text-gray-400 font-body flex-shrink-0">
+                            {isKorean ? '건너뜀' : 'Skipped'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => updateActionStatus(action.id, 'not-started')}
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs text-gray-400 font-body hover:text-primary transition-colors"
+                        >
+                          <RotateCcw size={11} />
+                          {isKorean ? '복원' : 'Restore'}
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                )}
+                </details>
+              )}
+
+              {/* ── Intake review + start over ── */}
+              <details className="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+                <summary className="cursor-pointer list-none text-sm text-gray-400 font-body">
+                  {isKorean ? '입력 내용 확인' : 'Review intake answers'}
+                </summary>
+                <div className="mt-3 divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
+                  {intakeSteps.map((step) => {
+                    const val = answers[step.fieldName as keyof IntakeAnswers];
+                    const isEmpty = !val || (Array.isArray(val) && val.length === 0) || val === '';
+                    if (isEmpty && step.optional) return null;
+                    return (
+                      <div key={step.fieldName} className="px-3 py-2.5">
+                        <p className="text-[10px] text-gray-400 font-body mb-0.5">{localizedFieldLabels[step.fieldName]}</p>
+                        <p className="text-sm text-text-main font-body">
+                          {Array.isArray(val) ? val.join(', ') : val || '-'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </details>
+
+              <div className="flex justify-center pt-1 pb-2">
+                <button
+                  onClick={onStartOver}
+                  aria-label="Start over and retake the questionnaire"
+                  className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-primary transition-colors font-body"
+                >
+                  <ArrowLeft size={14} />
+                  {isKorean ? '처음부터 다시' : 'Start over'}
+                </button>
               </div>
 
               <FeedbackCard mobile locale={locale} />
@@ -1026,102 +1059,6 @@ export default function ResultsCard({
             </>
           )}
 
-          {mobileTab === 'history' && (
-            <div className="space-y-4">
-              {completedRecommendations.length > 0 && (
-                <div className="rounded-[28px] border border-[#d7e1c7] bg-[#f7fbf2] px-4 py-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-[#73856b] font-body">
-                    {isKorean ? '완료' : 'Completed'}
-                  </p>
-                  <div className="mt-3 space-y-3">
-                    {completedRecommendations.map(({ action, entry }) => (
-                      <div key={action.id} className="rounded-[20px] border border-[#d7e1c7] bg-white px-4 py-4">
-                        <h4 className="font-heading text-xl text-text-main">{action.title}</h4>
-                        <p className="mt-2 text-xs text-[#8a8377] font-body">
-                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : (isKorean ? '완료됨' : 'Completed')}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => updateActionStatus(action.id, 'not-started')}
-                          className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body"
-                        >
-                          <RotateCcw size={14} />
-                          {isKorean ? '다시 시작' : 'Reopen'}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {skippedRecommendations.length > 0 && (
-                <div className="rounded-[28px] border border-[#ddd5c8] bg-[#f7f4ef] px-4 py-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-[#7d7569] font-body">
-                    {isKorean ? '건너뜀' : 'Skipped'}
-                  </p>
-                  <div className="mt-3 space-y-3">
-                    {skippedRecommendations.map(({ action, entry }) => (
-                      <div key={action.id} className="rounded-[20px] border border-[#e0d8cb] bg-white px-4 py-4">
-                        <h4 className="font-heading text-xl text-text-main">{action.title}</h4>
-                        <p className="mt-2 text-xs text-[#8a8377] font-body">
-                          {entry?.updatedAt ? formatRelativeUpdate(entry.updatedAt) : (isKorean ? '건너뜀' : 'Skipped')}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => updateActionStatus(action.id, 'not-started')}
-                          className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#d5cfaf] bg-white px-4 py-2 text-sm text-[#5a5549] font-body"
-                        >
-                          <RotateCcw size={14} />
-                          {isKorean ? '복원' : 'Restore'}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <details className="rounded-[28px] border border-[#ddd3bf] bg-white/80 px-4 py-4">
-                <summary className="cursor-pointer list-none text-sm text-[#5a5549] font-body">
-                  {isKorean ? '입력 내용 확인' : 'Review intake answers'}
-                </summary>
-                <div className="mt-3 overflow-hidden rounded-[20px] border border-[#e7decd] bg-[#fffdf8]">
-                  {intakeSteps.map((step, index) => {
-                    const val = answers[step.fieldName as keyof IntakeAnswers];
-                    const isEmpty = !val || (Array.isArray(val) && val.length === 0) || val === '';
-
-                    if (isEmpty && step.optional) {
-                      return null;
-                    }
-
-                    return (
-                      <div
-                        key={step.fieldName}
-                        className={`px-4 py-3 ${index === intakeSteps.length - 1 ? '' : 'border-b border-[#eee6d7]'}`}
-                      >
-                        <p className="text-xs text-[#8a8377] font-body mb-1">
-                          {localizedFieldLabels[step.fieldName]}
-                        </p>
-                        <p className="text-sm text-text-main font-body">
-                          {Array.isArray(val) ? val.join(', ') : val || '-'}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </details>
-
-              <div className="flex justify-center pt-2">
-                <button
-                  onClick={onStartOver}
-                  aria-label="Start over and retake the questionnaire"
-                  className="flex items-center gap-1.5 text-sm text-[#7e786c] hover:text-primary transition-colors font-body"
-                >
-                  <ArrowLeft size={14} />
-                  Start over
-                </button>
-              </div>
-            </div>
-          )}
 
           {showMobileAuthSheet && (
             <div className="fixed inset-0 z-50">
@@ -1226,8 +1163,8 @@ export default function ResultsCard({
             </div>
           </div>
 
-          <div className="border-t border-[#e5dccb] bg-[#fffdf8]/95 px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+6px)] backdrop-blur">
-          <div className={`grid gap-1 ${mobileTabs.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+          <div className="border-t border-gray-100 bg-white px-3 py-2 pb-[calc(env(safe-area-inset-bottom)+6px)] backdrop-blur">
+          <div className="grid grid-cols-2 gap-1">
             {mobileTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = mobileTab === tab.id;
@@ -1237,8 +1174,8 @@ export default function ResultsCard({
                   key={tab.id}
                   type="button"
                   onClick={() => setMobileTab(tab.id)}
-                  className={`inline-flex flex-col items-center justify-center gap-1 rounded-[14px] px-2 py-2 text-xs font-body transition-colors min-h-[52px] ${
-                    isActive ? 'bg-[#f0eadb] text-[#5a5549]' : 'text-[#8a8377]'
+                  className={`inline-flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs font-semibold font-body transition-colors min-h-[52px] ${
+                    isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-gray-600'
                   }`}
                 >
                   <Icon size={18} />

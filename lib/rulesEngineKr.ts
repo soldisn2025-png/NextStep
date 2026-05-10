@@ -54,6 +54,7 @@ export function getRecommendationsKr(answers: IntakeAnswers): RecommendedAction[
 
   if (notDiagnosed || clinicOnly || concernsDoctor) {
     pin('find-developmental-ped-kr');
+    add('shorter-queue-strategy-kr');
     add('prepare-first-appointment-kr');
   }
 

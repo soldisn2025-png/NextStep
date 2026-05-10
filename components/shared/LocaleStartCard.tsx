@@ -9,11 +9,8 @@ const LOCALES: AppLocale[] = ['en-US', 'ko-KR'];
 
 export default function LocaleStartCard() {
   return (
-    <div className="mt-8 w-full rounded-[28px] border border-[#e6dccb] bg-white/90 px-5 py-5 shadow-[0_20px_60px_-48px_rgba(54,44,28,0.55)]">
-      <p className="text-xs uppercase tracking-[0.18em] text-[#8a8377] font-body">
-        Choose your guide
-      </p>
-      <div className="mt-4 grid gap-3">
+    <div className="mt-8 w-full rounded-2xl border border-gray-200 bg-white px-2 py-2 shadow-sm">
+      <div className="grid gap-1">
         {LOCALES.map((locale) => {
           const label = LOCALE_LABELS[locale];
 
@@ -22,20 +19,19 @@ export default function LocaleStartCard() {
               key={locale}
               href={`/intake?locale=${locale}`}
               onClick={() => writeStoredLocale(locale)}
-              className="group flex items-center justify-between gap-4 rounded-[22px] border border-[#ddd3bf] bg-[#fffdf8] px-4 py-4 text-left transition-colors hover:border-[#7f7a57] hover:bg-white"
+              className="group flex items-center justify-between gap-4 rounded-xl bg-gray-50 px-4 py-4 text-left transition-colors hover:bg-primary/5"
             >
               <span>
-                <span className="block text-sm font-medium text-text-main font-body">
+                <span className="block text-sm font-semibold text-text-main font-body">
                   {label.title}
                 </span>
-                <span className="mt-1 block text-xs text-[#6f695d] font-body leading-relaxed">
+                <span className="mt-1 block text-xs text-gray-500 font-body leading-relaxed">
                   {label.subtitle}
                 </span>
               </span>
-              <ArrowRight
-                size={18}
-                className="shrink-0 text-[#8a8377] transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
-              />
+              <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                <ArrowRight size={14} className="text-white" />
+              </span>
             </Link>
           );
         })}

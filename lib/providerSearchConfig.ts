@@ -45,6 +45,8 @@ const PROVIDER_SEARCH_CONFIG: Record<ProviderSearchKind, ProviderSearchConfig> =
 };
 
 const ACTION_PROVIDER_KIND: Record<string, ProviderSearchKind> = {
+  'official-diagnosis': 'doctor',
+  'find-developmental-ped': 'doctor',
   'find-slp': 'speech',
   'find-ot': 'ot',
   'explore-aba': 'aba',

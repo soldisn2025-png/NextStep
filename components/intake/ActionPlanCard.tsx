@@ -44,6 +44,7 @@ interface ActionPlanCardProps {
   entry?: ActionPlanProgressEntry;
   mobileMode?: boolean;
   focusMode?: boolean;
+  loadProviderSearch?: boolean;
   onUpdateStatus: (actionId: string, status: ActionPlanStatus) => void;
   onUpdateEntry: (actionId: string, updates: Partial<ActionPlanProgressEntry>) => void;
 }
@@ -190,6 +191,7 @@ export default function ActionPlanCard({
   entry,
   mobileMode = false,
   focusMode = false,
+  loadProviderSearch = false,
   onUpdateStatus,
   onUpdateEntry,
 }: ActionPlanCardProps) {
@@ -219,10 +221,12 @@ export default function ActionPlanCard({
       potentialProviderSearchKind ||
       (action.supportItems?.length ?? 0) > 0
   );
-  const [showResources, setShowResources] = useState(hasResourceHub);
+  const [showResources, setShowResources] = useState(false);
   const [showTools, setShowTools] = useState(savedDraftCount > 0 || executionLogCount > 0);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel | null>(null);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
+  const shouldLoadProviderSearch =
+    loadProviderSearch || (!mobileMode && showResources) || (mobileMode && mobilePanel === 'resources');
   const resourceSummary = [
     providerSearchKind && savedZip ? `nearby search for ${savedZip}` : null,
     localResources.length
@@ -298,7 +302,9 @@ export default function ActionPlanCard({
         </div>
       )}
 
-      {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} locale={locale} />}
+      {shouldLoadProviderSearch && savedZip && (
+        <NearbyProviders actionId={action.id} zip={savedZip} locale={locale} />
+      )}
 
       {localKinds.length > 0 && (
         <div className="mt-5 space-y-3">
@@ -493,7 +499,9 @@ export default function ActionPlanCard({
               topConcerns={topConcerns}
             />
           )}
-          {savedZip && <NearbyProviders actionId={action.id} zip={savedZip} locale={locale} />}
+          {shouldLoadProviderSearch && savedZip && (
+            <NearbyProviders actionId={action.id} zip={savedZip} locale={locale} />
+          )}
           {visibleTrustedResourcesSection}
         </div>
       ) : (

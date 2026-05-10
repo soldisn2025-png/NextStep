@@ -28,7 +28,7 @@ export default function StepWrapper({
         <Link
           href="/"
           aria-label="Go to NextStep home"
-          className="font-heading text-lg text-text-main leading-none"
+          className="font-heading text-lg font-bold text-primary leading-none"
         >
           NextStep
         </Link>

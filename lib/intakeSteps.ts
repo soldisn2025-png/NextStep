@@ -5,6 +5,7 @@ export const intakeSteps: IntakeStep[] = [
     id: 1,
     fieldName: 'childAge',
     question: "How old is your child?",
+    subtitle: "Age determines which services and timelines apply to your situation.",
     type: 'single-select',
     options: [
       'Under 2',
@@ -19,6 +20,7 @@ export const intakeSteps: IntakeStep[] = [
     id: 2,
     fieldName: 'diagnosedBy',
     question: "Who diagnosed your child?",
+    subtitle: "This shapes which next steps and resources we prioritize for you.",
     type: 'single-select',
     options: [
       'Developmental pediatrician',
@@ -47,6 +49,7 @@ export const intakeSteps: IntakeStep[] = [
     id: 4,
     fieldName: 'currentSupport',
     question: "Is your child currently receiving any therapy or support?",
+    subtitle: "We'll build on what's already in place and point to what might be missing.",
     type: 'multi-select',
     options: [
       'No, nothing yet',

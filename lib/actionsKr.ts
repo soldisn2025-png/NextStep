@@ -59,6 +59,20 @@ export const KR_ACTIONS: Record<string, RecommendedAction> = {
       { label: '질병관리청 국가건강정보포털', url: 'https://health.kdca.go.kr/' },
     ],
   },
+  'shorter-queue-strategy-kr': {
+    id: 'shorter-queue-strategy-kr',
+    title: '대기 시간을 줄이는 예약 전략 세우기',
+    description:
+      '한 병원만 기다리면 진료까지 오래 걸릴 수 있습니다. 발달소아과, 소아정신과, 재활의학과, 지역 대학병원과 민간 발달클리닉을 함께 확인하면 더 빠른 초진 기회를 찾을 수 있습니다.',
+    firstMove: '오늘 전화할 병원과 클리닉을 5곳 이상 적고, 초진 대기 기간과 취소 자리 알림 가능 여부를 같은 날 확인하세요.',
+    whileWaiting: '대기 명단에 이름을 올린 뒤에도 1-2주마다 취소 자리나 빠른 예약 가능 여부를 다시 확인하세요. 기존 검사 결과와 어린이집/학교 관찰 메모를 미리 모아 두면 갑자기 자리가 났을 때 바로 움직일 수 있습니다.',
+    category: 'doctor',
+    urgency: 'immediate',
+    resources: [
+      { label: '건강보험심사평가원 병원 찾기', url: 'https://www.hira.or.kr/' },
+      { label: '국민건강보험 병의원 찾기', url: 'https://www.nhis.or.kr/' },
+    ],
+  },
   'darei-services': {
     id: 'darei-services',
     title: '발달재활서비스(바우처) 신청하기',
