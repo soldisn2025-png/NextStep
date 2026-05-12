@@ -4,7 +4,9 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const nextPath = requestUrl.searchParams.get('next') ?? '/intake';
+  const rawNext = requestUrl.searchParams.get('next') ?? '/intake';
+  // Only allow relative paths — reject absolute URLs (https://evil.com) and protocol-relative (//evil.com)
+  const nextPath = /^\/(?!\/)/.test(rawNext) ? rawNext : '/intake';
   const redirectUrl = new URL(buildAppUrl(nextPath, requestUrl.origin));
   const supabase = getSupabaseServerClient();
 
